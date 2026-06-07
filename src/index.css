@@ -54,6 +54,21 @@ body {
   margin: 0;
 }
 
+.dashboard-profile,
+.dashboard-subjects {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.dashboard-profile {
+  margin-bottom: 1.5rem;
+}
+
+.dashboard-subjects {
+  margin-top: 0;
+}
+
 #root {
   width: 1126px;
   max-width: 100%;

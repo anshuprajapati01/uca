@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase.js';
  * @property {string | null} [roll_number]
  * @property {string | null} [phone]
  * @property {string | null} [college_id]
+ * @property {string | null} [batch_id]
  */
 
 /**
@@ -17,7 +18,7 @@ import { supabase } from '../lib/supabase.js';
 export async function fetchStudentProfile(userId) {
   const { data, error } = await supabase
     .from('user_profiles')
-    .select('id, role, full_name, roll_number, phone, college_id')
+    .select('id, role, full_name, roll_number, phone, college_id, batch_id')
     .eq('id', userId)
     .maybeSingle();
 
