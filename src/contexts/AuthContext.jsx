@@ -8,7 +8,6 @@ import { createContext } from 'react';
  * @property {string} id
  * @property {string} role
  * @property {string | null} [full_name]
- * @property {string | null} [email]
  */
 
 /**
