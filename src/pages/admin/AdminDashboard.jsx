@@ -1,12 +1,13 @@
-import { Link } from 'react-router-dom';
-import { ROUTES } from '../../config/constants.js';
+import DashboardLayout from '../../components/layout/DashboardLayout.jsx';
+import { ADMIN_NAV_ITEMS } from '../../config/navigation.js';
 
 export default function AdminDashboard() {
   return (
-    <main className="page">
-      <h1>Admin Dashboard</h1>
-      <p>Placeholder — admin features will be added here.</p>
-      <Link to={ROUTES.HOME}>Back to home</Link>
-    </main>
+    <DashboardLayout title="Admin Dashboard" navItems={ADMIN_NAV_ITEMS}>
+      <section className="dashboard-placeholder">
+        <h2>Welcome, Administrator</h2>
+        <p>College management tools and reports will appear here.</p>
+      </section>
+    </DashboardLayout>
   );
 }

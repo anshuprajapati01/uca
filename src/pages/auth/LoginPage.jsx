@@ -1,16 +1,20 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import FormField from '../../components/common/FormField.jsx';
 import { APP_NAME, ROUTES } from '../../config/constants.js';
+import { useAuth } from '../../hooks/useAuth.js';
 import { loginSchema } from '../../schemas/loginSchema.js';
 import { signInWithEmail } from '../../services/authService.js';
+import { fetchUserProfile } from '../../services/userProfileService.js';
 import { getAuthErrorMessage } from '../../utils/authErrors.js';
+import { getDashboardRouteForRole } from '../../utils/roleRouting.js';
 import './LoginPage.css';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { isAuthenticated, role } = useAuth();
   const [submitError, setSubmitError] = useState(null);
 
   const {
@@ -25,12 +29,24 @@ export default function LoginPage() {
     },
   });
 
+  useEffect(() => {
+    if (isAuthenticated && role) {
+      navigate(getDashboardRouteForRole(role), { replace: true });
+    }
+  }, [isAuthenticated, role, navigate]);
+
   async function onSubmit({ email, password }) {
     setSubmitError(null);
 
     try {
-      await signInWithEmail(email, password);
-      navigate(ROUTES.HOME, { replace: true, state: { loginSuccess: true } });
+      const { user } = await signInWithEmail(email, password);
+
+      if (!user) {
+        throw new Error('Sign-in succeeded but no user was returned.');
+      }
+
+      const profile = await fetchUserProfile(user.id);
+      navigate(getDashboardRouteForRole(profile.role), { replace: true });
     } catch (error) {
       setSubmitError(getAuthErrorMessage(error));
     }

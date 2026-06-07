@@ -1,12 +1,13 @@
-import { Link } from 'react-router-dom';
-import { ROUTES } from '../../config/constants.js';
+import DashboardLayout from '../../components/layout/DashboardLayout.jsx';
+import { STUDENT_NAV_ITEMS } from '../../config/navigation.js';
 
 export default function StudentDashboard() {
   return (
-    <main className="page">
-      <h1>Student Dashboard</h1>
-      <p>Placeholder — student features will be added here.</p>
-      <Link to={ROUTES.HOME}>Back to home</Link>
-    </main>
+    <DashboardLayout title="Student Dashboard" navItems={STUDENT_NAV_ITEMS}>
+      <section className="dashboard-placeholder">
+        <h2>Welcome, Student</h2>
+        <p>Your subjects, resources, and progress will appear here.</p>
+      </section>
+    </DashboardLayout>
   );
 }
