@@ -2,16 +2,6 @@ import { NavLink } from 'react-router-dom';
 import { APP_SHORT_NAME } from '../../config/constants.js';
 import './DashboardLayout.css';
 
-/**
- * @typedef {import('../../config/navigation.js').NavItem} NavItem
- */
-
-/**
- * @param {Object} props
- * @param {NavItem[]} props.navItems
- * @param {boolean} props.isOpen
- * @param {() => void} props.onClose
- */
 export default function Sidebar({ navItems, isOpen, onClose }) {
   return (
     <>

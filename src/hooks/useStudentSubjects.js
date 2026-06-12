@@ -1,53 +1,48 @@
 import { useState, useEffect } from 'react';
-import { fetchSubjectsByBatch } from '../services/subjectService.js';
-import { useAuth } from './useAuth.js';
+import { supabase } from '../lib/supabase.js';
 
-export function useStudentSubjects() {
-  const { user, profile } = useAuth();
+export default function useStudentSubjects() {
   const [subjects, setSubjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!user || !profile?.batch_id) {
-      setSubjects([]);
-      setIsLoading(false);
-      setError(null);
-      return;
-    }
-
-    let cancelled = false;
-
-    async function load() {
-      setIsLoading(true);
-      setError(null);
+    const fetchBatchSubjects = async () => {
       try {
-        const data = await fetchSubjectsByBatch(profile.batch_id);
-        if (!cancelled) {
-          setSubjects(data);
+        // 1. Get current user
+        const { data: { user }, error: authErr } = await supabase.auth.getUser();
+        if (authErr || !user) throw new Error("Authentication failed");
+
+        // 2. Fetch the user's specific batch_id directly
+        const { data: profile, error: profileErr } = await supabase
+          .from('user_profiles')
+          .select('batch_id')
+          .eq('id', user.id)
+          .single();
+          
+        if (profileErr || !profile?.batch_id) {
+          setSubjects([]); // No batch assigned yet
+          return;
         }
+
+        // 3. Fetch subjects for this exact batch_id
+        const { data: subjectsData, error: subErr } = await supabase
+          .from('subjects')
+          .select('*')
+          .eq('batch_id', profile.batch_id);
+
+        if (subErr) throw subErr;
+        setSubjects(subjectsData || []);
       } catch (err) {
-        if (!cancelled) {
-          setError(err);
-          setSubjects([]);
-        }
+        console.error("Subject fetch error:", err);
+        setError(err.message);
       } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
+        setIsLoading(false);
       }
-    }
-
-    load();
-
-    return () => {
-      cancelled = true;
     };
-  }, [user, profile?.batch_id]);
 
-  return {
-    subjects,
-    isLoading,
-    error,
-  };
+    fetchBatchSubjects();
+  }, []);
+
+  return { subjects, isLoading, error };
 }

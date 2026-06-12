@@ -1,0 +1,80 @@
+.faculty-subjects__header {
+  margin-bottom: 1.5rem;
+}
+
+.faculty-subjects__header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #f3f4f6;
+}
+
+.faculty-subjects__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.subject-card {
+  background: #1e1e2f;
+  border: 1px solid #2e303a;
+  border-radius: 10px;
+  padding: 1.25rem;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.subject-card:hover {
+  transform: translateY(-3px);
+  border-color: #6366f1;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.12);
+}
+
+.subject-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.subject-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.subject-card__name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f3f4f6;
+  line-height: 1.3;
+}
+
+.subject-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  background: rgba(99, 102, 241, 0.15);
+  color: #a5b4fc;
+  width: fit-content;
+}
+
+.subject-card__details {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin-top: 0.1rem;
+}

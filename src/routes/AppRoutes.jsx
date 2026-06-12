@@ -1,11 +1,23 @@
 import { Route, Routes } from 'react-router-dom';
 import ProtectedRoute from '../components/common/ProtectedRoute.jsx';
 import { ROUTES, USER_ROLES } from '../config/constants.js';
-import { ADMIN_ACCESS_ROLES } from '../utils/roleRouting.js';
+import { ADMIN_ACCESS_ROLES, STUDENT_ACCESS_ROLES } from '../utils/roleRouting.js';
 import LoginPage from '../pages/auth/LoginPage.jsx';
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
+import AdminOverview from '../pages/admin/AdminOverview.jsx';
+import SubjectAllocation from '../pages/admin/SubjectAllocation.jsx';
+import ManageStudents from '../pages/admin/ManageStudents.jsx';
+import ManageFaculty from '../pages/admin/ManageFaculty.jsx';
+import ManageAnnouncements from '../pages/admin/ManageAnnouncements.jsx';
+import UploadMaterials from '../pages/admin/UploadMaterials.jsx';
 import FacultyDashboard from '../pages/faculty/FacultyDashboard.jsx';
 import StudentDashboard from '../pages/student/StudentDashboard.jsx';
+import StudentOverview from '../pages/student/StudentOverview.jsx';
+import StudentResources from '../pages/student/StudentResources.jsx';
+import StudentBookmarks from '../pages/student/StudentBookmarks.jsx';
+import StudentAnnouncements from '../pages/student/StudentAnnouncements.jsx';
+import StudentSubjects from '../pages/student/StudentSubjects.jsx';
+import SubjectDetail from '../pages/student/SubjectDetail.jsx';
 import LandingPage from '../pages/public/LandingPage.jsx';
 import NotFoundPage from '../pages/public/NotFoundPage.jsx';
 
@@ -17,11 +29,18 @@ export default function AppRoutes() {
       <Route
         path={ROUTES.STUDENT_DASHBOARD}
         element={
-          <ProtectedRoute allowedRoles={[USER_ROLES.STUDENT]}>
+          <ProtectedRoute allowedRoles={STUDENT_ACCESS_ROLES}>
             <StudentDashboard />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<StudentOverview />} />
+        <Route path="subjects" element={<StudentSubjects />} />
+        <Route path="subjects/:subjectId" element={<SubjectDetail />} />
+        <Route path="resources" element={<StudentResources />} />
+        <Route path="bookmarks" element={<StudentBookmarks />} />
+        <Route path="announcements" element={<StudentAnnouncements />} />
+      </Route>
       <Route
         path={ROUTES.FACULTY_DASHBOARD}
         element={
@@ -37,7 +56,14 @@ export default function AppRoutes() {
             <AdminDashboard />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<AdminOverview />} />
+        <Route path="subject-allocation" element={<SubjectAllocation />} />
+        <Route path="students" element={<ManageStudents />} />
+        <Route path="faculty" element={<ManageFaculty />} />
+        <Route path="announcements" element={<ManageAnnouncements />} />
+        <Route path="upload-materials" element={<UploadMaterials />} />
+      </Route>
       <Route path={ROUTES.NOT_FOUND} element={<NotFoundPage />} />
     </Routes>
   );

@@ -1,14 +1,22 @@
+import { useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { APP_NAME, ROUTES } from '../../config/constants.js';
 import { useAuth } from '../../hooks/useAuth.js';
 import { useLogout } from '../../hooks/useLogout.js';
+import { getDashboardRouteForRole } from '../../utils/roleRouting.js';
 
 export default function LandingPage() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, profile, isAuthenticated } = useAuth();
   const { logout, isLoading: isLoggingOut, error: logoutError } = useLogout();
   const location = useLocation();
   const navigate = useNavigate();
   const loginSuccess = location.state?.loginSuccess === true;
+
+  useEffect(() => {
+    if (isAuthenticated && profile) {
+      navigate(getDashboardRouteForRole(profile.role), { replace: true });
+    }
+  }, [isAuthenticated, profile, navigate]);
 
   async function handleLogout() {
     await logout();

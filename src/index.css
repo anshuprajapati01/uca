@@ -69,6 +69,40 @@ body {
   margin-top: 0;
 }
 
+.dashboard-resources__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .dashboard-resources__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .dashboard-resources__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.dashboard-resources__status {
+  margin: 0;
+  padding: 1rem;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+
+.dashboard-resources__status--error {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.08);
+}
+
 #root {
   width: 1126px;
   max-width: 100%;

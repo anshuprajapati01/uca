@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AuthContext } from '../contexts/AuthContext.jsx';
 import AuthLoading from '../components/common/AuthLoading.jsx';
 import { supabase } from '../lib/supabase.js';
@@ -13,6 +13,8 @@ export default function AuthProvider({ children }) {
   const [profileError, setProfileError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const isFetchingProfile = useRef(false);
+
   const loadProfile = useCallback(async (authUser) => {
     if (!authUser) {
       setProfile(null);
@@ -21,15 +23,24 @@ export default function AuthProvider({ children }) {
       return;
     }
 
+    if (isFetchingProfile.current) {
+      return;
+    }
+
+    isFetchingProfile.current = true;
+
     try {
       const userProfile = await fetchUserProfile(authUser.id);
       setProfile(userProfile);
       setRole(userProfile.role);
       setProfileError(null);
     } catch (error) {
+      console.error('Failed to fetch user profile:', error);
       setProfile(null);
       setRole(null);
       setProfileError(getAuthErrorMessage(error));
+    } finally {
+      isFetchingProfile.current = false;
     }
   }, []);
 
@@ -37,23 +48,34 @@ export default function AuthProvider({ children }) {
     let mounted = true;
 
     async function initializeAuth() {
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
 
-      if (!mounted) return;
+        if (!mounted) return;
 
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
 
-      if (currentSession?.user) {
-        await loadProfile(currentSession.user);
-      } else {
-        setProfile(null);
-        setRole(null);
-        setProfileError(null);
-      }
-
-      if (mounted) {
-        setIsLoading(false);
+        if (currentSession?.user) {
+          await loadProfile(currentSession.user);
+        } else {
+          setProfile(null);
+          setRole(null);
+          setProfileError(null);
+        }
+      } catch (error) {
+        console.error('Auth initialization failed:', error);
+        if (mounted) {
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+          setRole(null);
+          setProfileError(null);
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     }
 
@@ -62,18 +84,27 @@ export default function AuthProvider({ children }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
-      setSession(nextSession);
-      setUser(nextSession?.user ?? null);
+      if (!mounted) return;
 
-      if (nextSession?.user) {
-        await loadProfile(nextSession.user);
-      } else {
-        setProfile(null);
-        setRole(null);
-        setProfileError(null);
+      try {
+        setSession(nextSession);
+        setUser(nextSession?.user ?? null);
+
+        if (nextSession?.user) {
+          await loadProfile(nextSession.user);
+        } else {
+          setProfile(null);
+          setRole(null);
+          setProfileError(null);
+        }
+      } catch (error) {
+        console.error('Auth state change handler failed:', error);
+        if (mounted) {
+          setProfile(null);
+          setRole(null);
+          setProfileError(null);
+        }
       }
-
-      setIsLoading(false);
     });
 
     return () => {
@@ -81,6 +112,14 @@ export default function AuthProvider({ children }) {
       subscription.unsubscribe();
     };
   }, [loadProfile]);
+
+  useEffect(() => {
+    const failsafeTimeoutId = setTimeout(() => {
+      setIsLoading(false);
+    }, 8000);
+
+    return () => clearTimeout(failsafeTimeoutId);
+  }, []);
 
   const value = useMemo(
     () => ({

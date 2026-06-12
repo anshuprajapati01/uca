@@ -1,0 +1,113 @@
+.faculty-resources__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.faculty-resources__header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #f3f4f6;
+}
+
+.faculty-resources__add-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.faculty-resources__add-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.faculty-resources__table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #1e1e2f;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #2e303a;
+}
+
+.faculty-resources__table th,
+.faculty-resources__table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #2e303a;
+}
+
+.faculty-resources__table th {
+  background: rgba(255, 255, 255, 0.05);
+  font-weight: 600;
+  color: #e5e7eb;
+}
+
+.faculty-resources__table td {
+  color: #d1d5e0;
+}
+
+.faculty-resources__table tr:last-child td {
+  border-bottom: none;
+}
+
+.faculty-resources__delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+  border-radius: 6px;
+  background: transparent;
+  color: #9ca3af;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.faculty-resources__delete-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.faculty-resources__tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.faculty-resources__tab {
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #9ca3af;
+  border: 1px solid #2e303a;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.faculty-resources__tab:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e5e7eb;
+}
+
+.faculty-resources__tab--active {
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}

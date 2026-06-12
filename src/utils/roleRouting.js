@@ -7,6 +7,12 @@ export const ADMIN_ACCESS_ROLES = [
   'director',
 ];
 
+/** Roles that share the student dashboard. */
+export const STUDENT_ACCESS_ROLES = [
+  USER_ROLES.STUDENT,
+  'CR',
+];
+
 /**
  * @param {string | null | undefined} role
  * @returns {string}
@@ -14,6 +20,7 @@ export const ADMIN_ACCESS_ROLES = [
 export function getDashboardRouteForRole(role) {
   switch (role) {
     case USER_ROLES.STUDENT:
+    case 'CR':
       return ROUTES.STUDENT_DASHBOARD;
     case USER_ROLES.FACULTY:
       return ROUTES.FACULTY_DASHBOARD;
@@ -33,7 +40,7 @@ export function getDashboardRouteForRole(role) {
 export function getAllowedRolesForDashboard(path) {
   switch (path) {
     case ROUTES.STUDENT_DASHBOARD:
-      return [USER_ROLES.STUDENT];
+      return STUDENT_ACCESS_ROLES;
     case ROUTES.FACULTY_DASHBOARD:
       return [USER_ROLES.FACULTY];
     case ROUTES.ADMIN_DASHBOARD:

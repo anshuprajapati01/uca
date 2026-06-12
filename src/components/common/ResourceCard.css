@@ -1,0 +1,79 @@
+.resource-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.resource-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.resource-card__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.resource-card__badge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 0.1875rem 0.5rem;
+  border-radius: 9999px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.resource-card__subject {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #6b7280;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.resource-card__code {
+  font-size: 0.6875rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  background: var(--code-bg);
+  color: var(--text);
+}
+
+.resource-card__description {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+.resource-card__button {
+  display: inline-block;
+  margin-top: auto;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  text-align: center;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.resource-card__button:hover {
+  opacity: 0.9;
+}

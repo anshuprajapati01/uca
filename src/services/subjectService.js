@@ -20,6 +20,7 @@ export async function fetchSubjectsByBatch(batchId) {
     .eq('batch_id', batchId);
 
   if (error) {
+    console.error('[subjectService] Supabase error:', error);
     throw error;
   }
 

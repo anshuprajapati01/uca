@@ -12,11 +12,17 @@ import { supabase } from '../lib/supabase.js';
  * @returns {Promise<UserProfile>}
  */
 export async function fetchUserProfile(userId) {
-  const { data, error } = await supabase
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Profile fetch timeout')), 5000);
+  });
+
+  const fetchPromise = supabase
     .from('user_profiles')
     .select('id, role, full_name')
     .eq('id', userId)
     .maybeSingle();
+
+  const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
 
   if (error) {
     throw error;

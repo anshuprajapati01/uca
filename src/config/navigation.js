@@ -1,13 +1,12 @@
 import {
-  BarChart3,
   Bookmark,
   BookOpen,
-  Building2,
   FileText,
-  GraduationCap,
   LayoutDashboard,
   Megaphone,
+  Upload,
   Users,
+  UserCheck,
 } from 'lucide-react';
 import { ROUTES } from './constants.js';
 
@@ -26,48 +25,36 @@ export const STUDENT_NAV_ITEMS = [
     label: 'My Subjects',
     path: `${ROUTES.STUDENT_DASHBOARD}/subjects`,
     icon: BookOpen,
-    disabled: true,
   },
   {
     label: 'Resources',
     path: `${ROUTES.STUDENT_DASHBOARD}/resources`,
     icon: FileText,
-    disabled: true,
   },
   {
     label: 'Bookmarks',
     path: `${ROUTES.STUDENT_DASHBOARD}/bookmarks`,
     icon: Bookmark,
-    disabled: true,
   },
   {
     label: 'Announcements',
     path: `${ROUTES.STUDENT_DASHBOARD}/announcements`,
     icon: Megaphone,
-    disabled: true,
   },
 ];
 
 /** @type {NavItem[]} */
 export const FACULTY_NAV_ITEMS = [
-  { label: 'Overview', path: ROUTES.FACULTY_DASHBOARD, icon: LayoutDashboard },
+  { label: '🏠 Overview', path: ROUTES.FACULTY_DASHBOARD, icon: LayoutDashboard },
   {
-    label: 'My Subjects',
-    path: `${ROUTES.FACULTY_DASHBOARD}/subjects`,
+    label: '📚 My Subjects',
+    path: ROUTES.FACULTY_DASHBOARD,
     icon: BookOpen,
-    disabled: true,
   },
   {
-    label: 'Resources',
-    path: `${ROUTES.FACULTY_DASHBOARD}/resources`,
-    icon: FileText,
-    disabled: true,
-  },
-  {
-    label: 'Announcements',
-    path: `${ROUTES.FACULTY_DASHBOARD}/announcements`,
-    icon: Megaphone,
-    disabled: true,
+    label: '📤 Upload Materials',
+    path: ROUTES.FACULTY_DASHBOARD,
+    icon: Upload,
   },
 ];
 
@@ -75,27 +62,28 @@ export const FACULTY_NAV_ITEMS = [
 export const ADMIN_NAV_ITEMS = [
   { label: 'Overview', path: ROUTES.ADMIN_DASHBOARD, icon: LayoutDashboard },
   {
-    label: 'Colleges',
-    path: `${ROUTES.ADMIN_DASHBOARD}/colleges`,
-    icon: Building2,
-    disabled: true,
+    label: 'Subject Allocation',
+    path: `${ROUTES.ADMIN_DASHBOARD}/subject-allocation`,
+    icon: BookOpen,
   },
   {
-    label: 'Departments',
-    path: `${ROUTES.ADMIN_DASHBOARD}/departments`,
-    icon: GraduationCap,
-    disabled: true,
-  },
-  {
-    label: 'Users',
-    path: `${ROUTES.ADMIN_DASHBOARD}/users`,
+    label: 'Manage Students',
+    path: `${ROUTES.ADMIN_DASHBOARD}/students`,
     icon: Users,
-    disabled: true,
   },
   {
-    label: 'Reports',
-    path: `${ROUTES.ADMIN_DASHBOARD}/reports`,
-    icon: BarChart3,
-    disabled: true,
+    label: 'Manage Faculty',
+    path: `${ROUTES.ADMIN_DASHBOARD}/faculty`,
+    icon: UserCheck,
+  },
+  {
+    label: 'Announcements',
+    path: `${ROUTES.ADMIN_DASHBOARD}/announcements`,
+    icon: Megaphone,
+  },
+  {
+    label: 'Upload Materials',
+    path: `${ROUTES.ADMIN_DASHBOARD}/upload-materials`,
+    icon: Upload,
   },
 ];
