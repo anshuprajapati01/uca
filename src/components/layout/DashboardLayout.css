@@ -50,24 +50,34 @@
 .dashboard-sidebar__link {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.625rem 0.75rem;
-  border-radius: 8px;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  background: transparent;
+  border: 1px solid transparent;
   text-decoration: none;
-  color: var(--text);
-  font-size: 0.95rem;
-  transition: background 0.15s;
 }
 
 .dashboard-sidebar__link:hover:not(.dashboard-sidebar__link--disabled) {
-  background: var(--accent-bg);
-  color: var(--text-h);
+  background: rgba(255, 255, 255, 0.05);
+  color: #f1f5f9;
+  transform: translateX(4px);
 }
 
 .dashboard-sidebar__link--active {
-  background: var(--accent-bg);
-  color: var(--text-h);
-  font-weight: 500;
+  color: #ffffff;
+  background: linear-gradient(90deg, rgba(139, 92, 246, 0.15) 0%, rgba(139, 92, 246, 0) 100%);
+  border-left: 4px solid #8b5cf6;
+  font-weight: 600;
+  box-shadow: 0 8px 22px rgba(99, 102, 241, 0.12);
+}
+
+.dashboard-sidebar__link--active .dashboard-sidebar__icon {
+  color: #c7d2fe;
+  filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.6));
 }
 
 .dashboard-sidebar__link--disabled {

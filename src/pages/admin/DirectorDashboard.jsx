@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabase.js';
-import { Shield, Users, BarChart3, Layers, Calendar, Bell, LayoutDashboard, BookOpen, Target, Award, ArrowLeft, UploadCloud, Send } from 'lucide-react';
+import { Shield, Users, BarChart3, Layers, Calendar, Bell, LayoutDashboard, BookOpen, Target, Award, ArrowLeft, UploadCloud, Send, FileText, Archive, ScrollText, PenTool } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout.jsx';
 import './DirectorDashboard-v2.css';
 
@@ -162,7 +162,9 @@ export default function DirectorDashboard() {
   
   const [selectedYear, setSelectedYear] = useState(null);
   const [selectedBranch, setSelectedBranch] = useState(null);
+  const [branchViewTab, setBranchViewTab] = useState('academic');
   const [selectedSemester, setSelectedSemester] = useState(null);
+  const [selectedSubject, setSelectedSubject] = useState(null);
   const [subjectType, setSubjectType] = useState('theory');
   const [broadcastTab, setBroadcastTab] = useState('global');
   const [urgency, setUrgency] = useState('normal');
@@ -180,12 +182,26 @@ export default function DirectorDashboard() {
       setSelectedYear(null);
       setSelectedBranch(null);
       setSelectedSemester(null);
+      setSelectedSubject(null);
       return;
     }
 
     setSelectedBranch(null);
     setSelectedSemester(null);
+    setSelectedSubject(null);
   }, [activeTab, selectedYear]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    setBranchViewTab('academic');
+  }, [selectedBranch]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    setSelectedSubject(null);
+  }, [activeTab, selectedBranch, selectedSemester]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   /* eslint-disable react-hooks/set-state-in-effect */
@@ -339,42 +355,105 @@ export default function DirectorDashboard() {
            {/* STATE 3: EXACT DESIGN COPY WITH NO SUBJECT LIST */}
             {selectedYear && selectedBranch && !selectedSemester && (
                 <div className="director-branch-view-wrapper">
-                    <button className="director-back-btn" onClick={() => setSelectedBranch(null)}>
-                        <ArrowLeft size={18} /> Back
+                    <button className="director-back-btn director-back-btn--premium" onClick={() => setSelectedBranch(null)}>
+                        <ArrowLeft size={18} /> Back to Departments
                     </button>
 
-                    <div className="sem-grid-container">
-                        {SEMESTERS.map((sem) => (
-                            <div
-                                key={sem.id}
-                                className="sem-card-glass"
-                                role="button"
-                                tabIndex={0}
-                                aria-label={`Open ${sem.name} subjects`}
-                                onClick={() => handleSemesterSelect(sem)}
-                                onKeyDown={(event) => {
-                                    if (event.key === 'Enter' || event.key === ' ') {
-                                        event.preventDefault();
-                                        handleSemesterSelect(sem);
-                                    }
-                                }}
-                            >
-                                <h3 className="sem-title">{sem.name}</h3>
-                                {sem.isLive && (
-                                    <span className="live-badge">LIVE</span>
-                                )}
-                            </div>
-                        ))}
+                    <div className="director-branch-subtabs" role="tablist" aria-label="Branch view">
+                        <button
+                            type="button"
+                            className={`director-branch-subtab ${branchViewTab === 'academic' ? 'director-branch-subtab--active' : ''}`}
+                            role="tab"
+                            aria-selected={branchViewTab === 'academic'}
+                            onClick={() => setBranchViewTab('academic')}
+                        >
+                            Academic
+                        </button>
+                        <button
+                            type="button"
+                            className={`director-branch-subtab ${branchViewTab === 'announcements' ? 'director-branch-subtab--active' : ''}`}
+                            role="tab"
+                            aria-selected={branchViewTab === 'announcements'}
+                            onClick={() => setBranchViewTab('announcements')}
+                        >
+                            Batch Announcements
+                        </button>
                     </div>
+
+                    {branchViewTab === 'academic' ? (
+                        <div className="sem-grid-container">
+                            {SEMESTERS.map((sem) => (
+                                <div
+                                    key={sem.id}
+                                    className="sem-card-glass"
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label={`Open ${sem.name} subjects`}
+                                    onClick={() => handleSemesterSelect(sem)}
+                                    onKeyDown={(event) => {
+                                        if (event.key === 'Enter' || event.key === ' ') {
+                                            event.preventDefault();
+                                            handleSemesterSelect(sem);
+                                        }
+                                    }}
+                                >
+                                    <h3 className="sem-title">{sem.name}</h3>
+                                    {sem.isLive && (
+                                        <span className="live-badge">LIVE</span>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="director-branch-announcements-placeholder">
+                            <h3>Batch Announcements</h3>
+                            <p>Batch Announcements list will go here</p>
+                        </div>
+                    )}
                 </div>
             )}
 
             {selectedYear && selectedBranch && selectedSemester && (
                 <div className="director-branch-view-wrapper">
-                    <button className="director-back-btn" onClick={handleBackToSemesters}>
-                        <ArrowLeft size={18} /> Back to Semesters
-                    </button>
+                    {!selectedSubject && (
+                        <button
+                            className="director-back-btn"
+                            onClick={handleBackToSemesters}
+                        >
+                            <ArrowLeft size={18} /> Back to Semesters
+                        </button>
+                    )}
 
+                    {selectedSubject ? (
+                        <div className="subject-detail-materials-full">
+                            <button className="premium-back-btn" onClick={() => setSelectedSubject(null)}>
+                                <ArrowLeft size={18} /> Back to Subjects
+                            </button>
+
+                            <div className="subject-detail-header">
+                                <h2 className="subject-detail-name">{selectedSubject.name}</h2>
+                                <span className="subject-detail-code">{selectedSubject.code}</span>
+                            </div>
+
+                            <div className="material-cards-grid" aria-label="Material categories">
+                                {[
+                                    { name: 'All Lecture Notes', icon: BookOpen, count: '12 Files' },
+                                    { name: 'Assignments', icon: FileText, count: '8 Files' },
+                                    { name: 'Tutorials', icon: PenTool, count: '5 Files' },
+                                    { name: 'PYQs', icon: Archive, count: '15 Files' },
+                                    { name: 'Syllabus', icon: ScrollText, count: '3 Files' },
+                                ].map((material) => (
+                                    <div key={material.name} className="material-category-card" role="button" tabIndex={0}>
+                                        <div className="material-category-card__icon">
+                                            <material.icon size={28} />
+                                        </div>
+                                        <h3 className="material-category-card__title">{material.name}</h3>
+                                        <span className="material-category-card__count">{material.count}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
                         <div className="pw-subject-view-main">
                             <div className="director-subject-view">
                                 <div className="director-subject-view__header">
@@ -410,7 +489,20 @@ export default function DirectorDashboard() {
 
                                 <div className="pw-subject-grid">
                                     {currentSubjects[subjectType].length > 0 ? currentSubjects[subjectType].map((subject) => (
-                                        <article key={`${subject.code}-${subject.name}`} className="pw-subject-card">
+                                        <article
+                                            key={`${subject.code}-${subject.name}`}
+                                            className="pw-subject-card"
+                                            role="button"
+                                            tabIndex={0}
+                                            aria-label={`Open ${subject.name} details`}
+                                            onClick={() => setSelectedSubject(subject)}
+                                            onKeyDown={(event) => {
+                                                if (event.key === 'Enter' || event.key === ' ') {
+                                                    event.preventDefault();
+                                                    setSelectedSubject(subject);
+                                                }
+                                            }}
+                                        >
                                             <div className="pw-subject-card__content">
                                                 <h4 className="pw-subject-card__name">{subject.name}</h4>
                                                 <span className="pw-subject-card__code">{subject.code}</span>
@@ -426,6 +518,7 @@ export default function DirectorDashboard() {
                                 </div>
                             </div>
                         </div>
+                    )}
                 </div>
             )}
             
