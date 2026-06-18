@@ -1,0 +1,550 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.director-dashboard {
+  min-height: 100%;
+  background: transparent;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #e2e8f0;
+  padding: 1rem 1.5rem;
+}
+
+/* --- HEADER --- */
+.director-header {
+  position: relative;
+  margin-bottom: 2rem;
+  padding: 1rem 0;
+}
+
+.director-header__content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.director-header__title {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #f1f5f9;
+  margin-bottom: 0.5rem;
+}
+
+.director-header__highlight {
+  background: linear-gradient(135deg, #c7d2fe 0%, #ddd6fe 50%, #f3e8ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.director-header__subtitle {
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* --- OVERVIEW STAT CARDS --- */
+.director-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+  max-width: 1200px;
+  margin: 0 auto 2.5rem;
+}
+
+.director-stat-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.75rem 1.5rem;
+  border-radius: 20px;
+  background: rgba(20, 20, 40, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: transform 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease;
+}
+
+.director-stat-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(139, 92, 246, 0.34);
+  box-shadow: 0 16px 40px rgba(99, 102, 241, 0.12), 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+.director-stat-card__glow {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(ellipse at top left, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.24s ease;
+  pointer-events: none;
+}
+
+.director-stat-card:hover .director-stat-card__glow { opacity: 1; }
+
+.director-stat-card__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.director-stat-card__content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.director-stat-card__value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  letter-spacing: -0.01em;
+  font-family: 'Inter', sans-serif;
+}
+
+.director-stat-card__label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* --- SECTION HEADERS --- */
+.director-section {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.director-section__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.director-section__header h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  letter-spacing: -0.01em;
+}
+.director-section__header svg {
+  color: #818cf8;
+}
+
+/* --- ACADEMIC HUB YEARS --- */
+.director-years-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
+}
+
+.director-year-card {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.director-year-card:hover {
+  transform: translateY(-3px);
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.director-year-card__icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.director-year-card--purple .director-year-card__icon { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+.director-year-card--emerald .director-year-card__icon { background: linear-gradient(135deg, #10b981, #34d399); }
+.director-year-card--amber .director-year-card__icon { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+.director-year-card--rose .director-year-card__icon { background: linear-gradient(135deg, #f43f5e, #fb7185); }
+
+.director-year-card__info {
+  display: flex;
+  flex-direction: column;
+}
+
+.director-year-card__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.director-year-card__subtitle {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-top: 0.15rem;
+}
+
+.director-year-card__meta {
+  margin-top: 0.6rem;
+  font-size: 0.7rem;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  width: fit-content;
+}
+
+.director-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.director-back-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* --- DEPARTMENTS (ASH 1, ASH 2 etc) --- */
+.director-depts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.director-dept-card {
+  background: rgba(18, 18, 34, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 18px;
+  padding: 1.5rem;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.director-dept-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(139, 92, 246, 0.3);
+  box-shadow: 0 12px 36px rgba(99, 102, 241, 0.1), 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+.director-dept-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.director-dept-card__name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  letter-spacing: -0.01em;
+}
+
+.director-dept-card__year {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(139, 92, 246, 0.12);
+  color: #c7d2fe;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.director-dept-card__hod {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+}
+
+.director-dept-card__hod svg {
+  color: #818cf8;
+  flex-shrink: 0;
+}
+
+.director-dept-card__hod span {
+  font-size: 0.85rem;
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+.director-dept-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.director-dept-card__tag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(52, 211, 153, 0.08);
+  color: #a7f3d0;
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  transition: all 0.2s ease;
+}
+
+.director-dept-card__tag--clickable {
+  cursor: pointer;
+}
+
+.director-dept-card__tag--clickable:hover {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.4);
+  color: #ddd6fe;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+}
+
+/* --- BRANCH OVERVIEW (THE FIX FOR SEMESTERS & ANNOUNCEMENTS) --- */
+.director-branch-view-wrapper {
+  animation: fadeIn 0.3s ease;
+  width: 100%;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 🔥 The main fix: Using CSS Grid for perfect split layout */
+.director-branch-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px; /* Left takes remaining space, right is fixed 380px */
+  gap: 1.5rem;
+  align-items: start;
+  width: 100%;
+}
+
+.director-branch-semesters {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.director-semester-card {
+  background: rgba(18, 18, 34, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 1.5rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+  width: 100%;
+}
+
+.director-semester-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+.director-semester-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.director-semester-header h3 {
+  font-size: 1.15rem;
+  color: #f8fafc;
+  font-weight: 700;
+  margin: 0;
+}
+
+.director-live-tag {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.director-live-tag::before {
+  content: '';
+  display: block;
+  width: 6px;
+  height: 6px;
+  background-color: #34d399;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #34d399;
+}
+
+.director-semester-subjects {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.director-subject-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  transition: background 0.2s ease;
+}
+
+.director-subject-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.director-branch-announcements {
+  background: rgba(15, 23, 42, 0.4);
+  padding: 1.5rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  width: 100%;
+}
+
+.director-branch-announcements .director-section__header {
+  margin-bottom: 1.25rem;
+}
+
+/* --- MAIN ANNOUNCEMENTS TAB --- */
+.director-announcements-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.director-announcement-card {
+  padding: 1.25rem;
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  transition: background 0.2s;
+}
+
+.director-announcement-card:hover {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+.director-announcement-card__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.director-announcement-card__header h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #f8fafc;
+  line-height: 1.4;
+}
+
+.director-announcement-card__date {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.director-announcement-card__excerpt {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+.director-empty-state {
+  color: #64748b;
+  font-size: 0.9rem;
+  font-style: italic;
+  padding: 1rem 0;
+}
+
+/* --- SKELETON LOADERS --- */
+.director-skeleton-line {
+  background: linear-gradient(90deg, #14142a 25%, #1e1e36 50%, #14142a 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+.director-skeleton-line--title { height: 1.2rem; width: 70%; margin-bottom: 0.75rem; }
+.director-skeleton-line--subtitle { height: 0.85rem; width: 40%; margin-bottom: 1rem; }
+.director-skeleton-line--hod { height: 0.9rem; width: 60%; margin-bottom: 1.25rem; }
+
+.director-skeleton-tags { display: flex; gap: 0.5rem; }
+.director-skeleton-tag {
+  height: 1.1rem; width: 4rem; border-radius: 999px;
+  background: linear-gradient(90deg, #14142a 25%, #1e1e36 50%, #14142a 75%);
+  background-size: 200% 100%; animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@media (max-width: 960px) {
+  .director-dashboard { padding: 1.5rem; }
+  .director-header__title { font-size: 1.6rem; }
+  .director-stats-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
+  
+  /* Break grid to stack on smaller screens */
+  .director-branch-layout { 
+      grid-template-columns: 1fr; 
+  }
+}
+
+@media (max-width: 640px) {
+  .director-dashboard { padding: 1rem; }
+  .director-header__title { font-size: 1.4rem; }
+  .director-stats-grid { grid-template-columns: 1fr; }
+  .director-depts-grid { grid-template-columns: 1fr; }
+  .director-years-grid { grid-template-columns: 1fr; }
+}

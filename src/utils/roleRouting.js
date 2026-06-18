@@ -3,8 +3,14 @@ import { ROUTES, USER_ROLES } from '../config/constants.js';
 /** Roles that share the admin dashboard. */
 export const ADMIN_ACCESS_ROLES = [
   USER_ROLES.ADMIN,
-  'hod',
-  'director',
+];
+
+export const HOD_ACCESS_ROLES = [
+  USER_ROLES.HOD,
+];
+
+export const DIRECTOR_ACCESS_ROLES = [
+  USER_ROLES.DIRECTOR,
 ];
 
 /** Roles that share the student dashboard. */
@@ -25,9 +31,11 @@ export function getDashboardRouteForRole(role) {
     case USER_ROLES.FACULTY:
       return ROUTES.FACULTY_DASHBOARD;
     case USER_ROLES.ADMIN:
-    case 'hod':
-    case 'director':
       return ROUTES.ADMIN_DASHBOARD;
+    case USER_ROLES.HOD:
+      return ROUTES.HOD_DASHBOARD;
+    case USER_ROLES.DIRECTOR:
+      return ROUTES.DIRECTOR_DASHBOARD;
     default:
       return ROUTES.HOME;
   }
@@ -45,6 +53,10 @@ export function getAllowedRolesForDashboard(path) {
       return [USER_ROLES.FACULTY];
     case ROUTES.ADMIN_DASHBOARD:
       return ADMIN_ACCESS_ROLES;
+    case ROUTES.HOD_DASHBOARD:
+      return HOD_ACCESS_ROLES;
+    case ROUTES.DIRECTOR_DASHBOARD:
+      return DIRECTOR_ACCESS_ROLES;
     default:
       return [];
   }

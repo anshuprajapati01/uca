@@ -11,6 +11,8 @@ export const ROUTES = {
   STUDENT_DASHBOARD: '/student',
   FACULTY_DASHBOARD: '/faculty',
   ADMIN_DASHBOARD: '/admin',
+  DIRECTOR_DASHBOARD: '/director',
+  HOD_DASHBOARD: '/hod',
   NOT_FOUND: '*',
 };
 
@@ -18,4 +20,6 @@ export const USER_ROLES = {
   STUDENT: 'student',
   FACULTY: 'faculty',
   ADMIN: 'admin',
+  DIRECTOR: 'director',
+  HOD: 'hod',
 };

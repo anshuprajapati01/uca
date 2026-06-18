@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import { sanitizeFileName, validateAcademicFile } from '../../services/resourceService.js';
 import './UploadMaterials.css';
 
 const MATERIAL_CATEGORIES = ['Syllabus', 'Class Notes', 'Toppers Notes', 'Reference Books', 'PYQs', 'Exam Cheatsheets', 'Lecture', 'Assignment', 'Tutorial'];
@@ -26,11 +27,37 @@ export default function UploadMaterials() {
   };
 
   const fetchUploadedMaterials = async () => {
-    const { data: materials, error } = await supabase.from('study_materials').select('id, title, type, subject_id');
+    // Yahan humne explicitly * lagaya hai taaki file_url pakka aaye
+    const { data: materials, error } = await supabase.from('study_materials').select('*');
     if (!error && materials) {
       const { data: subjects } = await supabase.from('subjects').select('id, code');
       const subjectMap = Object.fromEntries((subjects || []).map(s => [s.id, s.code]));
-      const enriched = materials.map(m => ({ ...m, subject_code: subjectMap[m.subject_id] || 'N/A' }));
+
+      const { data: users } = await supabase.from('user_profiles').select('id, full_name, role');
+      const userMap = Object.fromEntries((users || []).map(u => [u.id, { name: u.full_name, role: u.role }]));
+
+      const enriched = materials.map(m => {
+        let uploaderName = 'Unknown';
+        if (m.uploaded_by) {
+            if (userMap[m.uploaded_by]) {
+                uploaderName = userMap[m.uploaded_by].name;
+            } else {
+                uploaderName = "Profile Missing in DB";
+            }
+        } else {
+            uploaderName = "ID Not Saved by Faculty";
+        }
+
+        const uploaderRole = m.uploaded_by && userMap[m.uploaded_by] ? userMap[m.uploaded_by].role : 'Unknown';
+
+        return { 
+          ...m, 
+          subject_code: subjectMap[m.subject_id] || 'N/A',
+          uploader_name: uploaderName,
+          uploader_role: uploaderRole,
+          file_url: m.file_url // Pura link yahan pass ho raha hai
+        };
+      });
       setUploadedMaterials(enriched);
     }
   };
@@ -62,9 +89,8 @@ export default function UploadMaterials() {
     let finalFileUrl = formData.file_url;
 
     if (file) {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `documents/${fileName}`;
+      validateAcademicFile(file);
+      const filePath = `documents/${sanitizeFileName(file.name)}`;
 
       const { error: uploadError } = await supabase.storage
         .from('materials')
@@ -80,12 +106,20 @@ export default function UploadMaterials() {
     }
 
     try {
-      const { error } = await supabase.from('study_materials').insert([{
+      const { data: { user } } = await supabase.auth.getUser();
+
+      const insertPayload = {
         title: formData.title,
         type: formData.category,
         subject_id: formData.subject_id,
-        file_url: finalFileUrl,
-      }]);
+        file_url: finalFileUrl, // URL database me ja rahi hai
+      };
+
+      if (user) {
+        insertPayload.uploaded_by = user.id;
+      }
+
+      const { error } = await supabase.from('study_materials').insert([insertPayload]);
 
       if (error) throw error;
 
@@ -271,27 +305,61 @@ export default function UploadMaterials() {
                   <div style={{ color: '#9ca3af', fontSize: '13px', marginTop: '4px' }}>
                     Code: {item.subject_code} • {item.type}
                   </div>
+                  <p style={{ color: '#fbbf24', fontSize: '13px', margin: '6px 0 0 0', fontWeight: 'bold' }}>
+                    Uploaded by: {item.uploader_name} ({item.uploader_role})
+                  </p>
                 </div>
-                <button
-                  onClick={() => handleDelete(item.id)}
-                  style={{
-                    background: '#ef4444',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '8px',
-                    padding: '8px 16px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                    fontSize: '13px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    marginLeft: '16px',
-                    transition: '0.2s'
-                  }}
-                >
-                  🗑️ Delete
-                </button>
+                
+                {/* YAHAN BUTTONS HAIN (VIEW + DELETE) */}
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  
+                  {/* VIEW BUTTON (Sirf tab dikhega jab link ho) */}
+                  {item.file_url && (
+                    <a
+                      href={item.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        background: '#3b82f6',
+                        color: '#fff',
+                        textDecoration: 'none',
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '8px 16px',
+                        fontWeight: 'bold',
+                        fontSize: '13px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        transition: '0.2s'
+                      }}
+                    >
+                      👁️ View
+                    </a>
+                  )}
+
+                  {/* DELETE BUTTON */}
+                  <button
+                    onClick={() => handleDelete(item.id)}
+                    style={{
+                      background: '#ef4444',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '8px 16px',
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                      fontSize: '13px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      transition: '0.2s'
+                    }}
+                  >
+                    🗑️ Delete
+                  </button>
+                </div>
+
               </div>
             ));
           })()}

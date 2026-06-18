@@ -1166,3 +1166,17 @@
 @media (max-width: 640px) {
   .student-lib-grid { grid-template-columns: 1fr; }
 }
+/* Select dropdown fix for Dark Mode */
+select {
+    background-color: #1e1e2d; /* Dark background matching your theme */
+    color: #ffffff; /* White text */
+    border: 1px solid #3f3f46;
+    padding: 10px;
+    border-radius: 8px;
+    outline: none;
+}
+
+select option {
+    background-color: #1e1e2d; /* Options ke background ko bhi dark rakhega */
+    color: #ffffff;
+}

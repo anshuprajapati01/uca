@@ -30,7 +30,7 @@ export default function AuthProvider({ children }) {
     isFetchingProfile.current = true;
 
     try {
-      const userProfile = await fetchUserProfile(authUser.id);
+      const userProfile = await fetchUserProfile(authUser.id, authUser.email);
       setProfile(userProfile);
       setRole(userProfile.role);
       setProfileError(null);
