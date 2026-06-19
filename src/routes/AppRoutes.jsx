@@ -1,8 +1,8 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import ProtectedRoute from '../components/common/ProtectedRoute.jsx';
 import { ROUTES, USER_ROLES } from '../config/constants.js';
 // Updated imports to include HOD and DIRECTOR roles
-import { ADMIN_ACCESS_ROLES, STUDENT_ACCESS_ROLES } from '../utils/roleRouting.js';
+import { ADMIN_ACCESS_ROLES, HOD_ACCESS_ROLES, STUDENT_ACCESS_ROLES } from '../utils/roleRouting.js';
 import LoginPage from '../pages/auth/LoginPage.jsx';
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
 import AdminOverview from '../pages/admin/AdminOverview.jsx';
@@ -25,7 +25,6 @@ import NotFoundPage from '../pages/public/NotFoundPage.jsx';
 // NEW IMPORTS FOR DIRECTOR & HOD
 import DirectorDashboard from '../pages/admin/DirectorDashboard.jsx';
 import HodDashboard from '../pages/dashboard/HodDashboard.jsx';
-import { useAuth } from '../hooks/useAuth.js';
 
 export default function AppRoutes() {
   return (
@@ -62,9 +61,9 @@ export default function AppRoutes() {
 
       {/* NEW: HOD ROUTE */}
       <Route
-        path={ROUTES.HOD_DASHBOARD || '/hod'}
+        path={`${ROUTES.HOD_DASHBOARD}/*`}
         element={
-          <ProtectedRoute allowedRoles={[USER_ROLES.HOD]}>
+          <ProtectedRoute allowedRoles={HOD_ACCESS_ROLES}>
             <HodDashboard />
           </ProtectedRoute>
         }

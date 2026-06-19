@@ -12,7 +12,7 @@ export const ROUTES = {
   FACULTY_DASHBOARD: '/faculty',
   ADMIN_DASHBOARD: '/admin',
   DIRECTOR_DASHBOARD: '/director',
-  HOD_DASHBOARD: '/hod',
+  HOD_DASHBOARD: '/hod-dashboard',
   NOT_FOUND: '*',
 };
 

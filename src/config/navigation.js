@@ -1,5 +1,4 @@
 import {
-  BarChart3,
   Bookmark,
   BookOpen,
   FileText,
@@ -85,9 +84,37 @@ export const ADMIN_NAV_ITEMS = [
 
 /** @type {NavItem[]} */
 export const HOD_NAV_ITEMS = [
-  { label: 'Faculty Management', path: ROUTES.HOD_DASHBOARD, icon: Users },
-  { label: 'Reports & Analytics', path: ROUTES.HOD_DASHBOARD, icon: BarChart3 },
-  { label: 'Subject Allocation', path: ROUTES.HOD_DASHBOARD, icon: BookOpen },
+  { id: 'overview', label: 'Overview', path: ROUTES.HOD_DASHBOARD, icon: LayoutDashboard },
+  {
+    id: 'subject-allocation',
+    label: 'Subject Allocation',
+    path: `${ROUTES.HOD_DASHBOARD}/subject-allocation`,
+    icon: BookOpen,
+  },
+  {
+    id: 'manage-student',
+    label: 'Manage Student',
+    path: `${ROUTES.HOD_DASHBOARD}/manage-student`,
+    icon: Users,
+  },
+  {
+    id: 'upload-material',
+    label: 'Upload Material',
+    path: `${ROUTES.HOD_DASHBOARD}/upload-material`,
+    icon: Upload,
+  },
+  {
+    id: 'announcement',
+    label: 'Announcement',
+    path: `${ROUTES.HOD_DASHBOARD}/announcement`,
+    icon: Megaphone,
+  },
+  {
+    id: 'curriculum',
+    label: 'Curriculum',
+    path: `${ROUTES.HOD_DASHBOARD}/curriculum`,
+    icon: BookOpen,
+  },
 ];
 
 /** @type {NavItem[]} */
