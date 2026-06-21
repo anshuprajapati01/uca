@@ -8,6 +8,7 @@ import {
   Upload,
   Users,
   UserCheck,
+  UserPlus,
 } from 'lucide-react';
 import { ROUTES } from './constants.js';
 
@@ -122,12 +123,19 @@ export const DIRECTOR_NAV_ITEMS = [
   { label: 'Overview', path: ROUTES.DIRECTOR_DASHBOARD, icon: LayoutDashboard },
   {
     label: 'Academic Hub',
-    path: `${ROUTES.DIRECTOR_DASHBOARD}/departments`,
+    path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=academic`,
     icon: Layers,
   },
   {
+    label: 'Manage Departments',
+    path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=manage-departments`,
+    icon: Layers,
+  },
+  { label: 'Manage Faculty', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=manage-faculty`, icon: UserPlus },
+  { label: 'HOD Management', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=hod-management`, icon: UserCheck },
+  {
     label: 'Announcements',
-    path: `${ROUTES.DIRECTOR_DASHBOARD}/announcements`,
+    path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=announcements`,
     icon: Megaphone,
   },
 ];

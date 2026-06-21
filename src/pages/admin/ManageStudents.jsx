@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase'; 
-import { createClient } from '@supabase/supabase-js'; 
+import { useState, useEffect } from 'react';
+import { supabase, createTempClient } from '../../lib/supabase.js';
 
 export default function ManageStudents() {
   const [students, setStudents] = useState([]);
@@ -29,10 +28,8 @@ export default function ManageStudents() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // 🔥 AUTO-INHERIT JUGAD: Keys apne aap purane connection se uth jayengi!
-    const tempSupabase = createClient(supabase.supabaseUrl, supabase.supabaseKey, { 
-      auth: { persistSession: false, autoRefreshToken: false } 
-    });
+// 🔥 AUTO-INHERIT JUGAD: Keys apne aap purane connection se uth jayengi!
+    const tempSupabase = createTempClient();
 
     try {
       // 1. Student Auth Account Creation

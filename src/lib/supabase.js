@@ -26,7 +26,21 @@ export const supabase = new Proxy(
       const instance = getSupabase();
       const value = instance[prop];
 
+      if (prop === 'supabaseUrl') return getSupabaseEnv().url;
+      if (prop === 'supabaseKey') return getSupabaseEnv().publishableKey;
+
       return typeof value === 'function' ? value.bind(instance) : value;
     },
   },
 );
+
+/**
+ * Creates a temporary Supabase client for auth operations without session persistence.
+ * Use this when signing up users to avoid interfering with the main session.
+ */
+export function createTempClient() {
+  const { url, publishableKey } = getSupabaseEnv();
+  return createClient(url, publishableKey, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  });
+}

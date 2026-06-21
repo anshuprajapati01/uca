@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
-import { supabase } from '../../lib/supabase';
-import { getSupabaseEnv } from '../../lib/env';
+import { supabase, createTempClient } from '../../lib/supabase.js';
 
 export default function ManageFaculty() {
   const [faculties, setFaculties] = useState([]);
   const [branches, setBranches] = useState([]);
-  const [formData, setFormData] = useState({ fullName: '', email: '', phone: '', password: '', branchId: '' });
+  const [formData, setFormData] = useState({ fullName: '', email: '', phone: '', branchId: '' });
   const [toast, setToast] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -26,8 +24,8 @@ export default function ManageFaculty() {
   const fetchFaculties = async () => {
     const { data, error } = await supabase
       .from('user_profiles')
-      .select('id, full_name, email, phone, role')
-      .eq('role', 'faculty');
+      .select('id, full_name, email, phone, expertise, avatar_url, can_view_faculty')
+      .eq('can_view_faculty', true);
 
     if (!error && data) {
       setFaculties(data);
@@ -50,12 +48,35 @@ export default function ManageFaculty() {
     }
 
     try {
-      const { url, publishableKey } = getSupabaseEnv();
-      const tempClient = createClient(url, publishableKey, { auth: { persistSession: false } });
+      const { data: existingUser, error: checkError } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('email', formData.email)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+
+      if (existingUser) {
+        const { error: updateError } = await supabase
+          .from('user_profiles')
+          .update({ can_view_faculty: true })
+          .eq('email', formData.email);
+
+        if (updateError) throw updateError;
+
+        setToast({ message: 'Existing user granted Faculty access!', type: 'success' });
+        setFormData({ fullName: '', email: '', phone: '', branchId: '' });
+        fetchFaculties();
+        return;
+      }
+
+      const tempClient = createTempClient();
 
       const { data: authData, error: authError } = await tempClient.auth.signUp({
         email: formData.email,
-        password: formData.password,
+        password: 'Test@123',
       });
 
       if (authError) throw authError;
@@ -65,9 +86,11 @@ export default function ManageFaculty() {
       const { error: profileError } = await supabase.from('user_profiles').insert([{
         id: realUserId,
         full_name: formData.fullName,
-        email: formData.email, // Email DB me save karne ka try
+        email: formData.email,
         phone: formData.phone,
         role: 'faculty',
+        can_view_faculty: true,
+        expertise: '',
         branch_id: formData.branchId,
         college_id: '11111111-0000-0000-0000-000000000001',
         is_active: true
@@ -75,8 +98,8 @@ export default function ManageFaculty() {
 
       if (profileError) throw profileError;
 
-      setToast({ message: 'Faculty Added Successfully!', type: 'success' });
-      setFormData({ fullName: '', email: '', phone: '', password: '', branchId: '' });
+      setToast({ message: 'Faculty added successfully. Default password is Test@123', type: 'success' });
+      setFormData({ fullName: '', email: '', phone: '', branchId: '' });
       fetchFaculties();
     } catch (error) {
       setToast({ message: 'Error: ' + error.message, type: 'error' });
@@ -112,8 +135,7 @@ export default function ManageFaculty() {
             <input type="email" placeholder="Email Address" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} style={inputStyle} />
           </div>
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-            <input type="text" placeholder="Phone Number" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} style={inputStyle} />
-            <input type="password" placeholder="Password" required value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} style={inputStyle} />
+            <input type="text" placeholder="Phone Number" required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} style={inputStyle} />
           </div>
           
           {/* STRICT DARK STYLING APPLIED TO SELECT AND OPTIONS */}

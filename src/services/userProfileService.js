@@ -6,6 +6,8 @@ import { USER_ROLES } from '../config/constants.js';
  * @property {string} id
  * @property {string} role
  * @property {string | null} [full_name]
+ * @property {boolean} [can_view_faculty]
+ * @property {boolean} [can_view_hod]
  * @property {boolean} inferred
  */
 
@@ -49,7 +51,7 @@ export async function fetchUserProfile(userId, email) {
   try {
     const { data, error } = await supabase
       .from(PROFILES_TABLE)
-      .select('id, role, full_name')
+      .select('id, role, full_name, can_view_faculty, can_view_hod')
       .eq('id', userId)
       .maybeSingle();
 

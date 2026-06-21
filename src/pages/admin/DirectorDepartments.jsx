@@ -106,11 +106,26 @@ const MOCK_MATERIAL_STATS = {
 };
 
 // The intelligent swapping logic based on department
+const getSemestersForYear = (year) => {
+  if (year === '1st Year') return ['ASH 1', 'ASH 2'];
+  if (year === '2nd Year') return ['Semester 3', 'Semester 4'];
+  if (year === '3rd Year') return ['Semester 5', 'Semester 6'];
+  if (year === '4th Year') return ['Semester 7', 'Semester 8'];
+  return [];
+};
+
+const getSemesterSubtitle = (sem) => {
+  if (sem === 'ASH 1' || sem === 'ASH 2') return 'Foundation Year';
+  const num = parseInt(sem.split(' ')[1], 10);
+  return num % 2 === 1 ? 'Odd Semester' : 'Even Semester';
+};
+
 const getSubjectsForSemester = (parentDeptName, semester) => {
   const isAsh1 = parentDeptName === 'ASH 1';
-  if (semester === 'Semester 1') {
+  const normalizedSemester = semester === 'ASH 1' ? 'Semester 1' : semester === 'ASH 2' ? 'Semester 2' : semester;
+  if (normalizedSemester === 'Semester 1') {
     return isAsh1 ? GROUP_B_SUBJECTS : GROUP_A_SUBJECTS;
-  } else if (semester === 'Semester 2') {
+  } else if (normalizedSemester === 'Semester 2') {
     return isAsh1 ? GROUP_A_SUBJECTS : GROUP_B_SUBJECTS;
   }
   return { theory: [], practical: [] };
@@ -342,21 +357,20 @@ export default function DirectorDepartments() {
                 <div>
                   {!selectedSemester ? (
                     <div className="semester-cards-grid">
-                      <div
-                        className="semester-card"
-                        onClick={() => setSelectedSemester('Semester 1')}
-                      >
-                        <h3 className="semester-card__title">Semester 1</h3>
-                        <p className="semester-card__subtitle">Fall Semester</p>
-                        <span className="live-badge">🟢 LIVE</span>
-                      </div>
-                      <div
-                        className="semester-card"
-                        onClick={() => setSelectedSemester('Semester 2')}
-                      >
-                        <h3 className="semester-card__title">Semester 2</h3>
-                        <p className="semester-card__subtitle">Spring Semester</p>
-                      </div>
+                      {getSemestersForYear(selectedYear).map((sem) => (
+                        <div
+                          key={sem}
+                          className="semester-card"
+                          onClick={() => {
+                            console.log('Semester clicked:', { year: selectedYear, sem });
+                            setSelectedSemester(sem);
+                          }}
+                        >
+                          <h3 className="semester-card__title">{sem}</h3>
+                          <p className="semester-card__subtitle">{getSemesterSubtitle(sem)}</p>
+                          {(sem === 'ASH 1' || sem === 'Semester 1' || sem === 'Semester 3' || sem === 'Semester 5' || sem === 'Semester 7') && <span className="live-badge">🟢 LIVE</span>}
+                        </div>
+                      ))}
                     </div>
                   ) : (
                     <div>
@@ -372,6 +386,7 @@ export default function DirectorDepartments() {
                         {selectedSemester} Subjects
                       </h3>
                       {(() => {
+                        console.log('Rendering subjects:', { year: selectedYear, semester: selectedSemester, parentDept: selectedParentDept });
                         const currentSubjects = getSubjectsForSemester(selectedParentDept, selectedSemester);
                         const tabSubjects = currentSubjects[activeSubjectTab] || [];
 

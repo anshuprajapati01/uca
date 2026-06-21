@@ -274,6 +274,32 @@
   transform: translateY(-1px);
 }
 
+.faculty-header__switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  border: 1px solid rgba(139, 92, 246, 0.22);
+  color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.06);
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.faculty-header__switcher:hover {
+  background: rgba(139, 92, 246, 0.12);
+  border-color: rgba(139, 92, 246, 0.45);
+  color: #e9d5ff;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+  transform: translateY(-1px);
+}
+
 .faculty-content {
   flex: 1;
   padding: 2rem;

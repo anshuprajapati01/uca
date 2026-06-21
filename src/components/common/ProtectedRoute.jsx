@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import { ROUTES } from '../../config/constants.js';
+import { ROUTES, USER_ROLES } from '../../config/constants.js';
 import { useAuth } from '../../hooks/useAuth.js';
 import { getDashboardRouteForRole } from '../../utils/roleRouting.js';
 import AuthLoading from './AuthLoading.jsx';
@@ -10,7 +10,7 @@ import AuthLoading from './AuthLoading.jsx';
  * @param {import('react').ReactNode} props.children
  */
 export default function ProtectedRoute({ allowedRoles, children }) {
-  const { isAuthenticated, role, isLoading } = useAuth();
+  const { isAuthenticated, role, isLoading, profile } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -25,7 +25,12 @@ export default function ProtectedRoute({ allowedRoles, children }) {
     return <Navigate to={ROUTES.LOGIN} replace />;
   }
 
-  if (!allowedRoles.includes(role)) {
+  // Check role-based access or permission-based access via flags
+  const hasAllowedRole = allowedRoles.includes(role);
+  const hasHodPermission = allowedRoles.includes(USER_ROLES.HOD) && profile?.can_view_hod === true;
+  const hasFacultyPermission = allowedRoles.includes(USER_ROLES.FACULTY) && profile?.can_view_faculty === true;
+
+  if (!hasAllowedRole && !hasHodPermission && !hasFacultyPermission) {
     return <Navigate to={getDashboardRouteForRole(role)} replace />;
   }
 

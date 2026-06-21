@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { BookOpen, LayoutDashboard, LogOut, Upload, User } from 'lucide-react';
 import { supabase } from '../../lib/supabase.js';
 import { ROUTES } from '../../config/constants.js';
@@ -66,6 +66,20 @@ export default function FacultyDashboard() {
     navigate(ROUTES.LOGIN, { replace: true });
   }
 
+  const location = useLocation();
+  const canViewFaculty = facultyProfile?.can_view_faculty === true;
+  const canViewHod = facultyProfile?.can_view_hod === true;
+  const showRoleSwitcher = canViewFaculty && canViewHod;
+  const isOnHodDashboard = location.pathname.startsWith(ROUTES.HOD_DASHBOARD);
+
+  function handleSwitchRole() {
+    if (isOnHodDashboard) {
+      navigate(ROUTES.FACULTY_DASHBOARD, { replace: true });
+    } else {
+      navigate(ROUTES.HOD_DASHBOARD, { replace: true });
+    }
+  }
+
   const displayName = facultyProfile?.full_name || 'Faculty';
   const initials = displayName
     .split(' ')
@@ -84,7 +98,14 @@ export default function FacultyDashboard() {
       <div className="faculty-dashboard-layout">
         <FacultySidebar activeTab={activeTab} setActiveTab={setActiveTab} />
         <main className="faculty-main">
-          <FacultyHeader displayName={displayName} initials={initials} onSignOut={handleSignOut} />
+          <FacultyHeader
+            displayName={displayName}
+            initials={initials}
+            onSignOut={handleSignOut}
+            showRoleSwitcher={showRoleSwitcher}
+            onSwitchRole={handleSwitchRole}
+            isOnHodDashboard={isOnHodDashboard}
+          />
           <div className="faculty-content">
             <div className="faculty-error-card">
               <User size={28} />
@@ -102,7 +123,14 @@ export default function FacultyDashboard() {
       <FacultySidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
       <main className="faculty-main">
-        <FacultyHeader displayName={displayName} initials={initials} onSignOut={handleSignOut} />
+        <FacultyHeader
+          displayName={displayName}
+          initials={initials}
+          onSignOut={handleSignOut}
+          showRoleSwitcher={showRoleSwitcher}
+          onSwitchRole={handleSwitchRole}
+          isOnHodDashboard={isOnHodDashboard}
+        />
 
         <div className="faculty-content">
           {activeTab === 'overview' && (
@@ -156,7 +184,7 @@ function FacultySidebar({ activeTab, setActiveTab }) {
   );
 }
 
-function FacultyHeader({ displayName, initials, onSignOut }) {
+function FacultyHeader({ displayName, initials, onSignOut, showRoleSwitcher, onSwitchRole, isOnHodDashboard }) {
   return (
     <header className="faculty-header">
       <div className="faculty-header__title-wrap">
@@ -165,6 +193,11 @@ function FacultyHeader({ displayName, initials, onSignOut }) {
       </div>
 
       <div className="faculty-header__right">
+        {showRoleSwitcher ? (
+          <button type="button" className="faculty-header__switcher" onClick={onSwitchRole}>
+            {isOnHodDashboard ? '🔄 Switch to Faculty Portal' : '🔄 Switch to HOD Portal'}
+          </button>
+        ) : null}
         <div className="faculty-header__user">
           <div className="faculty-header__avatar">{initials}</div>
           <div className="faculty-header__meta">
