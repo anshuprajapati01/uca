@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { APP_NAME, ROUTES } from '../../config/constants.js';
 import { useAuth } from '../../hooks/useAuth.js';
 import { useLogout } from '../../hooks/useLogout.js';
-import { getDashboardRouteForRole } from '../../utils/roleRouting.js';
+import { getDashboardRouteForProfile } from '../../utils/roleRouting.js';
 
 export default function LandingPage() {
   const { user, profile, isAuthenticated } = useAuth();
@@ -14,7 +14,7 @@ export default function LandingPage() {
 
   useEffect(() => {
     if (isAuthenticated && profile) {
-      navigate(getDashboardRouteForRole(profile.role), { replace: true });
+      navigate(getDashboardRouteForProfile(profile), { replace: true });
     }
   }, [isAuthenticated, profile, navigate]);
 

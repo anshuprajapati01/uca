@@ -1,21 +1,29 @@
-import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { BookOpen, LayoutDashboard, LogOut, Upload, User } from 'lucide-react';
 import { supabase } from '../../lib/supabase.js';
 import { ROUTES } from '../../config/constants.js';
 import './FacultyDashboard.css';
 
 const navItems = [
-  { id: 'overview', label: '🏠 Overview', icon: <LayoutDashboard size={18} /> },
-  { id: 'subjects', label: '📚 My Subjects', icon: <BookOpen size={18} /> },
-  { id: 'upload', label: '📤 Upload Materials', icon: <Upload size={18} /> },
+  { id: 'overview', label: '🏠 Overview', path: ROUTES.FACULTY_DASHBOARD, icon: <LayoutDashboard size={18} /> },
+  { id: 'subjects', label: '📚 My Subjects', path: `${ROUTES.FACULTY_DASHBOARD}/subjects`, icon: <BookOpen size={18} /> },
+  { id: 'upload', label: '📤 Upload Materials', path: `${ROUTES.FACULTY_DASHBOARD}/resources`, icon: <Upload size={18} /> },
 ];
 
 export default function FacultyDashboard() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('overview');
+  const location = useLocation();
+  const activeTab = useMemo(() => {
+    const pathname = location.pathname.replace(/\/+$/, '') || ROUTES.FACULTY_DASHBOARD;
+
+    if (pathname === ROUTES.FACULTY_DASHBOARD) return 'overview';
+    if (pathname === `${ROUTES.FACULTY_DASHBOARD}/subjects` || pathname.startsWith(`${ROUTES.FACULTY_DASHBOARD}/subjects/`)) return 'subjects';
+    if (pathname === `${ROUTES.FACULTY_DASHBOARD}/resources`) return 'upload';
+
+    return 'overview';
+  }, [location.pathname]);
   const [facultyProfile, setFacultyProfile] = useState(null);
-  const [assignedSubjects, setAssignedSubjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -46,9 +54,6 @@ export default function FacultyDashboard() {
         if (!profileData) throw new Error('Faculty profile not found.');
 
         if (!cancelled) setFacultyProfile(profileData);
-
-        const subjects = await fetchAssignedSubjects(user.id, profileData.full_name);
-        if (!cancelled) setAssignedSubjects(subjects);
       } catch (err) {
         if (!cancelled) setError(err.message || 'Failed to load faculty dashboard.');
       } finally {
@@ -66,7 +71,6 @@ export default function FacultyDashboard() {
     navigate(ROUTES.LOGIN, { replace: true });
   }
 
-  const location = useLocation();
   const canViewFaculty = facultyProfile?.can_view_faculty === true;
   const canViewHod = facultyProfile?.can_view_hod === true;
   const showRoleSwitcher = canViewFaculty && canViewHod;
@@ -96,7 +100,7 @@ export default function FacultyDashboard() {
   if (error) {
     return (
       <div className="faculty-dashboard-layout">
-        <FacultySidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+        <FacultySidebar activeTab={activeTab} onNavigate={navigate} />
         <main className="faculty-main">
           <FacultyHeader
             displayName={displayName}
@@ -120,7 +124,7 @@ export default function FacultyDashboard() {
 
   return (
     <div className="faculty-dashboard-layout">
-      <FacultySidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <FacultySidebar activeTab={activeTab} onNavigate={navigate} />
 
       <main className="faculty-main">
         <FacultyHeader
@@ -133,24 +137,18 @@ export default function FacultyDashboard() {
         />
 
         <div className="faculty-content">
-          {activeTab === 'overview' && (
-            <OverviewTab facultyProfile={facultyProfile} assignedSubjects={assignedSubjects} />
-          )}
+          {activeTab === 'overview' && <Outlet />}
 
-          {activeTab === 'subjects' && (
-            <MySubjectsTab assignedSubjects={assignedSubjects} />
-          )}
+          {activeTab === 'subjects' && <Outlet />}
 
-          {activeTab === 'upload' && (
-            <UploadMaterialsTab />
-          )}
+          {activeTab === 'upload' && <Outlet />}
         </div>
       </main>
     </div>
   );
 }
 
-function FacultySidebar({ activeTab, setActiveTab }) {
+function FacultySidebar({ activeTab, onNavigate }) {
   return (
     <aside className="faculty-sidebar">
       <div className="faculty-sidebar__header">
@@ -164,12 +162,12 @@ function FacultySidebar({ activeTab, setActiveTab }) {
       </div>
 
       <nav className="faculty-sidebar__nav">
-        {navItems.map(({ id, label, icon }) => (
+        {navItems.map(({ id, path, label, icon }) => (
           <button
             key={id}
             type="button"
             className={`faculty-sidebar__link ${activeTab === id ? 'faculty-sidebar__link--active' : ''}`}
-            onClick={() => setActiveTab(id)}
+            onClick={() => onNavigate(path)}
           >
             <span className="faculty-sidebar__link-icon">{icon}</span>
             <span className="faculty-sidebar__link-label">{label}</span>
@@ -214,111 +212,6 @@ function FacultyHeader({ displayName, initials, onSignOut, showRoleSwitcher, onS
   );
 }
 
-function OverviewTab({ facultyProfile, assignedSubjects }) {
-  const batchName = facultyProfile?.batches?.name || '—';
-
-  return (
-    <div className="faculty-section">
-      <section className="faculty-welcome-banner">
-        <div>
-          <span className="faculty-welcome-banner__eyebrow">Faculty Workspace</span>
-          <h3>Welcome to the Faculty Portal</h3>
-          <p>Track your assigned subjects and prepare to upload learning materials from one place.</p>
-        </div>
-        <div className="faculty-welcome-banner__accent">
-          <BookOpen size={34} />
-        </div>
-      </section>
-
-      <div className="faculty-overview-grid">
-        <section className="faculty-profile-card">
-          <div className="faculty-profile-card__icon">
-            <User size={32} />
-          </div>
-          <div className="faculty-profile-card__body">
-            <div className="faculty-profile-row">
-              <span>Name</span>
-              <strong>{facultyProfile?.full_name || '—'}</strong>
-            </div>
-            <div className="faculty-profile-row">
-              <span>Email</span>
-              <strong>{facultyProfile?.email || '—'}</strong>
-            </div>
-            <div className="faculty-profile-row">
-              <span>Batch</span>
-              <strong>{batchName}</strong>
-            </div>
-          </div>
-        </section>
-
-        <section className="faculty-stat-card">
-          <div className="faculty-stat-card__icon">
-            <BookOpen size={28} />
-          </div>
-          <div>
-            <p>Total Assigned Subjects</p>
-            <strong>{assignedSubjects.length}</strong>
-          </div>
-        </section>
-      </div>
-    </div>
-  );
-}
-
-function MySubjectsTab({ assignedSubjects }) {
-  return (
-    <section className="faculty-section">
-      <div className="faculty-section-header">
-        <div>
-          <span className="faculty-section-header__eyebrow">Subject Allocation</span>
-          <h3>My Subjects</h3>
-          <p>Subjects currently allocated to your faculty profile.</p>
-        </div>
-        <span className="faculty-section-badge">{assignedSubjects.length} assigned</span>
-      </div>
-
-      {assignedSubjects.length === 0 ? (
-        <div className="faculty-empty-card">
-          <BookOpen size={44} />
-          <h4>No subjects assigned yet</h4>
-          <p>Your administrator has not allocated any subjects to you yet.</p>
-        </div>
-      ) : (
-        <div className="faculty-subjects-grid">
-          {assignedSubjects.map((subject) => (
-            <article key={subject.id} className="faculty-subject-card">
-              <div className="faculty-subject-card__accent" />
-              <div className="faculty-subject-card__icon">
-                <BookOpen size={24} />
-              </div>
-              <div className="faculty-subject-card__body">
-                <h4>{subject.name || subject.subject_name || 'Unnamed Subject'}</h4>
-                <p>{subject.code || subject.subject_code || 'No Code'}</p>
-                <div className="faculty-subject-card__meta">
-                  <span>Semester {subject.semester || 'N/A'}</span>
-                  {subject.credits != null && <span>{subject.credits} Credits</span>}
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
-      )}
-    </section>
-  );
-}
-
-function UploadMaterialsTab() {
-  return (
-    <section className="faculty-upload-card">
-      <div className="faculty-upload-card__icon">
-        <Upload size={34} />
-      </div>
-      <h3>Upload Materials</h3>
-      <p>Upload form will go here</p>
-    </section>
-  );
-}
-
 function FacultyDashboardSkeleton() {
   return (
     <div className="faculty-dashboard-layout">
@@ -355,38 +248,4 @@ function FacultyDashboardSkeleton() {
       </main>
     </div>
   );
-}
-
-async function fetchAssignedSubjects(facultyId, facultyName) {
-  const normalizedFacultyName = String(facultyName || '').toLowerCase();
-
-  let { data: subjectsData, error: subjectsError } = await supabase
-    .from('subjects')
-    .select('*')
-    .eq('faculty_id', facultyId)
-    .order('semester', { ascending: true })
-    .order('name', { ascending: true });
-
-  if (subjectsError) {
-    const { data: allSubjectsData, error: allSubjectsError } = await supabase
-      .from('subjects')
-      .select('*')
-      .order('semester', { ascending: true })
-      .order('name', { ascending: true });
-
-    if (allSubjectsError) throw subjectsError;
-    subjectsData = allSubjectsData;
-  }
-
-  return (subjectsData || []).filter((subject) => {
-    const assignedFaculty = String(subject.assigned_faculty || '').toLowerCase();
-    const assignedFacultyName = String(subject.assigned_faculty_name || '').toLowerCase();
-
-    return (
-      subject.faculty_id === facultyId ||
-      assignedFaculty === facultyId ||
-      assignedFaculty === normalizedFacultyName ||
-      assignedFacultyName === normalizedFacultyName
-    );
-  });
 }

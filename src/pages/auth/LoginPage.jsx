@@ -9,12 +9,12 @@ import { loginSchema } from '../../schemas/loginSchema.js';
 import { signInWithEmail } from '../../services/authService.js';
 import { fetchUserProfile } from '../../services/userProfileService.js';
 import { getAuthErrorMessage } from '../../utils/authErrors.js';
-import { getDashboardRouteForRole } from '../../utils/roleRouting.js';
+import { getDashboardRouteForProfile } from '../../utils/roleRouting.js';
 import './LoginPage.css';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { isAuthenticated, role } = useAuth();
+  const { isAuthenticated, role, profile } = useAuth();
   const [submitError, setSubmitError] = useState(null);
 
   const {
@@ -30,10 +30,10 @@ export default function LoginPage() {
   });
 
   useEffect(() => {
-    if (isAuthenticated && role) {
-      navigate(getDashboardRouteForRole(role), { replace: true });
+    if (isAuthenticated && profile) {
+      navigate(getDashboardRouteForProfile(profile), { replace: true });
     }
-  }, [isAuthenticated, role, navigate]);
+  }, [isAuthenticated, profile, navigate]);
 
   async function onSubmit({ email, password }) {
     setSubmitError(null);
@@ -46,7 +46,7 @@ export default function LoginPage() {
       }
 
       const profile = await fetchUserProfile(user.id);
-      navigate(getDashboardRouteForRole(profile.role), { replace: true });
+      navigate(getDashboardRouteForProfile(profile), { replace: true });
     } catch (error) {
       setSubmitError(getAuthErrorMessage(error));
     }

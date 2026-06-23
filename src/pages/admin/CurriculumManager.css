@@ -220,6 +220,10 @@
   gap: 1.5rem;
 }
 
+.semester-branch-cards {
+  margin-top: 1.5rem;
+}
+
 .branch-card {
   position: relative;
   width: 100%;
@@ -277,11 +281,102 @@
   letter-spacing: -0.01em;
 }
 
+.branch-card__action {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-top: auto;
+  padding: 0.6rem 1rem;
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  border-radius: 999px;
+  color: #c7d2fe;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.14), rgba(59, 130, 246, 0.08));
+  font-size: 0.82rem;
+  font-weight: 800;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 10px rgba(99, 102, 241, 0.1);
+}
+
+.branch-card:hover .branch-card__action {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.24), rgba(59, 130, 246, 0.18));
+  border-color: rgba(139, 92, 246, 0.45);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.2);
+}
+
 .semester-cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.75rem;
   margin-top: 1.25rem;
+}
+
+.semester-card-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.semester-card__toggle {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.semester-card__toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  z-index: 101;
+}
+
+.toggle-track {
+  display: inline-flex;
+  align-items: center;
+  width: 2.75rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  padding: 2px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.25s ease;
+}
+
+.toggle-thumb {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: #94a3b8;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  transition: all 0.25s ease;
+}
+
+.semester-card__toggle input:checked + .toggle-track {
+  background: rgba(139, 92, 246, 0.45);
+  border-color: rgba(139, 92, 246, 0.7);
+}
+
+.semester-card__toggle input:checked + .toggle-track .toggle-thumb {
+  transform: translateX(1.25rem);
+  background: #10b981;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+.semester-card__toggle:hover .toggle-track {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.semester-card__toggle input:checked:hover + .toggle-track {
+  background: rgba(139, 92, 246, 0.6);
+  border-color: rgba(139, 92, 246, 0.85);
 }
 
 .semester-card {
@@ -380,8 +475,8 @@
 
 .live-badge {
   position: absolute;
-  top: 1.1rem;
-  right: 1.1rem;
+  top: 10px;
+  right: 10px;
   z-index: 2;
   display: inline-flex;
   align-items: center;

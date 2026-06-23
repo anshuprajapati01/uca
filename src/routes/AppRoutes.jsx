@@ -12,6 +12,9 @@ import ManageFaculty from '../pages/admin/ManageFaculty.jsx';
 import ManageAnnouncements from '../pages/admin/ManageAnnouncements.jsx';
 import UploadMaterials from '../pages/admin/UploadMaterials.jsx';
 import FacultyDashboard from '../pages/faculty/FacultyDashboard.jsx';
+import FacultyOverview from '../pages/faculty/FacultyOverview.jsx';
+import FacultyResources from '../pages/faculty/FacultyResources.jsx';
+import MySubjects from '../pages/faculty/MySubjects.jsx';
 import StudentDashboard from '../pages/student/StudentDashboard.jsx';
 import StudentOverview from '../pages/student/StudentOverview.jsx';
 import StudentResources from '../pages/student/StudentResources.jsx';
@@ -25,6 +28,20 @@ import NotFoundPage from '../pages/public/NotFoundPage.jsx';
 // NEW IMPORTS FOR DIRECTOR & HOD
 import DirectorDashboard from '../pages/admin/DirectorDashboard.jsx';
 import HodDashboard from '../pages/dashboard/HodDashboard.jsx';
+import { HodProvider } from '../context/HodContext.jsx';
+import { useAuth } from '../hooks/useAuth.js';
+
+function HodRouteWrapper({ children }) {
+  const { user } = useAuth();
+
+  if (!user) return null;
+
+  return (
+    <HodProvider user={user}>
+      {children}
+    </HodProvider>
+  );
+}
 
 export default function AppRoutes() {
   return (
@@ -51,20 +68,27 @@ export default function AppRoutes() {
 
       {/* FACULTY ROUTES */}
       <Route
-        path={ROUTES.FACULTY_DASHBOARD}
+        path={`${ROUTES.FACULTY_DASHBOARD}/*`}
         element={
           <ProtectedRoute allowedRoles={[USER_ROLES.FACULTY]}>
             <FacultyDashboard />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<FacultyOverview />} />
+        <Route path="subjects" element={<MySubjects />} />
+        <Route path="subjects/:subjectId" element={<MySubjects />} />
+        <Route path="resources" element={<FacultyResources />} />
+      </Route>
 
       {/* NEW: HOD ROUTE */}
       <Route
         path={`${ROUTES.HOD_DASHBOARD}/*`}
         element={
           <ProtectedRoute allowedRoles={HOD_ACCESS_ROLES}>
-            <HodDashboard />
+            <HodRouteWrapper>
+              <HodDashboard />
+            </HodRouteWrapper>
           </ProtectedRoute>
         }
       />

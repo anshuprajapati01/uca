@@ -84,22 +84,22 @@ const getDirectorSubjectFaculty = (subject) => {
   };
 };
 
-const getSemestersForYear = (year) => {
+const getSemestersForYear = (year, liveSemesterIds = new Set()) => {
   if (year === '1st Year') return [
-    { id: 'ash1', name: 'ASH 1', isLive: false },
-    { id: 'ash2', name: 'ASH 2', isLive: true }
+    { id: 'ash1', name: 'ASH 1', isLive: liveSemesterIds.has('ash1') },
+    { id: 'ash2', name: 'ASH 2', isLive: liveSemesterIds.has('ash2') }
   ];
   if (year === '2nd Year') return [
-    { id: 'sem3', name: 'Semester 3', isLive: false },
-    { id: 'sem4', name: 'Semester 4', isLive: true }
+    { id: 'sem3', name: 'Semester 3', isLive: liveSemesterIds.has('sem3') },
+    { id: 'sem4', name: 'Semester 4', isLive: liveSemesterIds.has('sem4') }
   ];
   if (year === '3rd Year') return [
-    { id: 'sem5', name: 'Semester 5', isLive: false },
-    { id: 'sem6', name: 'Semester 6', isLive: true }
+    { id: 'sem5', name: 'Semester 5', isLive: liveSemesterIds.has('sem5') },
+    { id: 'sem6', name: 'Semester 6', isLive: liveSemesterIds.has('sem6') }
   ];
   if (year === '4th Year') return [
-    { id: 'sem7', name: 'Semester 7', isLive: false },
-    { id: 'sem8', name: 'Semester 8', isLive: true }
+    { id: 'sem7', name: 'Semester 7', isLive: liveSemesterIds.has('sem7') },
+    { id: 'sem8', name: 'Semester 8', isLive: liveSemesterIds.has('sem8') }
   ];
   return [];
 };
@@ -205,6 +205,7 @@ export default function DirectorDashboard() {
   const [dbSemesterSubjects, setDbSemesterSubjects] = useState([]);
   const [subjectsLoading, setSubjectsLoading] = useState(false);
   const [subjectsError, setSubjectsError] = useState(null);
+  const [liveDeptRows, setLiveDeptRows] = useState([]);
 
   const toggleYear = (year) => {
     setTargetYears(prev =>
@@ -456,6 +457,57 @@ const handleAddFaculty = async (e) => {
     if (data) {
       setDepartments((data || []).filter((dept) => !isDummyUuid(dept.id, DUMMY_BRANCH_IDS)));
     }
+  };
+
+  const fetchLiveDepartments = async () => {
+    if (!selectedAcademicYear) {
+      setLiveDeptRows([]);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('departments')
+      .select('*')
+      .eq('description', selectedAcademicYear)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("Error fetching live departments:", error);
+      return;
+    }
+    if (data) {
+      setLiveDeptRows(data || []);
+    }
+  };
+
+  useEffect(() => {
+    fetchLiveDepartments();
+  }, [selectedAcademicYear]);
+
+  const getLiveSemesterIdForBranch = (year, branchName) => {
+    if (!year || !branchName || liveDeptRows.length === 0) return null;
+    const deptRow = liveDeptRows.find(
+      (d) => (d.code || d.name) === branchName && d.description === year
+    );
+    if (!deptRow) return null;
+    for (let i = 1; i <= 8; i++) {
+      if (deptRow[`is_sem${i}_live`]) {
+        return `sem${i}`;
+      }
+    }
+    return null;
+  };
+
+  const buildLiveSemesterIdsSet = (deptRows) => {
+    const ids = new Set();
+    deptRows.forEach((d) => {
+      for (let i = 1; i <= 8; i++) {
+        if (d[`is_sem${i}_live`]) {
+          ids.add(`sem${i}`);
+        }
+      }
+    });
+    return ids;
   };
 
   const handleCreateDepartment = async (e) => {
@@ -787,7 +839,7 @@ const handleAddFaculty = async (e) => {
 
                     {branchViewTab === 'academic' ? (
                         <div className="sem-grid-container">
-                            {getSemestersForYear(selectedAcademicYear).map((sem) => (
+                            {getSemestersForYear(selectedAcademicYear, buildLiveSemesterIdsSet(liveDeptRows)).map((sem) => (
                                 <div
                                     key={sem.id}
                                     className="sem-card-glass"

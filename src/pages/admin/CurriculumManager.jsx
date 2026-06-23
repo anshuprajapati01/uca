@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase.js';
+import { useHodContext } from '../../context/HodContext.jsx';
+import { useAuth } from '../../hooks/useAuth.js';
 import './CurriculumManager.css';
 
 const FACULTY_AVATAR_FALLBACK = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Faculty';
@@ -13,18 +15,6 @@ const getFacultyAvatarUrl = (faculty) => {
   return `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
 };
 
-const HOD_BRANCHES = [
-  { id: 'cs', name: 'Computer Science', code: 'CS' },
-  { id: 'it', name: 'Information Technology', code: 'IT' }
-];
-
-const currentHodProfile = {
-  name: 'Dr. Ranjeet Rai',
-  email: 'ucahodcsit02@gmail.com',
-  department: 'CS & IT',
-  assignedYears: ['2nd Year', '3rd Year']
-};
-
 const YEAR_SEMESTERS = {
   '1st Year': [1, 2],
   '2nd Year': [3, 4],
@@ -34,18 +24,22 @@ const YEAR_SEMESTERS = {
 
 const CURRENT_TERM = 'ODD';
 
-function getSemestersForYear(year) {
+function getSemestersForYear(year, isLive = true) {
+  if (!year || !YEAR_SEMESTERS[year]) return [];
   return YEAR_SEMESTERS[year].map((semesterNumber) => ({
     id: `sem${semesterNumber}`,
     name: `Semester ${semesterNumber}`,
     year,
-    isLive: CURRENT_TERM === 'ODD' && semesterNumber % 2 === 1
+    isLive: CURRENT_TERM === 'ODD' && semesterNumber % 2 === 1 && isLive
   }));
 }
 
 const getFacultyInfo = (subject) => {
   const faculty = subject.faculty || subject.assigned_faculty || null;
-  if (!faculty) return { name: 'Unknown Faculty', avatarUrl: FACULTY_AVATAR_FALLBACK };
+  if (!faculty) {
+    console.warn('Missing faculty on subject:', subject.id, subject.name, 'keys:', Object.keys(subject));
+    return { name: 'Unknown Faculty', avatarUrl: FACULTY_AVATAR_FALLBACK };
+  }
   return {
     name: faculty.full_name || faculty.name || 'Unknown Faculty',
     avatarUrl: getFacultyAvatarUrl(faculty),
@@ -53,9 +47,10 @@ const getFacultyInfo = (subject) => {
 };
 
 export default function CurriculumManager() {
-  const [curriculumBranch, setCurriculumBranch] = useState(null);
-  const [selectedYear, setSelectedYear] = useState(currentHodProfile.assignedYears[0]);
+  // ── State Hooks ──
+  const [selectedYear, setSelectedYear] = useState(null);
   const [selectedSemester, setSelectedSemester] = useState(null);
+  const [selectedBranch, setSelectedBranch] = useState(null);
   const [dbSubjectsList, setDbSubjectsList] = useState([]);
   const [dbFacultyList, setDbFacultyList] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -69,12 +64,56 @@ export default function CurriculumManager() {
   const [isLoadingSubjects, setIsLoadingSubjects] = useState(false);
   const toastTimerRef = useRef(null);
 
-  const selectedSemesterDetails = selectedSemester
-    ? getSemestersForYear(selectedYear).find((semester) => semester.id === selectedSemester)
+  // ── Context Hooks ──
+  const {
+    isLoading: isCheckingAuth,
+    isAssigned,
+    hodAuthorizedBranches,
+    hodAssignedYears,
+    hodDepartmentsData,
+    refreshDepartments,
+  } = useHodContext();
+  const { profile } = useAuth();
+  const hodPersonName = profile?.full_name || '';
+
+  // ── Helper Functions ──
+  const getDepartmentRow = (branchCode, year) => {
+    return hodDepartmentsData.find(
+      (d) => d.code === branchCode && d.description === year
+    );
+  };
+
+  const getDepartmentRowsForYear = (year) => {
+    if (!year) return [];
+    return hodDepartmentsData.filter((d) => {
+      const branchCode = d.code || d.name;
+      return d.description === year && hodAuthorizedBranches.some((b) => b.code === branchCode);
+    });
+  };
+
+  // ── Derived Values ──
+  const activeDepartmentRows = selectedYear ? getDepartmentRowsForYear(selectedYear) : [];
+
+  const isSemLiveForYear = (semId) => {
+    if (activeDepartmentRows.length === 0) return false;
+    const semNum = semId.replace('sem', '');
+    return activeDepartmentRows.some((d) => d[`is_sem${semNum}_live`]);
+  };
+
+  const effectiveBranchCode = selectedBranch || (hodAuthorizedBranches.length === 1 ? hodAuthorizedBranches[0].code : null);
+  const activeDepartmentRow = effectiveBranchCode && selectedYear
+    ? getDepartmentRow(effectiveBranchCode, selectedYear)
     : null;
+
+  const selectedSemesterDetails = selectedSemester
+    ? getSemestersForYear(selectedYear, true).find((semester) => semester.id === selectedSemester)
+    : null;
+  const selectedSemesterNumber = selectedSemester?.replace('sem', '');
+  const activeSemesterLive = activeDepartmentRow?.[`is_sem${selectedSemesterNumber}_live`] ?? false;
 
   const selectedFacultyData = dbFacultyList.find((faculty) => faculty.id === selectedFaculty);
 
+  // ── useMemo Hooks ──
   const theorySubjects = useMemo(
     () => dbSubjectsList.filter((subject) => subject.type?.toLowerCase() === 'theory'),
     [dbSubjectsList]
@@ -84,9 +123,19 @@ export default function CurriculumManager() {
     [dbSubjectsList]
   );
 
-  const filteredSemesterSubjects =
-    subjectTypeFilter?.toLowerCase() === 'theory' ? theorySubjects : practicalSubjects;
+  const branchFilteredTheorySubjects = useMemo(
+    () => theorySubjects.filter((subject) => subject.department === selectedBranch),
+    [theorySubjects, selectedBranch]
+  );
+  const branchFilteredPracticalSubjects = useMemo(
+    () => practicalSubjects.filter((subject) => subject.department === selectedBranch),
+    [practicalSubjects, selectedBranch]
+  );
 
+  const filteredSemesterSubjects =
+    subjectTypeFilter?.toLowerCase() === 'theory' ? branchFilteredTheorySubjects : branchFilteredPracticalSubjects;
+
+  // ── useCallback Hooks ──
   const fetchFaculty = useCallback(async () => {
     const { data, error } = await supabase
       .from('user_profiles')
@@ -96,9 +145,6 @@ export default function CurriculumManager() {
 
     if (!error && data) {
       setDbFacultyList(data || []);
-    } else {
-      console.error('Failed to fetch faculty:', error);
-      setDbFacultyList([]);
     }
   }, []);
 
@@ -107,7 +153,7 @@ export default function CurriculumManager() {
       ? getSemestersForYear(selectedYear).find((sem) => sem.id === selectedSemester)
       : null;
 
-    if (!semesterDetails || !curriculumBranch) {
+    if (!semesterDetails || !selectedBranch) {
       setDbSubjectsList([]);
       return;
     }
@@ -116,11 +162,11 @@ export default function CurriculumManager() {
     try {
       const { data, error } = await supabase
         .from('subjects')
-        .select('*, faculty:faculty_id(id, full_name, avatar_url, expertise_tags)')
-        .eq('department', curriculumBranch.code)
-        .eq('year', selectedYear)
-        .eq('semester', semesterDetails.name)
-        .order('created_at', { ascending: false });
+         .select('*, faculty:faculty_id(id, full_name, avatar_url, expertise_tags)')
+         .eq('department', selectedBranch)
+         .eq('year', selectedYear)
+         .eq('semester', semesterDetails.name)
+         .order('created_at', { ascending: false });
 
       if (error) throw error;
       setDbSubjectsList(data || []);
@@ -130,19 +176,45 @@ export default function CurriculumManager() {
     } finally {
       setIsLoadingSubjects(false);
     }
-  }, [curriculumBranch, selectedSemester, selectedYear]);
+  }, [selectedBranch, selectedSemester, selectedYear]);
+
+  // ── useEffect Hooks ──
+  useEffect(() => {
+    console.log('showAddModal changed:', showAddModal);
+  }, [showAddModal]);
 
   useEffect(() => {
     fetchFaculty();
   }, [fetchFaculty]);
 
   useEffect(() => {
-    fetchSubjects();
+    if (!isAssigned) return;
+  }, [isAssigned]);
+
+  useEffect(() => {
+    if (!selectedYear) {
+      setSelectedSemester(null);
+      setSelectedBranch(null);
+    }
+  }, [selectedYear]);
+
+  useEffect(() => {
+    if (selectedBranch && selectedSemester && selectedYear) {
+      fetchSubjects();
+    }
   }, [fetchSubjects]);
 
+  useEffect(() => {
+    if (!isAssigned) return;
+    if (!selectedYear && hodAssignedYears.length > 0) {
+      setSelectedYear(hodAssignedYears[0]);
+    }
+  }, [isAssigned, selectedYear, hodAssignedYears]);
+
+  // ── Handler Functions ──
   const handleSubmitSubject = async (e) => {
     e.preventDefault();
-    if (!selectedFacultyData || !selectedSemesterDetails || !curriculumBranch) return;
+    if (!selectedFacultyData || !selectedSemesterDetails || !selectedBranch || !activeSemesterLive) return;
 
     setIsSubmitting(true);
     try {
@@ -151,7 +223,7 @@ export default function CurriculumManager() {
         code: subjectCode,
         type: subjectType.toLowerCase(),
         faculty_id: selectedFacultyData.id,
-        department: curriculumBranch.code,
+        department: selectedBranch,
         year: selectedYear,
         semester: selectedSemesterDetails.name,
       };
@@ -181,7 +253,7 @@ export default function CurriculumManager() {
   };
 
   const handleDeleteSubject = async (subjectId) => {
-    if (!selectedSemesterDetails) return;
+    if (!selectedSemesterDetails || !activeSemesterLive) return;
 
     if (window.confirm('Are you sure you want to delete this subject? This action cannot be undone.')) {
       const { error } = await supabase.from('subjects').delete().eq('id', subjectId);
@@ -202,6 +274,67 @@ export default function CurriculumManager() {
     }
   };
 
+  const toggleSemesterLive = async (e, semesterId) => {
+    e.stopPropagation();
+    if (activeDepartmentRows.length === 0) return;
+
+    const semNum = semesterId.replace('sem', '');
+    const targetColumn = `is_sem${semNum}_live`;
+
+    const updates = activeDepartmentRows.map(async (deptRow) => {
+      const isCurrentlyLive = deptRow[targetColumn];
+      const payload = {};
+
+      for (let i = 1; i <= 8; i++) {
+        const col = 'is_sem' + i + '_live';
+        if (deptRow.hasOwnProperty(col)) {
+          payload[col] = false;
+        }
+      }
+
+      if (!isCurrentlyLive) {
+        payload[targetColumn] = true;
+      }
+
+      const { error } = await supabase
+        .from('departments')
+        .update(payload)
+        .eq('id', deptRow.id);
+
+      return error;
+    });
+
+    const results = await Promise.all(updates);
+    const hasError = results.some((err) => err);
+
+    if (hasError) {
+      console.error('Error toggling semester live:', results.filter(Boolean));
+    } else {
+      await refreshDepartments();
+    }
+  };
+
+  // ── Early Returns (after all hooks) ──
+  if (isCheckingAuth) {
+    return <div className="curriculum-manager"><p>Verifying Access...</p></div>;
+  }
+
+  if (!isAssigned) {
+    return (
+      <div className="curriculum-manager">
+        <div className="curriculum-manager__header">
+          <h3 className="section-title">Access Denied</h3>
+          <p className="curriculum-manager__subtitle">You have not been assigned as an HOD to any department yet.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const yearOptions = hodAssignedYears;
+
+  console.log('Button Disabled Status:', !activeSemesterLive, 'for branch:', selectedBranch, 'activeDepartmentRow:', activeDepartmentRow);
+
+  // ── JSX Return ──
   return (
     <div className="curriculum-manager">
       <div className="curriculum-manager__header">
@@ -209,60 +342,143 @@ export default function CurriculumManager() {
           <p className="curriculum-manager__eyebrow">HOD Curriculum Access</p>
           <h3 className="section-title">Curriculum Manager</h3>
           <p className="curriculum-manager__subtitle">
-            {currentHodProfile.name}, {currentHodProfile.department} &middot; Authorized for{' '}
-            {currentHodProfile.assignedYears.join(' & ')}
+            {hodPersonName} · Authorized for {hodAssignedYears.join(' & ')}
           </p>
         </div>
         <span className="curriculum-manager__term-pill">{CURRENT_TERM} Term</span>
       </div>
 
-      {!curriculumBranch ? (
+      {/* State 1: Year Tabs + Semester Cards (no semester selected) */}
+      {!selectedSemester ? (
         <>
-          <p className="curriculum-manager__hint">Select a branch to manage curriculum.</p>
-          <div className="branch-cards-grid">
-            {HOD_BRANCHES.map((branch) => (
+          {/* Year Tabs */}
+          <div className="year-selector-container" style={{ marginBottom: '1.75rem' }}>
+            {yearOptions.map((year) => (
               <button
-                key={branch.id}
+                key={year}
+                type="button"
+                className={`year-tab${year === selectedYear ? ' year-tab--active' : ''}`}
+                onClick={() => setSelectedYear(year)}
+              >
+                {year}
+              </button>
+            ))}
+          </div>
+
+          {/* Semester Selection */}
+          <div className="curriculum-manager__year-panel">
+            <div className="curriculum-manager__year-header">
+              <div>
+                <p className="curriculum-manager__eyebrow">{selectedYear}</p>
+                <h4 className="curriculum-manager__panel-title">Select a semester</h4>
+              </div>
+              <span className="curriculum-manager__scope-pill">
+                {getSemestersForYear(selectedYear).length} semesters
+              </span>
+            </div>
+
+            <div className="semester-cards-grid">
+              {getSemestersForYear(selectedYear).map((sem) => {
+                const isSemLive = isSemLiveForYear(sem.id);
+                return (
+                  <div key={sem.id} className="semester-card-wrapper">
+                    <button
+                      type="button"
+                      className="semester-card"
+                      onClick={() => setSelectedSemester(sem.id)}
+                    >
+                      {isSemLive && <span className="live-badge">LIVE</span>}
+                      <h4 className="semester-card__name">{sem.name}</h4>
+                      <p className="semester-card__year">{sem.year}</p>
+                      <span className="semester-card__action">Open curriculum</span>
+                    </button>
+                    {activeDepartmentRows.length > 0 && (
+                      <label className="semester-card__toggle">
+                        <input
+                          type="checkbox"
+                          checked={isSemLive}
+                          onChange={(e) => toggleSemesterLive(e, sem.id)}
+                        />
+                        <span className="toggle-track"><span className="toggle-thumb" /></span>
+                      </label>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      ) : !selectedBranch ? (
+        <>
+          {/* State 2: Branch Cards only */}
+          <button className="curriculum-manager__back" onClick={() => setSelectedSemester(null)}>
+            &larr; Back to Semesters
+          </button>
+
+          <div className="semester-detail-card">
+            <div className="semester-detail-card__top">
+              <div>
+                <p className="curriculum-manager__eyebrow">{selectedYear}</p>
+                <h4 className="semester-detail-card__title">{selectedSemesterDetails?.name}</h4>
+                <p className="semester-detail-card__meta">
+                  {activeSemesterLive ? 'Live curriculum planning is active' : 'Upcoming curriculum planning'}
+                </p>
+              </div>
+              {activeSemesterLive && <span className="live-badge">LIVE</span>}
+            </div>
+          </div>
+
+          <div className="branch-cards-grid semester-branch-cards">
+            {hodAuthorizedBranches.map((branch) => (
+              <button
+                key={branch.code}
                 type="button"
                 className="branch-card"
-                onClick={() => setCurriculumBranch(branch)}
+                onClick={() => setSelectedBranch(branch.code)}
               >
                 <div className="branch-card__code">{branch.code}</div>
                 <div className="branch-card__name">{branch.name}</div>
+                <div className="branch-card__action">Manage Subjects</div>
               </button>
             ))}
           </div>
         </>
-      ) : selectedSemesterDetails ? (
+      ) : (
         <>
+          {/* State 3: Subject Management only */}
+          <button className="curriculum-manager__back" onClick={() => setSelectedBranch(null)}>
+            &larr; Back to Branches
+          </button>
           {toastMsg && (
             <div className="cm-toast">
               <span className="cm-toast__message">{toastMsg}</span>
             </div>
           )}
-          <button className="curriculum-manager__back" onClick={() => setSelectedSemester(null)}>
-            &larr; Back to Semesters
-          </button>
           <div className="semester-detail-card">
             <div className="semester-detail-card__top">
               <div>
                 <p className="curriculum-manager__eyebrow">{selectedYear}</p>
-                <h4 className="semester-detail-card__title">{selectedSemesterDetails.name}</h4>
+                <h4 className="semester-detail-card__title">{selectedSemesterDetails?.name} · {selectedBranch}</h4>
                 <p className="semester-detail-card__meta">
-                  {selectedSemesterDetails.isLive ? 'Live curriculum planning is active' : 'Upcoming curriculum planning'}
+                  {activeSemesterLive ? 'Live curriculum planning is active' : 'Upcoming curriculum planning'}
                 </p>
               </div>
-              {selectedSemesterDetails.isLive && <span className="live-badge">LIVE</span>}
+              {activeSemesterLive && <span className="live-badge">LIVE</span>}
             </div>
 
             {filteredSemesterSubjects.length === 0 && !isLoadingSubjects && (
               <div className="semester-detail-card__empty">
                 <strong>No subjects added yet</strong>
-                <span>Subject details for {selectedSemesterDetails.name} will appear here.</span>
+                <span>Subject details for {selectedSemesterDetails?.name} will appear here.</span>
               </div>
             )}
 
-            <button type="button" className="curriculum-manager__add-button" onClick={() => setShowAddModal(true)}>
+            <button
+              type="button"
+              className="curriculum-manager__add-button"
+              onClick={() => setShowAddModal(true)}
+              disabled={!activeSemesterLive}
+            >
               + Add New Subject
             </button>
           </div>
@@ -300,6 +516,7 @@ export default function CurriculumManager() {
                       handleDeleteSubject(subject.id);
                     }}
                     title="Delete subject"
+                    disabled={!activeSemesterLive}
                   >
                     <Trash2 size={16} />
                   </button>
@@ -321,52 +538,6 @@ export default function CurriculumManager() {
                 <span>Use Add New Subject to populate this semester.</span>
               </div>
             )}
-          </div>
-        </>
-      ) : (
-        <>
-          <button className="curriculum-manager__back" onClick={() => setCurriculumBranch(null)}>
-            &larr; Back to Branches
-          </button>
-          <div className="curriculum-manager__year-panel">
-            <div className="curriculum-manager__year-header">
-              <div>
-                <p className="curriculum-manager__eyebrow">Assigned Academic Years</p>
-                <h4 className="curriculum-manager__panel-title">Select a year</h4>
-              </div>
-              <span className="curriculum-manager__scope-pill">
-                {currentHodProfile.assignedYears.length} years assigned
-              </span>
-            </div>
-
-            <div className="year-selector-container">
-              {currentHodProfile.assignedYears.map((year) => (
-                <button
-                  key={year}
-                  type="button"
-                  className={`year-tab${year === selectedYear ? ' year-tab--active' : ''}`}
-                  onClick={() => setSelectedYear(year)}
-                >
-                  {year}
-                </button>
-              ))}
-            </div>
-
-            <div className="semester-cards-grid">
-              {getSemestersForYear(selectedYear).map((sem) => (
-                <button
-                  key={sem.id}
-                  type="button"
-                  className="semester-card"
-                  onClick={() => setSelectedSemester(sem.id)}
-                >
-                  {sem.isLive && <span className="live-badge">LIVE</span>}
-                  <h4 className="semester-card__name">{sem.name}</h4>
-                  <p className="semester-card__year">{sem.year}</p>
-                  <span className="semester-card__action">Open curriculum</span>
-                </button>
-              ))}
-            </div>
           </div>
         </>
       )}

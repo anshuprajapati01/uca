@@ -42,7 +42,7 @@ export const FACULTY_NAV_ITEMS = [
   { label: '🏠 Overview', path: ROUTES.FACULTY_DASHBOARD, icon: LayoutDashboard },
   {
     label: '📚 My Subjects',
-    path: `${ROUTES.FACULTY_DASHBOARD}/subjects`, 
+    path: `${ROUTES.FACULTY_DASHBOARD}/subjects`,
     icon: BookOpen,
   },
   {

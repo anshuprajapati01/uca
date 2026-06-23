@@ -1,7 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { ROUTES, USER_ROLES } from '../../config/constants.js';
 import { useAuth } from '../../hooks/useAuth.js';
-import { getDashboardRouteForRole } from '../../utils/roleRouting.js';
+import { getDashboardRouteForProfile } from '../../utils/roleRouting.js';
 import AuthLoading from './AuthLoading.jsx';
 
 /**
@@ -31,7 +31,7 @@ export default function ProtectedRoute({ allowedRoles, children }) {
   const hasFacultyPermission = allowedRoles.includes(USER_ROLES.FACULTY) && profile?.can_view_faculty === true;
 
   if (!hasAllowedRole && !hasHodPermission && !hasFacultyPermission) {
-    return <Navigate to={getDashboardRouteForRole(role)} replace />;
+    return <Navigate to={getDashboardRouteForProfile(profile)} replace />;
   }
 
   return children;

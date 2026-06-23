@@ -74,3 +74,19 @@ export function canAccessDashboard(role, path) {
 
   return getAllowedRolesForDashboard(path).includes(role);
 }
+
+/**
+ * @param {import('../../contexts/AuthContext.jsx').UserProfile | null | undefined} profile
+ * @returns {string}
+ */
+export function getDashboardRouteForProfile(profile) {
+  if (profile?.can_view_hod === true) {
+    return ROUTES.HOD_DASHBOARD;
+  }
+  if (profile?.can_view_faculty === true) {
+    return ROUTES.FACULTY_DASHBOARD;
+  }
+
+  const role = profile?.role;
+  return getDashboardRouteForRole(role);
+}

@@ -33,12 +33,13 @@ const getAvatarUrl = (faculty, seedText = 'Faculty') => {
 };
 
 const getFacultyDetails = (assignment, facultyMap) => {
+  const profile = assignment.user_profiles || {};
   const faculty = facultyMap.get(assignment.faculty_id) || {};
   return {
-    name: faculty.full_name || assignment.faculty_name || 'Unknown Faculty',
-    email: faculty.email || assignment.faculty_email || 'N/A',
-    phone: faculty.phone || assignment.faculty_phone || 'N/A',
-    avatarUrl: getAvatarUrl(faculty, assignment.faculty_name || 'HOD'),
+    name: profile.full_name || faculty.full_name || assignment.faculty_name || 'Unknown Faculty',
+    email: profile.email || faculty.email || assignment.faculty_email || 'N/A',
+    phone: profile.phone || faculty.phone || assignment.faculty_phone || 'N/A',
+    avatarUrl: getAvatarUrl(profile.avatar_url ? profile : faculty, profile.full_name || faculty.full_name || assignment.faculty_name || 'HOD'),
   };
 };
 
@@ -126,17 +127,28 @@ if (error) {
 
   const refreshAssignments = useCallback(async () => {
     const { data, error } = await supabase
-      .from('hod_assignments')
-      .select('*, user_profiles!inner(can_view_faculty, can_view_hod)')
-      .order('created_at', { ascending: false });
+      .from('departments')
+      .select('id, name, code, description, hod_id, user_profiles:user_profiles!hod_id(full_name, email, phone, avatar_url, can_view_faculty, can_view_hod)')
+      .not('hod_id', 'is', null)
+      .order('description', { ascending: true });
 
     if (error) {
+      console.error('DB Error:', error);
       showToast('Failed to fetch HOD assignments', 'error');
       return;
     }
 
-    setAssignments(data || []);
-}, [showToast]);
+    const mapped = (data || []).map((row) => ({
+      id: row.id,
+      year: row.description,
+      department: row.code,
+      hod_id: row.hod_id,
+      user_profiles: row.user_profiles || null,
+      faculty_id: row.hod_id,
+    }));
+
+    setAssignments(mapped);
+  }, [showToast]);
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
@@ -190,32 +202,59 @@ if (error) {
     setLoading(true);
 
     try {
-      const { data: existingAssignments, error: existingError } = await supabase
-        .from('hod_assignments')
-        .select('id, year, department')
-        .eq('department', selectedDepartment)
-        .in('year', selectedYears);
+      for (const year of selectedYears) {
+        const { data: existing, error: selectError } = await supabase
+          .from('departments')
+          .select('id')
+          .eq('code', selectedDepartment)
+          .eq('description', year)
+          .limit(1);
 
-      if (existingError) throw existingError;
+        if (selectError) {
+          console.error('DB Error:', selectError);
+          throw selectError;
+        }
 
-      if (existingAssignments?.length > 0) {
-        showToast('Faculty already assigned to this year/dept', 'error');
-        return;
+        const existingRow = existing?.[0];
+
+        if (existingRow?.id) {
+          const { error: updateError } = await supabase
+            .from('departments')
+            .update({ hod_id: selectedFaculty.id })
+            .eq('id', existingRow.id);
+
+          if (updateError) {
+            console.error('DB Error:', updateError);
+            throw updateError;
+          }
+        } else {
+          const { error: insertError } = await supabase
+            .from('departments')
+            .insert({
+              name: selectedDepartment,
+              code: selectedDepartment,
+              description: year,
+              hod_id: selectedFaculty.id,
+              college_id: '11111111-0000-0000-0000-000000000001',
+            });
+
+          if (insertError) {
+            console.error('DB Error:', insertError);
+            throw insertError;
+          }
+        }
       }
 
-      const rows = selectedYears.map((year) => ({
-        year,
-        department: selectedDepartment,
-        faculty_id: selectedFaculty.id,
-        faculty_name: selectedFaculty.full_name,
-        college_id: DEFAULT_COLLEGE_ID,
-      }));
+      const { error: clearError } = await supabase
+        .from('departments')
+        .update({ hod_id: null })
+        .eq('code', selectedDepartment)
+        .not('description', 'in', `(${selectedYears.map((y) => `"${y}"`).join(',')})`);
 
-      const { error: assignmentError } = await supabase
-        .from('hod_assignments')
-        .upsert(rows, { onConflict: ['year', 'department'] });
-
-      if (assignmentError) throw assignmentError;
+      if (clearError) {
+        console.error('DB Error:', clearError);
+        throw clearError;
+      }
 
       let canViewFaculty = false;
       let canViewHod = false;
@@ -234,13 +273,17 @@ if (error) {
         .update({ can_view_faculty: canViewFaculty, can_view_hod: canViewHod })
         .eq('id', selectedFaculty.id);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('DB Error:', profileError);
+        throw profileError;
+      }
 
       showToast('Assigned and saved successfully');
       setSelectedYears([]);
       setSelectedRole('both');
       await refreshAssignments();
     } catch (error) {
+      console.error('DB Error:', error);
       showToast(`Failed to assign: ${error.message}`, 'error');
     } finally {
       setLoading(false);
@@ -254,16 +297,20 @@ if (error) {
 
     try {
       const { error } = await supabase
-        .from('hod_assignments')
-        .delete()
+        .from('departments')
+        .update({ hod_id: null })
         .eq('id', pendingDelete.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('DB Error:', error);
+        throw error;
+      }
 
       showToast('HOD assignment removed successfully');
       setPendingDelete(null);
       await refreshAssignments();
     } catch (error) {
+      console.error('DB Error:', error);
       showToast(`Failed to remove assignment: ${error.message}`, 'error');
     } finally {
       setLoading(false);
