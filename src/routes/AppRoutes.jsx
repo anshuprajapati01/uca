@@ -16,12 +16,6 @@ import FacultyOverview from '../pages/faculty/FacultyOverview.jsx';
 import FacultyResources from '../pages/faculty/FacultyResources.jsx';
 import MySubjects from '../pages/faculty/MySubjects.jsx';
 import StudentDashboard from '../pages/student/StudentDashboard.jsx';
-import StudentOverview from '../pages/student/StudentOverview.jsx';
-import StudentResources from '../pages/student/StudentResources.jsx';
-import StudentBookmarks from '../pages/student/StudentBookmarks.jsx';
-import StudentAnnouncements from '../pages/student/StudentAnnouncements.jsx';
-import StudentSubjects from '../pages/student/StudentSubjects.jsx';
-import SubjectDetail from '../pages/student/SubjectDetail.jsx';
 import LandingPage from '../pages/public/LandingPage.jsx';
 import NotFoundPage from '../pages/public/NotFoundPage.jsx';
 
@@ -57,14 +51,7 @@ export default function AppRoutes() {
             <StudentDashboard />
           </ProtectedRoute>
         }
-      >
-        <Route index element={<StudentOverview />} />
-        <Route path="subjects" element={<StudentSubjects />} />
-        <Route path="subjects/:subjectId" element={<SubjectDetail />} />
-        <Route path="resources" element={<StudentResources />} />
-        <Route path="bookmarks" element={<StudentBookmarks />} />
-        <Route path="announcements" element={<StudentAnnouncements />} />
-      </Route>
+      />
 
       {/* FACULTY ROUTES */}
       <Route

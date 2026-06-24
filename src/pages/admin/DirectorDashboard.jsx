@@ -563,7 +563,7 @@ const handleAddFaculty = async (e) => {
       const subjectIdList = Array.from(subjectIds);
 
       await supabase.from('study_materials').delete().in('subject_id', subjectIdList);
-      await supabase.from('resources').delete().in('subject_id', subjectIdList);
+      await supabase.from('study_materials').delete().in('subject_id', subjectIdList);
 
       const { error: subjectDeleteError } = await supabase
         .from('subjects')
@@ -679,7 +679,7 @@ const handleAddFaculty = async (e) => {
 
         // 2. Delete dependent resources
         const { error: resourceError } = await supabase
-            .from('resources')
+            .from('study_materials')
             .delete()
             .eq('uploaded_by', facultyToDelete);
         if (resourceError) console.warn("Resources deletion warning:", resourceError);

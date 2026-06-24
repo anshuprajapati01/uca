@@ -21,7 +21,7 @@ export default function FacultyResources() {
       setError(null);
       try {
         const { data, error: supabaseError } = await supabase
-          .from('resources')
+          .from('study_materials')
           .select('*')
           .order('created_at', { ascending: false });
         if (supabaseError) throw supabaseError;
@@ -59,7 +59,7 @@ export default function FacultyResources() {
   const handleModalSuccess = () => {
     const loadResources = async () => {
       const { data } = await supabase
-        .from('resources')
+        .from('study_materials')
         .select('*')
         .order('created_at', { ascending: false });
       setResources(data || []);

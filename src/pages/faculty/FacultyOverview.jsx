@@ -37,7 +37,7 @@ export default function FacultyOverview() {
         const [{ count: subjectsCount }, { count: resourcesCount }, { count: announcementsCount }] =
           await Promise.all([
             supabase.from('subjects').select('*', { count: 'exact', head: true }),
-            supabase.from('resources').select('*', { count: 'exact', head: true }),
+            supabase.from('study_materials').select('*', { count: 'exact', head: true }),
             supabase.from('announcements').select('*', { count: 'exact', head: true }),
           ]);
         if (!cancelled) {

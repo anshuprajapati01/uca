@@ -16,8 +16,8 @@
 }
 
 .broadcast-command-center__header {
-  max-width: 1200px;
-  margin: 0 auto 2rem;
+  width: 100%;
+  margin: 0 0 2rem;
   padding: 0 0 1.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   overflow: visible;
@@ -58,8 +58,8 @@
 }
 
 .broadcast-command-center__section {
-  max-width: 1200px;
-  margin: 0 auto 2.5rem;
+  width: 100%;
+  margin: 0 0 2.5rem;
 }
 
 .broadcast-command-center__section-header {

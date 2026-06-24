@@ -10,7 +10,7 @@
 
 .curriculum-manager {
   position: relative;
-  max-width: 1200px;
+  width: 100%;
   padding: 2rem;
   background:
     radial-gradient(circle at top left, rgba(139, 92, 246, 0.08), transparent 45%),

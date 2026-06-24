@@ -17,8 +17,7 @@
 }
 
 .hod-header__content {
-  max-width: 1280px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 .hod-header__title {
@@ -37,8 +36,7 @@
 }
 
 .hod-section {
-  max-width: 1280px;
-  margin: 0 auto;
+  width: 100%;
   display: grid;
   gap: 1.5rem;
 }

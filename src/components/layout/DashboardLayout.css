@@ -20,7 +20,8 @@
 }
 
 .dashboard-layout__main {
-  flex: 1;
+  flex: 1 1 100%;
+  width: 100%;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -30,7 +31,9 @@
 }
 
 .dashboard-layout__content {
-  flex: 1;
+  flex: 1 1 100%;
+  width: 100%;
+  max-width: none !important;
   padding: 1.5rem;
   background: transparent;
   overflow-y: auto;
