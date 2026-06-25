@@ -6,7 +6,7 @@ import { ADMIN_ACCESS_ROLES, HOD_ACCESS_ROLES, STUDENT_ACCESS_ROLES } from '../u
 import LoginPage from '../pages/auth/LoginPage.jsx';
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
 import AdminOverview from '../pages/admin/AdminOverview.jsx';
-import SubjectAllocation from '../pages/admin/SubjectAllocation.jsx';
+import FacultyWorkload from '../pages/admin/FacultyWorkload.jsx';
 import ManageStudents from '../pages/admin/ManageStudents.jsx';
 import ManageFaculty from '../pages/admin/ManageFaculty.jsx';
 import ManageAnnouncements from '../pages/admin/ManageAnnouncements.jsx';
@@ -15,6 +15,7 @@ import FacultyDashboard from '../pages/faculty/FacultyDashboard.jsx';
 import FacultyOverview from '../pages/faculty/FacultyOverview.jsx';
 import FacultyResources from '../pages/faculty/FacultyResources.jsx';
 import MySubjects from '../pages/faculty/MySubjects.jsx';
+import SubjectWorkspace from '../pages/faculty/SubjectWorkspace.jsx';
 import StudentDashboard from '../pages/student/StudentDashboard.jsx';
 import LandingPage from '../pages/public/LandingPage.jsx';
 import NotFoundPage from '../pages/public/NotFoundPage.jsx';
@@ -65,6 +66,7 @@ export default function AppRoutes() {
         <Route index element={<FacultyOverview />} />
         <Route path="subjects" element={<MySubjects />} />
         <Route path="subjects/:subjectId" element={<MySubjects />} />
+        <Route path="workspace/:subjectId" element={<SubjectWorkspace />} />
         <Route path="resources" element={<FacultyResources />} />
       </Route>
 
@@ -100,7 +102,7 @@ export default function AppRoutes() {
         }
       >
         <Route index element={<AdminOverview />} />
-        <Route path="subject-allocation" element={<SubjectAllocation />} />
+        <Route path="faculty-workload" element={<FacultyWorkload />} />
         <Route path="students" element={<ManageStudents />} />
         <Route path="faculty" element={<ManageFaculty />} />
         <Route path="announcements" element={<ManageAnnouncements />} />

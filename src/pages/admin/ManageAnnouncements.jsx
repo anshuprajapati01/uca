@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase.js';
 import { Trash2 } from 'lucide-react';
 import './ManageAnnouncements.css';
@@ -17,6 +17,10 @@ export default function ManageAnnouncements() {
     type: 'General',
   });
   const [file, setFile] = useState(null);
+  const fileInputRef = useRef(null);
+  const [selectedYear, setSelectedYear] = useState('');
+  const [selectedBranch, setSelectedBranch] = useState('');
+  const [selectedSemester, setSelectedSemester] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -52,6 +56,27 @@ export default function ManageAnnouncements() {
     }
   };
 
+  const getAvailableSemesters = () => {
+    if (!selectedYear) return [];
+    if (selectedYear === '2nd') return [3, 4];
+    if (selectedYear === '3rd') return [5, 6];
+    return [];
+  };
+
+  const handleYearChange = (e) => {
+    setSelectedYear(e.target.value);
+    setSelectedSemester('');
+  };
+
+  const handleBranchChange = (e) => {
+    setSelectedBranch(e.target.value);
+    setSelectedSemester('');
+  };
+
+  const handleSemesterChange = (e) => {
+    setSelectedSemester(e.target.value);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -83,10 +108,16 @@ export default function ManageAnnouncements() {
           content: formData.content,
           type: formData.type,
           file_url: finalFileUrl,
+          selected_year: selectedYear || null,
+          selected_branch: selectedBranch || null,
+          selected_semester: selectedSemester ? parseInt(selectedSemester, 10) : null,
         }]);
       if (insertError) throw insertError;
 
       setFormData({ title: '', content: '', type: 'General' });
+      setSelectedYear('');
+      setSelectedBranch('');
+      setSelectedSemester('');
       setFile(null);
 
       const { data } = await supabase
@@ -144,6 +175,9 @@ export default function ManageAnnouncements() {
     }
   };
 
+  const availableSemesters = getAvailableSemesters();
+  const isSemesterDisabled = !selectedYear || !selectedBranch;
+
   if (isLoading) {
     return (
       <div className="manage-announcements">
@@ -176,6 +210,54 @@ export default function ManageAnnouncements() {
 
       <div className="form-wrapper">
         <form className="announcement-form" onSubmit={handleSubmit}>
+          <div className="filter-row">
+            <div className="form-group">
+              <label htmlFor="selectedYear">Year</label>
+              <select
+                id="selectedYear"
+                name="selectedYear"
+                value={selectedYear}
+                onChange={handleYearChange}
+              >
+                <option value="">Select Year</option>
+                <option value="2nd">2nd</option>
+                <option value="3rd">3rd</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="selectedBranch">Branch</label>
+              <select
+                id="selectedBranch"
+                name="selectedBranch"
+                value={selectedBranch}
+                onChange={handleBranchChange}
+              >
+                <option value="">Select Branch</option>
+                <option value="CS">CS</option>
+                <option value="IT">IT</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="selectedSemester">Semester</label>
+              <select
+                id="selectedSemester"
+                name="selectedSemester"
+                value={selectedSemester}
+                onChange={handleSemesterChange}
+                disabled={isSemesterDisabled}
+              >
+                <option value="">Select Semester</option>
+                {availableSemesters.map((sem) => (
+                  <option key={sem} value={sem}>
+                    {sem}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div className="form-grid">
             <div className="form-group">
               <label htmlFor="title">Title</label>
@@ -225,15 +307,20 @@ export default function ManageAnnouncements() {
             <label>Attach Official Notice (Optional)</label>
             <div className="file-upload-area">
               <input
+                ref={fileInputRef}
                 type="file"
                 id="notice-file-upload"
                 onChange={handleFileChange}
                 accept=".pdf,.jpg,.jpeg,.png,.gif"
                 className="file-input-hidden"
               />
-              <label htmlFor="notice-file-upload" className="file-upload-label" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: '#374151', color: '#e5e7eb', borderRadius: '8px', border: 'none', fontSize: '14px', transition: '0.2s' }}>
+              <button
+                type="button"
+                className="broadcast-upload-btn"
+                onClick={() => fileInputRef.current?.click()}
+              >
                 📎 Choose File
-              </label>
+              </button>
               {file && (
                 <span className="file-name-display" style={{ marginLeft: '12px', color: '#9ca3af', fontSize: '13px' }}>{file.name}</span>
               )}

@@ -1,23 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowRight, BookOpen, CalendarDays, Layers, UserCheck } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { BookOpen } from 'lucide-react';
 import { supabase } from '../../lib/supabase.js';
 import { ROUTES, USER_ROLES } from '../../config/constants.js';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './MySubjects.css';
 
-const FACULTY_AVATAR_FALLBACK = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Faculty';
-
-function getFacultyAvatarUrl(faculty) {
-  if (!faculty) return FACULTY_AVATAR_FALLBACK;
-  if (faculty.avatar_url) return faculty.avatar_url;
-  if (faculty.avatarUrl) return faculty.avatarUrl;
-
-  const seed = encodeURIComponent(faculty.full_name || faculty.name || 'Faculty');
-  return `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
-}
-
 function normalizeSubject(subject) {
-  const branch = subject.department || subject.branch || subject.department_code || subject.branch_code || 'N/A';
   const year = subject.year || subject.academic_year || 'N/A';
   const semester = subject.semester || subject.semester_number || 'N/A';
 
@@ -25,46 +13,48 @@ function normalizeSubject(subject) {
     ...subject,
     name: subject.name || subject.subject_name || 'Unnamed Subject',
     code: subject.code || subject.subject_code || 'N/A',
-    branch: branch === 'cs' ? 'CS' : branch === 'it' ? 'IT' : branch,
+    branch: subject.department || subject.branch || subject.department_code || subject.branch_code || 'N/A',
     year: /^\d+$/.test(String(year)) ? `Year ${year}` : year,
     semester: /^\d+$/.test(String(semester)) ? `Semester ${semester}` : semester,
     status: subject.status || 'LIVE',
+    credits: subject.credits || subject.credit_hours || null,
   };
-}
-
-function formatStatus(status) {
-  if (!status) return 'LIVE';
-  return status === 'active' ? 'LIVE' : String(status).toUpperCase();
-}
-
-function isLiveSubject(subject) {
-  return subject.is_active !== false && subject.status !== 'inactive' && subject.status !== 'archived';
 }
 
 export default function MySubjects() {
   const navigate = useNavigate();
-  const { subjectId } = useParams();
-  const workspacePanelRef = useRef(null);
 
-  const [facultyProfile, setFacultyProfile] = useState(null);
+  const [, setFacultyProfile] = useState(null);
   const [subjects, setSubjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeBranch, setActiveBranch] = useState('All');
+  const [activeYear, setActiveYear] = useState('All');
 
   const normalizedSubjects = useMemo(
     () => subjects.map(normalizeSubject),
     [subjects]
   );
 
-  const selectedSubject = useMemo(
-    () => normalizedSubjects.find((subject) => subject.id === subjectId) || null,
-    [normalizedSubjects, subjectId]
-  );
+  const availableBranches = useMemo(() => {
+    const branches = Array.from(
+      new Set(normalizedSubjects.map((s) => s.branch).filter(Boolean))
+    );
+    return ['All', ...branches];
+  }, [normalizedSubjects]);
 
-  const liveCount = useMemo(
-    () => normalizedSubjects.filter(isLiveSubject).length,
-    [normalizedSubjects]
-  );
+  const availableYears = ['All', '1st Year', '2nd Year', '3rd Year', '4th Year'];
+
+  const filteredSubjects = useMemo(() => {
+    return normalizedSubjects.filter((subject) => {
+      const branchMatch = activeBranch === 'All' || subject.branch === activeBranch;
+      const yearMatch =
+        activeYear === 'All' ||
+        (subject.year &&
+          subject.year.toLowerCase().includes(activeYear.toLowerCase().replace(' Year', '')));
+      return branchMatch && yearMatch;
+    });
+  }, [normalizedSubjects, activeBranch, activeYear]);
 
   useEffect(() => {
     let cancelled = false;
@@ -125,18 +115,8 @@ export default function MySubjects() {
     };
   }, [navigate]);
 
-  useEffect(() => {
-    if (subjectId && workspacePanelRef.current) {
-      workspacePanelRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, [subjectId, selectedSubject]);
-
-  function handleOpenWorkspace(subject) {
-    navigate(`${ROUTES.FACULTY_DASHBOARD}/subjects/${encodeURIComponent(subject.id)}`);
-  }
-
-  function handleBackToSubjects() {
-    navigate(`${ROUTES.FACULTY_DASHBOARD}/subjects`, { replace: true });
+  function handleCardClick(subject) {
+    navigate(`/faculty/workspace/${encodeURIComponent(subject.id)}`);
   }
 
   if (isLoading) {
@@ -150,8 +130,8 @@ export default function MySubjects() {
   if (error) {
     return (
       <div className="my-subjects">
-        <div className="my-subjects__error-card">
-          <BookOpen size={32} />
+        <div className="faculty-error-card">
+          <BookOpen size={28} />
           <h2>Unable to load My Subjects</h2>
           <p>{error}</p>
         </div>
@@ -159,163 +139,96 @@ export default function MySubjects() {
     );
   }
 
-  const facultyName = facultyProfile?.full_name || 'Faculty';
-  const facultyInitials = facultyName
-    .split(' ')
-    .filter(Boolean)
-    .map((name) => name[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-
   return (
     <div className="my-subjects">
-      <section className="my-subjects__hero">
-        <div>
-          <p className="my-subjects__eyebrow">Faculty Portal · Subject Workspace</p>
-          <h1>My Subjects</h1>
-          <p className="my-subjects__subtitle">
-            Assigned subjects for <strong>{facultyName}</strong>. Open a subject workspace to manage the academic flow.
-          </p>
-        </div>
+      <div className="my-subjects__header">
+        <h1>My Subjects</h1>
+      </div>
 
-        <div className="my-subjects__hero-panel">
-          <div className="my-subjects__faculty-avatar">{facultyInitials}</div>
-          <div>
-            <span className="my-subjects__hero-label">Logged-in faculty</span>
-            <strong>{facultyName}</strong>
-          </div>
-          <span className="my-subjects__live-pill">
-            <span className="my-subjects__live-dot" />
-            LIVE
-          </span>
-        </div>
-      </section>
-
-      <section className="my-subjects__summary-grid" aria-label="Subject summary">
-        <div className="my-subjects__summary-card">
-          <BookOpen size={22} />
-          <span>Total Subjects</span>
-          <strong>{normalizedSubjects.length}</strong>
-        </div>
-        <div className="my-subjects__summary-card">
-          <CalendarDays size={22} />
-          <span>Live Workspaces</span>
-          <strong>{liveCount}</strong>
-        </div>
-        <div className="my-subjects__summary-card">
-          <UserCheck size={22} />
-          <span>Faculty ID</span>
-          <strong>{facultyProfile?.id ? `${facultyProfile.id.slice(0, 8)}…` : '—'}</strong>
-        </div>
-      </section>
-
-      {selectedSubject ? (
-        <section ref={workspacePanelRef} className="my-subjects__workspace-panel" aria-label="Subject workspace">
-          <div className="my-subjects__workspace-panel__top">
-            <div>
-              <p className="my-subjects__workspace-eyebrow">Open Workspace</p>
-              <h2>{selectedSubject.name}</h2>
-              <p>{selectedSubject.code} · {selectedSubject.branch} · {selectedSubject.year}</p>
-            </div>
-            <span className={`my-subjects__status-pill ${isLiveSubject(selectedSubject) ? 'my-subjects__status-pill--live' : ''}`}>
-              {formatStatus(selectedSubject.status)}
-            </span>
-          </div>
-
-          <div className="my-subjects__workspace-grid">
-            <div>
-              <span>Subject Code</span>
-              <strong>{selectedSubject.code}</strong>
-            </div>
-            <div>
-              <span>Branch</span>
-              <strong>{selectedSubject.branch}</strong>
-            </div>
-            <div>
-              <span>Year</span>
-              <strong>{selectedSubject.year}</strong>
-            </div>
-            <div>
-              <span>Semester</span>
-              <strong>{selectedSubject.semester}</strong>
-            </div>
-          </div>
-
-          <div className="my-subjects__workspace-actions">
-            <button type="button" className="my-subjects__workspace-button" onClick={handleBackToSubjects}>
-              Back to Subjects
+      <div className="my-subjects__filters flex flex-col gap-4">
+        <div className="my-subjects__year-pills pill-group">
+          {availableYears.map((year) => (
+            <button
+              key={year}
+              type="button"
+              className={`pill-btn ${activeYear === year ? 'pill-btn--active' : ''}`}
+              onClick={() => setActiveYear(year)}
+            >
+              {year}
             </button>
-            <span className="my-subjects__workspace-hint">Workspace is ready for course materials, announcements, and faculty tools.</span>
-          </div>
-        </section>
-      ) : subjectId ? (
-        <section ref={workspacePanelRef} className="my-subjects__workspace-panel my-subjects__workspace-panel--missing" aria-label="Subject workspace unavailable">
-          <div>
-            <p className="my-subjects__workspace-eyebrow">Workspace not found</p>
-            <h2>Subject workspace could not be opened</h2>
-            <p>The selected subject is not assigned to your faculty profile.</p>
-          </div>
-          <button type="button" className="my-subjects__workspace-button" onClick={handleBackToSubjects}>
-            Back to Subjects
-          </button>
-        </section>
-      ) : null}
+          ))}
+        </div>
+
+        <div className="my-subjects__branch-tabs director-branch-subtabs">
+          {availableBranches.map((branch) => (
+            <button
+              key={branch}
+              type="button"
+              className={`director-branch-subtab ${activeBranch === branch ? 'director-branch-subtab--active' : ''}`}
+              onClick={() => setActiveBranch(branch)}
+            >
+              {branch}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {normalizedSubjects.length === 0 ? (
         <section className="my-subjects__empty-card">
           <div className="my-subjects__empty-icon">
-            <BookOpen size={34} />
+            <BookOpen size={36} />
           </div>
           <h2>No subjects assigned yet</h2>
           <p>Your administrator has not allocated any subjects to your faculty account.</p>
         </section>
+      ) : filteredSubjects.length === 0 ? (
+        <section className="my-subjects__empty-card">
+          <div className="my-subjects__empty-icon">
+            <BookOpen size={36} />
+          </div>
+          <h2>No subjects assigned for this selection</h2>
+          <p>No subjects match the selected branch and year filters.</p>
+        </section>
       ) : (
         <section className="my-subjects__cards-grid" aria-label="Assigned subjects">
-          {normalizedSubjects.map((subject) => (
-            <article key={subject.id} className="my-subjects__subject-card">
-              <div className="my-subjects__subject-card__glow" aria-hidden="true" />
-              <div className="my-subjects__subject-card__top">
-                <div className="my-subjects__subject-icon">
-                  <BookOpen size={22} />
-                </div>
-                <span className={`my-subjects__status-pill ${isLiveSubject(subject) ? 'my-subjects__status-pill--live' : ''}`}>
-                  {formatStatus(subject.status)}
-                </span>
-              </div>
+          {filteredSubjects.map((subject) => {
+            const footerParts = [subject.semester];
+            if (subject.credits) {
+              footerParts.push(`Credits ${subject.credits}`);
+            }
+            const footerText = footerParts.join('  ·  ');
 
-              <div className="my-subjects__subject-card__body">
-                <h3>{subject.name}</h3>
-                <p className="my-subjects__subject-code">{subject.code}</p>
-
-                <div className="my-subjects__subject-meta">
-                  <span><Layers size={15} /> {subject.branch}</span>
-                  <span>{subject.year}</span>
-                  <span>{subject.semester}</span>
-                </div>
-
-                {subject.faculty && (
-                  <div className="my-subjects__faculty-row">
-                    <img
-                      className="my-subjects__faculty-avatar-img"
-                      src={getFacultyAvatarUrl(subject.faculty)}
-                      alt={subject.faculty.full_name || 'Assigned faculty'}
-                    />
-                    <span>{subject.faculty.full_name || 'Assigned Faculty'}</span>
-                  </div>
-                )}
-              </div>
-
-              <button
-                type="button"
-                className="my-subjects__open-workspace-button"
-                onClick={() => handleOpenWorkspace(subject)}
+            return (
+              <article
+                key={subject.id}
+                className="my-subjects__subject-card"
+                onClick={() => handleCardClick(subject)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleCardClick(subject);
+                  }
+                }}
               >
-                <span>Open Workspace</span>
-                <ArrowRight size={16} />
-              </button>
-            </article>
-          ))}
+                <div className="my-subjects__subject-card__icon">
+                  <BookOpen size={24} />
+                </div>
+
+                <div className="my-subjects__subject-card__body">
+                  <h3>{subject.name}</h3>
+                  <span className="my-subjects__subject-code-pill">{subject.code}</span>
+
+                  <div className="text-gray-400 text-xs mt-3 font-medium">{subject.year} • {subject.branch}</div>
+
+                  <div className="my-subjects__subject-card__footer">
+                    {footerText}
+                  </div>
+                </div>
+              </article>
+            );
+          })}
         </section>
       )}
     </div>
@@ -324,18 +237,14 @@ export default function MySubjects() {
 
 function MySubjectsSkeleton() {
   return (
-    <>
-      <div className="my-subjects__hero my-subjects__skeleton-card" />
-      <div className="my-subjects__summary-grid">
-        {[0, 1, 2].map((item) => (
-          <div key={item} className="my-subjects__summary-card my-subjects__skeleton-card" />
-        ))}
-      </div>
+    <div className="my-subjects__skeleton-wrapper">
+      <div className="my-subjects__skeleton-header" />
       <div className="my-subjects__cards-grid">
         {[0, 1, 2, 3].map((item) => (
           <div key={item} className="my-subjects__subject-card my-subjects__skeleton-card" />
         ))}
       </div>
-    </>
+    </div>
   );
 }
+

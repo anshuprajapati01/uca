@@ -2,7 +2,7 @@ import { useLocation } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout.jsx';
 import { HOD_NAV_ITEMS } from '../../config/navigation.js';
 import AdminOverview from '../admin/AdminOverview.jsx';
-import SubjectAllocation from '../admin/SubjectAllocation.jsx';
+import FacultyWorkload from '../admin/FacultyWorkload.jsx';
 import ManageStudents from '../admin/ManageStudents.jsx';
 import UploadMaterials from '../admin/UploadMaterials.jsx';
 import ManageAnnouncements from '../admin/ManageAnnouncements.jsx';
@@ -10,7 +10,7 @@ import CurriculumManager from '../admin/CurriculumManager.jsx';
 
 const HOD_TAB_COMPONENTS = {
   overview: AdminOverview,
-  'subject-allocation': SubjectAllocation,
+  'faculty-workload': FacultyWorkload,
   'manage-student': ManageStudents,
   'upload-material': UploadMaterials,
   announcement: ManageAnnouncements,

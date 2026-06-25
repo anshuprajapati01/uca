@@ -56,13 +56,18 @@ export default function CurriculumManager() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [subjectName, setSubjectName] = useState('');
   const [subjectCode, setSubjectCode] = useState('');
+  const [credits, setCredits] = useState(3);
   const [subjectType, setSubjectType] = useState('Theory');
   const [selectedFaculty, setSelectedFaculty] = useState('');
+  const [facultySearch, setFacultySearch] = useState('');
+  const [isFacultyDropdownOpen, setIsFacultyDropdownOpen] = useState(false);
   const [subjectTypeFilter, setSubjectTypeFilter] = useState('Theory');
   const [toastMsg, setToastMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingSubjects, setIsLoadingSubjects] = useState(false);
+  const [deleteSubjectId, setDeleteSubjectId] = useState(null);
   const toastTimerRef = useRef(null);
+  const facultyDropdownRef = useRef(null);
 
   // ── Context Hooks ──
   const {
@@ -211,6 +216,16 @@ export default function CurriculumManager() {
     }
   }, [isAssigned, selectedYear, hodAssignedYears]);
 
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (facultyDropdownRef.current && !facultyDropdownRef.current.contains(event.target)) {
+        setIsFacultyDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // ── Handler Functions ──
   const handleSubmitSubject = async (e) => {
     e.preventDefault();
@@ -226,6 +241,7 @@ export default function CurriculumManager() {
         department: selectedBranch,
         year: selectedYear,
         semester: selectedSemesterDetails.name,
+        credits,
       };
 
       const { error } = await supabase.from('subjects').insert(payload);
@@ -235,6 +251,7 @@ export default function CurriculumManager() {
       await fetchSubjects();
       setSubjectName('');
       setSubjectCode('');
+      setCredits(3);
       setSubjectType('Theory');
       setSelectedFaculty('');
       setShowAddModal(false);
@@ -252,26 +269,30 @@ export default function CurriculumManager() {
     }
   };
 
-  const handleDeleteSubject = async (subjectId) => {
+  const confirmDeleteSubject = async (subjectId) => {
     if (!selectedSemesterDetails || !activeSemesterLive) return;
 
-    if (window.confirm('Are you sure you want to delete this subject? This action cannot be undone.')) {
-      const { error } = await supabase.from('subjects').delete().eq('id', subjectId);
+    const { error } = await supabase.from('subjects').delete().eq('id', subjectId);
 
-      if (error) {
-        alert('Failed to delete subject: ' + error.message);
-        return;
-      }
-      await fetchSubjects();
-
-      if (toastTimerRef.current) {
-        clearTimeout(toastTimerRef.current);
-      }
-      setToastMsg('Subject deleted successfully!');
-      toastTimerRef.current = setTimeout(() => {
-        setToastMsg('');
-      }, 3000);
+    if (error) {
+      alert('Failed to delete subject: ' + error.message);
+      return;
     }
+    await fetchSubjects();
+
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+    setToastMsg('Subject deleted successfully!');
+    toastTimerRef.current = setTimeout(() => {
+      setToastMsg('');
+    }, 3000);
+
+    setDeleteSubjectId(null);
+  };
+
+  const handleDeleteSubject = (subjectId) => {
+    setDeleteSubjectId(subjectId);
   };
 
   const toggleSemesterLive = async (e, semesterId) => {
@@ -513,7 +534,7 @@ export default function CurriculumManager() {
                     aria-label={`Delete ${subject.name}`}
                     onClick={(event) => {
                       event.stopPropagation();
-                      handleDeleteSubject(subject.id);
+                      setDeleteSubjectId(subject.id);
                     }}
                     title="Delete subject"
                     disabled={!activeSemesterLive}
@@ -572,6 +593,22 @@ export default function CurriculumManager() {
               </div>
 
               <div className="cm-form__row">
+                <label className="cm-label">Credits</label>
+                <select
+                  className="cm-select"
+                  value={credits}
+                  onChange={(e) => setCredits(Number(e.target.value))}
+                  required
+                >
+                  {[1, 2, 3, 4, 5].map((value) => (
+                    <option key={value} value={value}>
+                      {value} Credit{value !== 1 ? 's' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="cm-form__row">
                 <label className="cm-label">Subject Type</label>
                 <div className="cm-type-group">
                   {['Theory', 'Practical'].map((type) => (
@@ -589,19 +626,48 @@ export default function CurriculumManager() {
 
               <div className="cm-form__row">
                 <label className="cm-label">Assign Faculty Teacher</label>
-                <select
-                  className="cm-select"
-                  value={selectedFaculty}
-                  onChange={(e) => setSelectedFaculty(e.target.value)}
-                  required
-                >
-                  <option value="" disabled>Select Faculty</option>
-                  {dbFacultyList.map((fac) => (
-                    <option key={fac.id} value={fac.id}>
-                      {fac.full_name} {fac.expertise_tags?.length > 0 ? `(${fac.expertise_tags[0]})` : ''}
-                    </option>
-                  ))}
-                </select>
+                <div className="cm-faculty-combobox" ref={facultyDropdownRef}>
+                  <input
+                    className="cm-input"
+                    type="text"
+                    placeholder="Search & Select Faculty..."
+                    value={facultySearch}
+                    onChange={(e) => {
+                      setFacultySearch(e.target.value);
+                      setIsFacultyDropdownOpen(true);
+                    }}
+                    onFocus={() => setIsFacultyDropdownOpen(true)}
+                    required
+                  />
+                  {isFacultyDropdownOpen && (
+                    <div className="cm-faculty-dropdown">
+                      {dbFacultyList
+                        .filter((f) =>
+                          f.full_name.toLowerCase().includes(facultySearch.toLowerCase())
+                        )
+                        .map((fac) => (
+                          <div
+                            key={fac.id}
+                            className="cm-faculty-option"
+                            onClick={() => {
+                              setSelectedFaculty(fac.id);
+                              setFacultySearch(fac.full_name + (fac.expertise_tags?.length > 0 ? ` (${fac.expertise_tags[0]})` : ''));
+                              setIsFacultyDropdownOpen(false);
+                            }}
+                          >
+                            {fac.full_name} {fac.expertise_tags?.length > 0 ? `(${fac.expertise_tags[0]})` : ''}
+                          </div>
+                        ))}
+                      {dbFacultyList.filter((f) =>
+                        f.full_name.toLowerCase().includes(facultySearch.toLowerCase())
+                      ).length === 0 && (
+                        <div className="cm-faculty-option cm-faculty-option--empty">
+                          No faculty found
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {selectedFacultyData && (
@@ -628,6 +694,19 @@ export default function CurriculumManager() {
             </form>
           </div>
         </div>
+      )}
+
+      {deleteSubjectId && (
+         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(5px)' }}>
+            <div style={{ background: '#1a1c2e', padding: '24px', borderRadius: '16px', border: '1px solid #ef4444', maxWidth: '400px', width: '90%' }}>
+               <h3 style={{ color: 'white', fontSize: '18px', fontWeight: 'bold' }}>Delete Subject?</h3>
+               <p style={{ color: '#ccc', margin: '10px 0' }}>Are you sure you want to delete this subject? This action cannot be undone.</p>
+               <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                  <button onClick={() => setDeleteSubjectId(null)} style={{ flex: 1, padding: '10px', borderRadius: '8px', background: '#374151', color: 'white', fontWeight: '500', transition: '0.2s', cursor: 'pointer' }} onMouseOver={(e) => e.target.style.background = '#4b5563'} onMouseOut={(e) => e.target.style.background = '#374151'}>Cancel</button>
+                  <button onClick={() => confirmDeleteSubject(deleteSubjectId)} style={{ flex: 1, padding: '10px', borderRadius: '8px', background: '#dc2626', color: 'white', fontWeight: 'bold', transition: '0.2s', cursor: 'pointer' }} onMouseOver={(e) => e.target.style.background = '#b91c1c'} onMouseOut={(e) => e.target.style.background = '#dc2626'}>Delete</button>
+               </div>
+            </div>
+         </div>
       )}
     </div>
   );

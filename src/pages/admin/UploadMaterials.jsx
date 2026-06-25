@@ -1,12 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { sanitizeFileName, validateAcademicFile } from '../../services/resourceService.js';
-import './UploadMaterials.css';
+import './DirectorDashboard-v2.css';
+
 
 const MATERIAL_CATEGORIES = ['Syllabus', 'Class Notes', 'Toppers Notes', 'Reference Books', 'PYQs', 'Exam Cheatsheets', 'Lecture', 'Assignment', 'Tutorial'];
 
+const YEAR_OPTIONS = ['2nd Year', '3rd Year'];
+const BRANCH_OPTIONS = ['CS', 'IT'];
+
 export default function UploadMaterials() {
   const [subjects, setSubjects] = useState([]);
+  const [selectedYear, setSelectedYear] = useState('');
+  const [selectedBranch, setSelectedBranch] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     category: '',
@@ -18,13 +24,27 @@ export default function UploadMaterials() {
   const [isLoading, setIsLoading] = useState(false);
   const [uploadedMaterials, setUploadedMaterials] = useState([]);
   const [manageFilter, setManageFilter] = useState('All');
+  const [deleteId, setDeleteId] = useState(null);
 
-  const fetchSubjects = async () => {
-    const { data, error } = await supabase.from('subjects').select('id, name, code');
+const fetchSubjects = useCallback(async () => {
+    if (!selectedYear || !selectedBranch) {
+      setSubjects([]);
+      return;
+    }
+    let query = supabase.from('subjects').select('id, name, code');
+    
+    if (selectedYear) {
+      query = query.eq('year', selectedYear);
+    }
+    if (selectedBranch) {
+      query = query.eq('department', selectedBranch);
+    }
+    
+    const { data, error } = await query;
     if (!error && data) {
       setSubjects(data);
     }
-  };
+  }, [selectedYear, selectedBranch]);
 
   const fetchUploadedMaterials = async () => {
     // Yahan humne explicitly * lagaya hai taaki file_url pakka aaye
@@ -64,6 +84,9 @@ export default function UploadMaterials() {
 
   useEffect(() => {
     fetchSubjects();
+  }, [fetchSubjects]);
+
+  useEffect(() => {
     fetchUploadedMaterials();
   }, []);
 
@@ -139,232 +162,271 @@ export default function UploadMaterials() {
   const handleReset = () => {
     setFormData({ title: '', category: '', subject_id: '', file_url: '' });
     setFile(null);
+    setSelectedYear('');
+    setSelectedBranch('');
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this material?")) {
-      const { error } = await supabase.from('study_materials').delete().eq('id', id);
-      if (!error) {
-        setUploadedMaterials(prev => prev.filter(item => item.id !== id));
-        alert("Material deleted successfully!");
-      } else {
-        alert("Error deleting material: " + error.message);
-      }
+  const handleDelete = (id) => {
+    setDeleteId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    const id = deleteId;
+    setDeleteId(null);
+    const { error } = await supabase.from('study_materials').delete().eq('id', id);
+    if (!error) {
+      setUploadedMaterials(prev => prev.filter(item => item.id !== id));
+      setToast({ message: 'Material deleted successfully!', type: 'success' });
+    } else {
+      setToast({ message: 'Error deleting material: ' + error.message, type: 'error' });
     }
+    setTimeout(() => setToast({ message: '', type: '' }), 3000);
   };
 
-  return (
-    <div className="upload-materials-container">
-      {toast.message && (
-        <div className={`custom-toast ${toast.type}`}>
-          {toast.message}
-        </div>
-      )}
-
-      <h2 className="upload-materials-title">Upload Study Materials</h2>
-
-      <form onSubmit={handleSubmit} className="upload-materials-form">
-        <div className="form-grid">
-          <div className="form-group">
-            <label htmlFor="title">Title</label>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              placeholder="e.g., OS Unit 1 Notes"
-              value={formData.title}
-              onChange={handleChange}
-              required
-            />
+return (
+    <div className="relative min-h-screen">
+      <div className="premium-glass-card p-6">
+        {toast.message && (
+          <div className={`custom-toast ${toast.type}`}>
+            {toast.message}
           </div>
+        )}
 
-          <div className="form-group">
-            <label htmlFor="category">Category</label>
-            <select
-              id="category"
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              required
-            >
-              <option value="">-- Select Category --</option>
-              {MATERIAL_CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-          </div>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#f8fafc', margin: '0 0 1.5rem 0', letterSpacing: '-0.02em' }}>Upload Study Materials</h2>
 
-          <div className="form-group">
-            <label htmlFor="subject_id">Subject</label>
-            <select
-              id="subject_id"
-              name="subject_id"
-              value={formData.subject_id}
-              onChange={handleChange}
-              required
-            >
-              <option value="">-- Select Subject --</option>
-              {subjects.map((sub) => (
-                <option key={sub.id} value={sub.id}>
-                  {sub.name} ({sub.code})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="file_url">File URL / Google Drive Link</label>
-            <input
-              type="url"
-              id="file_url"
-              name="file_url"
-              placeholder="https://drive.google.com/... or any file URL"
-              value={formData.file_url}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Upload Document</label>
-            <div className="file-upload-area">
+        <form onSubmit={handleSubmit} className="broadcast-form-container">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '1.2rem' }}>
+            <div className="broadcast-form-row">
+              <label htmlFor="title" style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#a1a1aa', marginBottom: '0.375rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Title</label>
               <input
-                type="file"
-                id="local-file-upload"
-                onChange={handleFileChange}
-                className="file-input-hidden"
+                type="text"
+                id="title"
+                name="title"
+                placeholder="e.g., OS Unit 1 Notes"
+                value={formData.title}
+                onChange={handleChange}
+                required
+                className="broadcast-input w-full"
               />
-              <label htmlFor="local-file-upload" className="file-upload-label">
-                📁 Choose File
-              </label>
-              {file && (
-                <span className="file-name-display">{file.name}</span>
-              )}
+            </div>
+
+            <div className="broadcast-form-row">
+              <label htmlFor="category" style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#a1a1aa', marginBottom: '0.375rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Category</label>
+              <select
+                id="category"
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                required
+                className="broadcast-input w-full"
+              >
+                <option value="">-- Select Category --</option>
+                {MATERIAL_CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="broadcast-form-row">
+              <label htmlFor="year" style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#a1a1aa', marginBottom: '0.375rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Year</label>
+              <select
+                id="year"
+                name="year"
+                value={selectedYear}
+                onChange={(e) => {
+                  setSelectedYear(e.target.value);
+                  setSelectedBranch('');
+                  setFormData(prev => ({ ...prev, subject_id: '' }));
+                }}
+                required
+                className="broadcast-input w-full"
+              >
+                <option value="">-- Select Year --</option>
+                {YEAR_OPTIONS.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="broadcast-form-row">
+              <label htmlFor="branch" style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#a1a1aa', marginBottom: '0.375rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Branch</label>
+              <select
+                id="branch"
+                name="branch"
+                value={selectedBranch}
+                onChange={(e) => {
+                  setSelectedBranch(e.target.value);
+                  setFormData(prev => ({ ...prev, subject_id: '' }));
+                }}
+                required
+                disabled={!selectedYear}
+                className="broadcast-input w-full"
+              >
+                <option value="">-- Select Branch --</option>
+                {BRANCH_OPTIONS.map((branch) => (
+                  <option key={branch} value={branch}>
+                    {branch}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="broadcast-form-row">
+              <label htmlFor="subject_id" style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#a1a1aa', marginBottom: '0.375rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Subject</label>
+              <select
+                id="subject_id"
+                name="subject_id"
+                value={formData.subject_id}
+                onChange={handleChange}
+                required
+                disabled={!selectedYear || !selectedBranch}
+                className="broadcast-input w-full"
+              >
+                <option value="">-- Select Subject --</option>
+                {subjects.map((sub) => (
+                  <option key={sub.id} value={sub.id}>
+                    {sub.name} ({sub.code})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="broadcast-form-row">
+              <label htmlFor="file_url" style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#a1a1aa', marginBottom: '0.375rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>File URL / Google Drive Link</label>
+              <input
+                type="url"
+                id="file_url"
+                name="file_url"
+                placeholder="https://drive.google.com/... or any file URL"
+                value={formData.file_url}
+                onChange={handleChange}
+                className="broadcast-input w-full"
+              />
+            </div>
+
+            <div className="broadcast-form-row">
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#a1a1aa', marginBottom: '0.375rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Upload Document</label>
+              <div className="broadcast-upload-btn">
+                <input
+                  type="file"
+                  id="local-file-upload"
+                  onChange={handleFileChange}
+                  style={{ display: 'none' }}
+                />
+                <label htmlFor="local-file-upload" style={{ cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}>
+                  📁 Choose File
+                </label>
+                {file && (
+                  <span style={{ marginLeft: '12px', color: '#9ca3af', fontSize: '13px' }}>{file.name}</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="broadcast-form-actions">
+            <button type="button" className="dept-modal__btn dept-modal__btn--cancel" onClick={handleReset}>
+              Clear
+            </button>
+            <button type="submit" className="broadcast-send-btn" disabled={isLoading}>
+              {isLoading ? 'Uploading...' : 'Upload Material'}
+            </button>
+          </div>
+        </form>
+
+        <div style={{ marginTop: '40px' }}>
+          <h3 style={{ color: '#f8fafc', fontSize: '1.25rem', fontWeight: '700', marginBottom: '16px', letterSpacing: '-0.01em' }}>Manage Uploaded Materials</h3>
+
+          <div className="pill-group" style={{ marginBottom: '20px' }}>
+            {['All', 'Syllabus', 'Class Notes', 'Toppers Notes', 'Reference Books', 'PYQs', 'Exam Cheatsheets', 'Lecture', 'Assignment', 'Tutorial'].map((f) => (
+              <button
+                key={f}
+                className={`pill-btn ${manageFilter === f ? 'pill-btn--active' : ''}`}
+                onClick={() => setManageFilter(f)}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+
+          <div className="director-announcements-list">
+            {(() => {
+              const filtered = uploadedMaterials.filter(item => manageFilter === 'All' || item.type === manageFilter);
+              if (filtered.length === 0) {
+                return (
+                  <div style={{ color: '#94a3b8', textAlign: 'center', padding: '2rem', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '14px', border: '1px dashed rgba(148, 163, 184, 0.25)' }}>
+                    No materials found.
+                  </div>
+                );
+              }
+              return filtered.map((item) => (
+                <div key={item.id} className="director-announcement-card">
+                  <div className="director-announcement-card__header">
+                    <h4>{item.title}</h4>
+                    <div className="director-announcement-card__date">
+                      Code: {item.subject_code} • {item.type}
+                    </div>
+                  </div>
+                  <div style={{ color: '#fbbf24', fontSize: '13px', margin: '6px 0 0 0', fontWeight: 'bold' }}>
+                    Uploaded by: {item.uploader_name} ({item.uploader_role})
+                  </div>
+                  
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '12px' }}>
+                    {item.file_url && (
+                      <a
+                        href={item.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          background: 'rgba(59, 130, 246, 0.15)',
+                          border: '1px solid rgba(59, 130, 246, 0.35)',
+                          color: '#93c5fd',
+                          textDecoration: 'none',
+                          borderRadius: '10px',
+                          padding: '0.5rem 1rem',
+                          fontSize: '0.85rem',
+                          fontWeight: '700',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        👁️ View
+                      </a>
+                    )}
+
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="dept-card__delete-btn"
+                      style={{ width: 'auto', height: 'auto', padding: '0.5rem 1rem', gap: '0.35rem', fontSize: '0.85rem', fontWeight: '700' }}
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
+                </div>
+              ));
+            })()}
+          </div>
+        </div>
+      </div>
+
+      {deleteId && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(5px)' }}>
+          <div style={{ background: '#1a1c2e', padding: '24px', borderRadius: '16px', border: '1px solid #ef4444', maxWidth: '400px', width: '90%' }}>
+            <h3 style={{ color: 'white', fontSize: '18px', fontWeight: 'bold' }}>Delete Material?</h3>
+            <p style={{ color: '#ccc', margin: '10px 0' }}>Are you sure? This action cannot be undone.</p>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <button onClick={() => setDeleteId(null)} style={{ flex: 1, padding: '10px', borderRadius: '8px', background: '#374151', color: 'white' }}>Cancel</button>
+              <button onClick={confirmDelete} style={{ flex: 1, padding: '10px', borderRadius: '8px', background: '#dc2626', color: 'white' }}>Delete</button>
             </div>
           </div>
         </div>
-
-        <div className="form-actions">
-          <button type="button" className="reset-button" onClick={handleReset}>
-            Clear
-          </button>
-          <button type="submit" className="submit-button" disabled={isLoading}>
-            {isLoading ? 'Uploading...' : 'Upload Material'}
-          </button>
-        </div>
-      </form>
-
-      <div style={{ marginTop: '40px' }}>
-        <h3 style={{ color: '#f3f4f6', fontSize: '20px', fontWeight: '700', marginBottom: '16px' }}>Manage Uploaded Materials</h3>
-
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '20px' }}>
-          {['All', 'Syllabus', 'Class Notes', 'Toppers Notes', 'Reference Books', 'PYQs', 'Exam Cheatsheets', 'Lecture', 'Assignment', 'Tutorial'].map((f) => (
-            <button
-              key={f}
-              style={{
-                padding: '6px 14px',
-                borderRadius: '20px',
-                border: 'none',
-                cursor: 'pointer',
-                fontWeight: '500',
-                fontSize: '13px',
-                background: manageFilter === f ? '#4f46e5' : '#374151',
-                color: manageFilter === f ? '#fff' : '#9ca3af',
-                transition: '0.2s'
-              }}
-              onClick={() => setManageFilter(f)}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {(() => {
-            const filtered = uploadedMaterials.filter(item => manageFilter === 'All' || item.type === manageFilter);
-            if (filtered.length === 0) {
-              return (
-                <div style={{ color: '#9ca3af', textAlign: 'center', padding: '30px', background: '#1f2937', borderRadius: '10px' }}>
-                  No materials found.
-                </div>
-              );
-            }
-            return filtered.map((item) => (
-              <div key={item.id} style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                background: '#1f2937',
-                padding: '16px 20px',
-                borderRadius: '10px',
-                border: '1px solid #374151'
-              }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ color: '#f3f4f6', fontWeight: '600', fontSize: '15px' }}>{item.title}</div>
-                  <div style={{ color: '#9ca3af', fontSize: '13px', marginTop: '4px' }}>
-                    Code: {item.subject_code} • {item.type}
-                  </div>
-                  <p style={{ color: '#fbbf24', fontSize: '13px', margin: '6px 0 0 0', fontWeight: 'bold' }}>
-                    Uploaded by: {item.uploader_name} ({item.uploader_role})
-                  </p>
-                </div>
-                
-                {/* YAHAN BUTTONS HAIN (VIEW + DELETE) */}
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  
-                  {/* VIEW BUTTON (Sirf tab dikhega jab link ho) */}
-                  {item.file_url && (
-                    <a
-                      href={item.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        background: '#3b82f6',
-                        color: '#fff',
-                        textDecoration: 'none',
-                        border: 'none',
-                        borderRadius: '8px',
-                        padding: '8px 16px',
-                        fontWeight: 'bold',
-                        fontSize: '13px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        transition: '0.2s'
-                      }}
-                    >
-                      👁️ View
-                    </a>
-                  )}
-
-                  {/* DELETE BUTTON */}
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    style={{
-                      background: '#ef4444',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: '8px',
-                      padding: '8px 16px',
-                      cursor: 'pointer',
-                      fontWeight: 'bold',
-                      fontSize: '13px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      transition: '0.2s'
-                    }}
-                  >
-                    🗑️ Delete
-                  </button>
-                </div>
-
-              </div>
-            ));
-          })()}
-        </div>
-      </div>
+      )}
     </div>
   );
 }

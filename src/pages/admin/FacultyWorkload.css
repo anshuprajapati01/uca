@@ -1,0 +1,329 @@
+.workload-container {
+  padding: 1.5rem;
+  color: #fff;
+}
+
+.workload-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #e4e4e7;
+  margin: 0 0 1.25rem;
+}
+
+.workload-status {
+  padding: 2rem;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.workload-list-glass {
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  border-radius: 16px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.workload-table {
+  display: grid;
+  grid-template-rows: auto auto;
+}
+
+.workload-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.5fr 1fr;
+  align-items: center;
+  padding: 0;
+}
+
+.workload-row--head {
+  background: rgba(15, 23, 42, 0.88);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.workload-row:not(.workload-row--head) {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  transition: background 0.2s ease;
+}
+
+.workload-row:not(.workload-row--head):hover {
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.workload-row:last-child {
+  border-bottom: none;
+}
+
+.workload-cell {
+  padding: 1rem 1.1rem;
+  overflow: hidden;
+}
+
+.workload-row--head .workload-cell {
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.workload-name {
+  font-weight: 700;
+  color: #fff;
+  display: block;
+}
+
+.workload-count {
+  display: inline-block;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #e2e8f0;
+  min-width: 1.5em;
+  text-align: center;
+}
+
+.workload-status-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.workload-bar-wrapper {
+  width: 100%;
+  max-width: 100px;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.12);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.workload-bar {
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.4s ease;
+}
+
+.workload-low {
+  background: linear-gradient(90deg, #22d3ee, #34d399);
+}
+
+.workload-medium {
+  background: linear-gradient(90deg, #f59e0b, #fcd34d);
+}
+
+.workload-high {
+  background: linear-gradient(90deg, #ef4444, #f87171);
+}
+
+.workload-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.workload-badge.workload-low {
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.24);
+}
+
+.workload-badge.workload-medium {
+  color: #fcd34d;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.24);
+}
+
+.workload-badge.workload-high {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.24);
+}
+
+.workload-action-btn {
+  min-width: 140px;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(139, 92, 246, 0.34);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(37, 99, 235, 0.12));
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  text-align: center;
+  justify-self: start;
+}
+
+.workload-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(99, 102, 241, 0.18);
+}
+
+.workload-empty {
+  padding: 2rem;
+  text-align: center;
+  color: #94a3b8;
+  grid-column: 1 / -1;
+}
+
+.workload-drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1.5rem;
+}
+
+.workload-drawer {
+  width: 100%;
+  max-width: 720px;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+.workload-drawer-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(16px);
+  border-radius: 16px 16px 0 0;
+}
+
+.workload-drawer-header h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.workload-drawer-close {
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.workload-drawer-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.workload-drawer-body {
+  padding: 0.75rem 1.25rem 1.25rem;
+  overflow-x: auto;
+}
+
+.workload-drawer-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 520px;
+}
+
+.workload-drawer-table th {
+  padding: 0.85rem 0.75rem;
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: left;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(15, 23, 42, 0.4);
+}
+
+.workload-drawer-table td {
+  padding: 0.85rem 0.75rem;
+  color: #e2e8f0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+.workload-drawer-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.workload-drawer-table tbody tr:hover {
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.subject-code {
+  display: inline-flex;
+  padding: 0.28rem 0.68rem;
+  border: 1px solid rgba(139, 92, 246, 0.26);
+  border-radius: 999px;
+  color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.1);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.workload-drawer-empty {
+  padding: 1.5rem;
+  text-align: center;
+  color: #94a3b8;
+}
+
+@media (max-width: 760px) {
+  .workload-row {
+    grid-template-columns: 1.5fr 1fr 1.5fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .workload-cell {
+    padding: 0.85rem 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .workload-bar-wrapper {
+    max-width: 80px;
+  }
+
+  .workload-badge {
+    padding: 3px 10px;
+    font-size: 0.68rem;
+  }
+
+  .workload-action-btn {
+    min-width: auto;
+    padding: 0.55rem 0.85rem;
+    font-size: 0.8rem;
+  }
+}

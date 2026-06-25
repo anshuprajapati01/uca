@@ -56,9 +56,9 @@ export const FACULTY_NAV_ITEMS = [
 export const ADMIN_NAV_ITEMS = [
   { label: 'Overview', path: ROUTES.ADMIN_DASHBOARD, icon: LayoutDashboard },
   {
-    label: 'Subject Allocation',
-    path: `${ROUTES.ADMIN_DASHBOARD}/subject-allocation`,
-    icon: BookOpen,
+    label: 'Faculty Workload',
+    path: `${ROUTES.ADMIN_DASHBOARD}/faculty-workload`,
+    icon: Users,
   },
   {
     label: 'Curriculum Manager',
@@ -87,10 +87,10 @@ export const ADMIN_NAV_ITEMS = [
 export const HOD_NAV_ITEMS = [
   { id: 'overview', label: 'Overview', path: ROUTES.HOD_DASHBOARD, icon: LayoutDashboard },
   {
-    id: 'subject-allocation',
-    label: 'Subject Allocation',
-    path: `${ROUTES.HOD_DASHBOARD}/subject-allocation`,
-    icon: BookOpen,
+    id: 'faculty-workload',
+    label: 'Faculty Workload',
+    path: `${ROUTES.HOD_DASHBOARD}/faculty-workload`,
+    icon: Users,
   },
   {
     id: 'manage-student',

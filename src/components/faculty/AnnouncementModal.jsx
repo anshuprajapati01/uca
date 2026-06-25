@@ -1,111 +1,51 @@
 import { useState } from 'react';
-import { X, Loader2 } from 'lucide-react';
-import FormField from '../common/FormField.jsx';
-import { supabase } from '../../lib/supabase.js';
-import './AnnouncementModal.css';
+import { X } from 'lucide-react';
+import toast from 'react-hot-toast';
 
-const ANNOUNCEMENT_TYPES = ['General', 'Exam', 'Holiday', 'Important'];
-
-export default function AnnouncementModal({ isOpen, onClose, onSuccess }) {
+export default function AnnouncementModal({ isOpen, onClose, subjectId }) {
+  const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    title: '',
-    content: '',
-    type: 'General',
-  });
 
   if (!isOpen) return null;
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!message.trim()) return toast.error('Please enter a message');
     setIsLoading(true);
     try {
-      const { error: insertError } = await supabase
+      const { error } = await supabase
         .from('announcements')
-        .insert([
-          {
-            title: formData.title,
-            content: formData.content,
-            type: formData.type,
-          },
-        ]);
-      if (insertError) throw insertError;
-      if (onSuccess) onSuccess();
-      setFormData({ title: '', content: '', type: 'General' });
+        .insert([{ subject_id: subjectId, message: message.trim() }]);
+      if (error) throw error;
+      toast.success('Announcement sent successfully!');
+      setMessage('');
+      onClose();
     } catch (err) {
-      console.error('Failed to create announcement:', err);
-      alert('Failed to create announcement. Please try again.');
+      console.error('Announcement failed:', err);
+      toast.error('Failed to send announcement. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleCancel = () => {
-    setFormData({ title: '', content: '', type: 'General' });
-    onClose();
-  };
-
   return (
-    <div className="upload-modal__overlay" onClick={handleCancel}>
-      <div className="upload-modal__content" onClick={(e) => e.stopPropagation()}>
-        <header className="upload-modal__header">
-          <h2>New Announcement</h2>
-          <button type="button" className="upload-modal__close" onClick={handleCancel}>
-            <X size={20} />
-          </button>
-        </header>
-        <form onSubmit={handleSubmit} className="upload-modal__form">
-          <FormField id="title" label="Title">
-            <input
-              type="text"
-              id="title"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              required
-            />
-          </FormField>
-
-          <FormField id="content" label="Content">
-            <textarea
-              id="content"
-              name="content"
-              value={formData.content}
-              onChange={handleChange}
-              rows={4}
-              required
-            />
-          </FormField>
-
-          <FormField id="type" label="Type">
-            <select id="type" name="type" value={formData.type} onChange={handleChange}>
-              {ANNOUNCEMENT_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </FormField>
-
-          <div className="upload-modal__actions">
-            <button type="button" className="upload-modal__cancel" onClick={handleCancel}>
-              Cancel
-            </button>
-            <button type="submit" className="upload-modal__submit" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 size={16} className="upload-modal__spinner" />
-                  Creating...
-                </>
-              ) : (
-                'Create'
-              )}
-            </button>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}>
+      <div style={{ backgroundColor: '#1c1d2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '24px', width: '90%', maxWidth: '500px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h2 style={{ color: 'white', fontSize: '1.25rem', margin: 0, fontWeight: 'bold' }}>Make an Announcement</h2>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer' }}><X size={20} /></button>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <textarea 
+            rows="4" 
+            placeholder="Write your announcement here... (e.g., Bring your tutorial copy tomorrow)"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            style={{ width: '100%', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '12px', borderRadius: '8px', marginBottom: '16px', resize: 'none' }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+            <button type="button" onClick={onClose} style={{ padding: '8px 16px', borderRadius: '8px', backgroundColor: 'transparent', color: '#9ca3af', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>Cancel</button>
+            <button type="submit" disabled={isLoading} style={{ padding: '8px 16px', borderRadius: '8px', backgroundColor: '#6366f1', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>Send Announcement</button>
           </div>
         </form>
       </div>

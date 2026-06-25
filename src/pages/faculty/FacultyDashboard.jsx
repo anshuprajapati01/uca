@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { BookOpen, LayoutDashboard, LogOut, Upload, User } from 'lucide-react';
+import { BookOpen, LayoutDashboard, LogOut, User } from 'lucide-react';
 import { supabase } from '../../lib/supabase.js';
 import { ROUTES } from '../../config/constants.js';
 import './FacultyDashboard.css';
@@ -8,7 +8,6 @@ import './FacultyDashboard.css';
 const navItems = [
   { id: 'overview', label: '🏠 Overview', path: ROUTES.FACULTY_DASHBOARD, icon: <LayoutDashboard size={18} /> },
   { id: 'subjects', label: '📚 My Subjects', path: `${ROUTES.FACULTY_DASHBOARD}/subjects`, icon: <BookOpen size={18} /> },
-  { id: 'upload', label: '📤 Upload Materials', path: `${ROUTES.FACULTY_DASHBOARD}/resources`, icon: <Upload size={18} /> },
 ];
 
 export default function FacultyDashboard() {
@@ -18,8 +17,7 @@ export default function FacultyDashboard() {
     const pathname = location.pathname.replace(/\/+$/, '') || ROUTES.FACULTY_DASHBOARD;
 
     if (pathname === ROUTES.FACULTY_DASHBOARD) return 'overview';
-    if (pathname === `${ROUTES.FACULTY_DASHBOARD}/subjects` || pathname.startsWith(`${ROUTES.FACULTY_DASHBOARD}/subjects/`)) return 'subjects';
-    if (pathname === `${ROUTES.FACULTY_DASHBOARD}/resources`) return 'upload';
+    if (pathname === `${ROUTES.FACULTY_DASHBOARD}/subjects` || pathname.startsWith(`${ROUTES.FACULTY_DASHBOARD}/subjects/`) || pathname === `${ROUTES.FACULTY_DASHBOARD}/workspace` || pathname.startsWith(`${ROUTES.FACULTY_DASHBOARD}/workspace/`)) return 'subjects';
 
     return 'overview';
   }, [location.pathname]);
@@ -122,6 +120,8 @@ export default function FacultyDashboard() {
     );
   }
 
+  const pageTitle = activeTab === 'subjects' ? 'My Subjects' : 'Faculty Dashboard';
+
   return (
     <div className="faculty-dashboard-layout">
       <FacultySidebar activeTab={activeTab} onNavigate={navigate} />
@@ -134,14 +134,13 @@ export default function FacultyDashboard() {
           showRoleSwitcher={showRoleSwitcher}
           onSwitchRole={handleSwitchRole}
           isOnHodDashboard={isOnHodDashboard}
+          pageTitle={pageTitle}
         />
 
         <div className="faculty-content">
           {activeTab === 'overview' && <Outlet />}
 
           {activeTab === 'subjects' && <Outlet />}
-
-          {activeTab === 'upload' && <Outlet />}
         </div>
       </main>
     </div>
@@ -182,12 +181,11 @@ function FacultySidebar({ activeTab, onNavigate }) {
   );
 }
 
-function FacultyHeader({ displayName, initials, onSignOut, showRoleSwitcher, onSwitchRole, isOnHodDashboard }) {
+function FacultyHeader({ displayName, initials, onSignOut, showRoleSwitcher, onSwitchRole, isOnHodDashboard, pageTitle }) {
   return (
     <header className="faculty-header">
       <div className="faculty-header__title-wrap">
-        <h2 className="faculty-header__title">Faculty Dashboard</h2>
-        <span className="faculty-header__welcome">Welcome back, {displayName.split(' ')[0]}</span>
+        <h2 className="faculty-header__title">{pageTitle}</h2>
       </div>
 
       <div className="faculty-header__right">

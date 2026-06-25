@@ -186,13 +186,6 @@
   color: #f1f5f9;
 }
 
-.faculty-header__welcome {
-  font-size: 0.72rem;
-  font-weight: 400;
-  color: #64748b;
-  letter-spacing: 0.02em;
-}
-
 .faculty-header__right {
   display: flex;
   align-items: center;
