@@ -25,7 +25,7 @@ export default function FacultyWorkload() {
   const [subjectsDetail, setSubjectsDetail] = useState([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState(null);
-  const [selectedSubBranch, setSelectedSubBranch] = useState(null);
+  const [selectedSubBranch, setSelectedSubBranch] = useState('');
 
   const {
     hodAuthorizedBranches,
@@ -48,12 +48,13 @@ export default function FacultyWorkload() {
     }));
   }, [isAggregateHod, hodAuthorizedBranches]);
 
-  const effectiveBranchCode = useMemo(() => {
-    if (!isHodMode) return null;
-    if (isAggregateHod && selectedSubBranch) return selectedSubBranch;
-    if (hodAuthorizedBranches.length === 1 && !isAggregateHod) return hodAuthorizedBranches[0].code;
-    return selectedBranch || null;
-  }, [isHodMode, isAggregateHod, selectedSubBranch, selectedBranch, hodAuthorizedBranches]);
+  const allowedDepartments = useMemo(() => {
+    if (!isHodMode) return [];
+    if (isAggregateHod) {
+      return selectedSubBranch ? [selectedSubBranch] : availableBranches.map((b) => b.code);
+    }
+    return selectedBranch ? [selectedBranch] : hodAuthorizedBranches.map((b) => b.code);
+  }, [isHodMode, isAggregateHod, selectedSubBranch, selectedBranch, availableBranches, hodAuthorizedBranches]);
 
   useEffect(() => {
     if (isHodMode && hodAuthorizedBranches.length === 1 && !isAggregateHod && !selectedBranch) {
@@ -62,22 +63,23 @@ export default function FacultyWorkload() {
   }, [isHodMode, hodAuthorizedBranches, isAggregateHod, selectedBranch]);
 
   useEffect(() => {
-    if (isHodMode && isAggregateHod && !selectedSubBranch && availableBranches.length > 0) {
-      setSelectedSubBranch(availableBranches[0].code);
-    }
-  }, [isHodMode, isAggregateHod, selectedSubBranch, availableBranches]);
-
-  useEffect(() => {
     async function loadWorkload() {
       setLoading(true);
 
       let query = supabase
         .from('subjects')
-        .select('faculty_id, faculty:user_profiles!faculty_id(full_name), department')
+        .select('faculty_id, faculty:user_profiles!faculty_id(full_name), department, year')
         .not('faculty_id', 'is', null);
 
-      if (isHodMode && effectiveBranchCode) {
-        query = query.eq('department', effectiveBranchCode);
+      if (isHodMode && isAggregateHod) {
+        query = query.eq('year', '1st Year');
+      }
+      if (isHodMode && !isAggregateHod) {
+        query = query.neq('year', '1st Year');
+      }
+
+      if (isHodMode && allowedDepartments.length > 0) {
+        query = query.in('department', allowedDepartments);
       }
 
       const { data: subjectsData, error: subjectsError } = await query;
@@ -91,6 +93,10 @@ export default function FacultyWorkload() {
 
       const workloadMap = new Map();
       (subjectsData || []).forEach((subject) => {
+        if (isHodMode && !allowedDepartments.includes(subject.department)) return;
+        const isCorrectYear =
+          isAggregateHod ? subject.year === '1st Year' : subject.year !== '1st Year';
+        if (isHodMode && !isCorrectYear) return;
         const facultyId = subject.faculty_id;
         const facultyName = subject.faculty?.full_name || 'Unknown Faculty';
         if (!workloadMap.has(facultyId)) {
@@ -120,7 +126,7 @@ export default function FacultyWorkload() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [isHodMode, effectiveBranchCode]);
+  }, [isHodMode, allowedDepartments]);
 
   const getWorkloadStatus = (count) => {
     if (count <= 2) return { label: 'Low', class: 'workload-low' };
@@ -133,12 +139,19 @@ export default function FacultyWorkload() {
 
     let query = supabase
       .from('subjects')
-      .select('code, name, semester, department, year')
+      .select('id, code, name, semester, department, year')
       .eq('faculty_id', faculty.id)
       .order('semester', { ascending: true });
 
-    if (isHodMode && effectiveBranchCode) {
-      query = query.eq('department', effectiveBranchCode);
+    if (isHodMode && isAggregateHod) {
+      query = query.eq('year', '1st Year');
+    }
+    if (isHodMode && !isAggregateHod) {
+      query = query.neq('year', '1st Year');
+    }
+
+    if (isHodMode && allowedDepartments.length > 0) {
+      query = query.in('department', allowedDepartments);
     }
 
     const { data, error } = await query;
@@ -147,7 +160,10 @@ export default function FacultyWorkload() {
       console.error('Error fetching subjects:', error);
       setSubjectsDetail([]);
     } else {
-      setSubjectsDetail(data || []);
+      const filteredData = isHodMode
+        ? (data || []).filter((subject) => allowedDepartments.includes(subject.department))
+        : (data || []);
+      setSubjectsDetail(filteredData);
     }
 
     setDrawerOpen(true);
@@ -173,9 +189,10 @@ export default function FacultyWorkload() {
                 <select
                   id="subbranch-select"
                   className="workload-filter-select"
-                  value={selectedSubBranch || ''}
+                  value={selectedSubBranch}
                   onChange={(e) => setSelectedSubBranch(e.target.value)}
                 >
+                  <option value="">All Sub-Branches</option>
                   {availableBranches.map((branch) => (
                     <option key={branch.code} value={branch.code}>
                       {branch.name}
@@ -290,7 +307,7 @@ export default function FacultyWorkload() {
                 </thead>
                 <tbody>
                   {subjectsDetail.map((subject) => (
-                    <tr key={subject.code}>
+                    <tr key={subject.id}>
                       <td><span className="subject-code">{subject.code}</span></td>
                       <td>{subject.name}</td>
                       <td>{subject.semester}</td>
