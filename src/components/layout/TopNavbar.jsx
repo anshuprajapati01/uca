@@ -23,12 +23,25 @@ export default function TopNavbar({ title, onMenuClick }) {
 
   const isFacultyDashboard = location.pathname.startsWith('/faculty');
   const isHodDashboard = location.pathname.startsWith('/hod-dashboard');
+  const isDirectorDashboard = location.pathname.startsWith('/director');
+
+  let switcherLabel = null;
+  let switcherTarget = null;
+
+  if (isFacultyDashboard) {
+    switcherLabel = '🔄 Switch to HOD Portal';
+    switcherTarget = ROUTES.HOD_DASHBOARD;
+  } else if (isHodDashboard) {
+    switcherLabel = '🔄 Switch to Faculty Portal';
+    switcherTarget = ROUTES.FACULTY_DASHBOARD;
+  } else if (isDirectorDashboard) {
+    switcherLabel = '🔄 Switch to Faculty Portal';
+    switcherTarget = ROUTES.FACULTY_DASHBOARD;
+  }
 
   function handleSwitchRole() {
-    if (isFacultyDashboard) {
-      navigate(ROUTES.HOD_DASHBOARD, { replace: true });
-    } else if (isHodDashboard) {
-      navigate(ROUTES.FACULTY_DASHBOARD, { replace: true });
+    if (switcherTarget) {
+      navigate(switcherTarget, { replace: true });
     }
   }
 
@@ -52,19 +65,24 @@ export default function TopNavbar({ title, onMenuClick }) {
       </div>
 
       <div className="dashboard-topbar__right">
-        {showRoleSwitcher ? (
+        {showRoleSwitcher && switcherLabel ? (
           <button
             type="button"
             className="dashboard-topbar__switcher"
             onClick={handleSwitchRole}
           >
-            {isFacultyDashboard ? '🔄 Switch to HOD Portal' : '🔄 Switch to Faculty Portal'}
+            {switcherLabel}
           </button>
         ) : null}
-        <div className="dashboard-topbar__user">
-          <strong>{displayName}</strong>
-          {role ? <span className="dashboard-topbar__role">{role}</span> : null}
-        </div>
+       <div className="dashboard-topbar__user">
+  <strong>{displayName}</strong>
+  {/* 👈 NAYA LOGIC: URL check karo, HOD portal hai toh HOD likho, varna original role */}
+  {role ? (
+    <span className="dashboard-topbar__role">
+      {location.pathname.startsWith('/hod-dashboard') ? 'HOD' : role.charAt(0).toUpperCase() + role.slice(1)}
+    </span>
+  ) : null}
+</div>
         <button
           type="button"
           className="dashboard-topbar__logout"

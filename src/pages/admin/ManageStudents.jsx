@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase, createTempClient } from '../../lib/supabase.js';
 import { useHodContext } from '../../context/HodContext.jsx';
 import { toast, Toaster } from 'react-hot-toast';
+import { AGGREGATE_DEPARTMENTS } from '../../config/constants.js';
 import './DirectorDashboard-v2.css';
 
 export default function ManageStudents() {
@@ -19,14 +20,37 @@ export default function ManageStudents() {
     return [...new Set(hodDepartmentsData.map((d) => d.description))].filter(Boolean).sort();
   }, [hodDepartmentsData]);
 
+  const availableBranches = useMemo(() => {
+    if (!formData.selectedYear) return [];
+    const yearFiltered = hodDepartmentsData.filter((d) => d.description === formData.selectedYear);
+    const branches = [];
+    yearFiltered.forEach((d) => {
+      const code = d.code || d.name;
+      const name = d.name || d.code;
+      if (AGGREGATE_DEPARTMENTS[code]) {
+        AGGREGATE_DEPARTMENTS[code].forEach(sub => branches.push({ id: sub, code: sub, name: sub }));
+      } else {
+        branches.push({ id: code || name, code: code || name, name: name });
+      }
+    });
+    return branches;
+  }, [formData.selectedYear, hodDepartmentsData]);
+
   const hodAuthorizedBranches = useMemo(() => {
     const branchMap = {};
     hodDepartmentsData.forEach((d) => {
       const year = d.description;
       const code = d.code || d.name;
+      const name = d.name || d.code;
       if (!year || !code) return;
-      if (!branchMap[year]) branchMap[year] = new Set();
-      branchMap[year].add(code);
+      if (!branchMap[year]) branchMap[year] = [];
+      if (AGGREGATE_DEPARTMENTS[code]) {
+        branchMap[year].push(...AGGREGATE_DEPARTMENTS[code]);
+      } else if (AGGREGATE_DEPARTMENTS[name]) {
+        branchMap[year].push(...AGGREGATE_DEPARTMENTS[name]);
+      } else {
+        branchMap[year].push(code);
+      }
     });
     return branchMap;
   }, [hodDepartmentsData]);
@@ -37,20 +61,9 @@ export default function ManageStudents() {
       const authorizedBranches = hodAuthorizedBranches[s.selected_year];
       if (!authorizedBranches) return false;
       if (!s.selected_branch) return false;
-      return authorizedBranches.has(s.selected_branch);
+      return authorizedBranches.includes(s.selected_branch);
     });
   }, [students, hodAuthorizedBranches]);
-
-  const availableBranches = useMemo(() => {
-    if (!formData.selectedYear) return [];
-    return hodDepartmentsData
-      .filter((d) => d.description === formData.selectedYear)
-      .map((d) => ({
-        id: d.code || d.name,
-        code: d.code || d.name,
-        name: d.name || d.code,
-      }));
-  }, [formData.selectedYear, hodDepartmentsData]);
 
   const tableStudents = useMemo(() => {
     let result = filteredStudents;
@@ -215,8 +228,8 @@ export default function ManageStudents() {
             </select>
             <select className="broadcast-input manage-students-select" style={{ maxWidth: '200px' }} value={filterBranch} onChange={(e) => setFilterBranch(e.target.value)} disabled={filterYear === 'All'}>
               <option value="All">All Branches</option>
-              {filterYear !== 'All' && hodAuthorizedBranches[filterYear] 
-                ? [...hodAuthorizedBranches[filterYear]].map(branch => (
+              {filterYear !== 'All' && hodAuthorizedBranches[filterYear]
+                ? hodAuthorizedBranches[filterYear].map(branch => (
                     <option key={branch} value={branch}>{branch}</option>
                   ))
                 : null

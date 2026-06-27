@@ -1,19 +1,41 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../hooks/useAuth';
 import './Overview.css';
 
 export default function Overview() {
+  const { profile } = useAuth();
+  const userBranchId = profile?.branch_id;
   const [stats, setStats] = useState({ faculty: 0, students: 0, materials: 0 });
   const [recentActivity, setRecentActivity] = useState([]);
 
-  useEffect(() => {
+ useEffect(() => {
     async function fetchData() {
-      const { count: fCount } = await supabase.from('user_profiles').select('*', { count: 'exact', head: true }).eq('role', 'faculty');
-      const { count: sCount } = await supabase.from('user_profiles').select('*', { count: 'exact', head: true }).eq('role', 'student');
-      const { count: mCount } = await supabase.from('study_materials').select('*', { count: 'exact', head: true });
+      // 1. Faculty aur Student query mein filter zaroor lagao (yahan branch_id hai)
+      const facultyQuery = supabase.from('user_profiles').select('*', { count: 'exact', head: true }).eq('role', 'faculty');
+      const studentQuery = supabase.from('user_profiles').select('*', { count: 'exact', head: true }).eq('role', 'student');
+      
+      // 2. Materials query se branch_id ka koi lena-dena nahi hai, toh simple rakho
+      const materialsCountQuery = supabase.from('study_materials').select('*', { count: 'exact', head: true });
 
+      // Apply branch filters ONLY where the column exists
+      const facultyBranchQuery = userBranchId ? facultyQuery.eq('branch_id', userBranchId) : facultyQuery;
+      const studentBranchQuery = userBranchId ? studentQuery.eq('branch_id', userBranchId) : studentQuery;
+
+      const [{ count: fCount }, { count: sCount }, { count: mCount }] = await Promise.all([
+        facultyBranchQuery,
+        studentBranchQuery,
+        materialsCountQuery,
+      ]);
+
+     // Recent Activity ko filter karne ka sahi tarika:
+      // Join karo study_materials ko user_profiles ke sath aur check karo branch_id
       const { data: materials } = await supabase.from('study_materials')
-        .select('*, user_profiles(full_name)')
+        .select(`
+          *, 
+          user_profiles!inner(full_name, branch_id)
+        `)
+        .eq('user_profiles.branch_id', userBranchId) // Yahan hum user_profiles ke through filter kar rahe hain!
         .order('created_at', { ascending: false })
         .limit(5);
 
@@ -28,7 +50,7 @@ export default function Overview() {
       setRecentActivity(activityItems);
     }
     fetchData();
-  }, []);
+  }, [userBranchId]);
 
   return (
     <div className="admin-overview">

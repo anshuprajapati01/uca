@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BookOpen } from 'lucide-react';
 import { supabase } from '../../lib/supabase.js';
-import { ROUTES, USER_ROLES } from '../../config/constants.js';
+import { ROUTES, USER_ROLES, AGGREGATE_DEPARTMENTS } from '../../config/constants.js';
 import { useNavigate } from 'react-router-dom';
 import './MySubjects.css';
 
@@ -37,17 +37,26 @@ export default function MySubjects() {
   );
 
   const availableBranches = useMemo(() => {
-    const branches = Array.from(
-      new Set(normalizedSubjects.map((s) => s.branch).filter(Boolean))
-    );
-    return ['All', ...branches];
+    const branches = [];
+    normalizedSubjects.forEach((s) => {
+      const branch = s.branch;
+      if (!branch) return;
+      if (AGGREGATE_DEPARTMENTS[branch]) {
+        AGGREGATE_DEPARTMENTS[branch].forEach((subBranch) => branches.push(subBranch));
+      } else {
+        branches.push(branch);
+      }
+    });
+    return ['All', ...Array.from(new Set(branches))];
   }, [normalizedSubjects]);
 
   const availableYears = ['All', '1st Year', '2nd Year', '3rd Year', '4th Year'];
 
   const filteredSubjects = useMemo(() => {
     return normalizedSubjects.filter((subject) => {
-      const branchMatch = activeBranch === 'All' || subject.branch === activeBranch;
+      const branchMatch = activeBranch === 'All' ||
+        subject.branch === activeBranch ||
+        (AGGREGATE_DEPARTMENTS[subject.branch] && AGGREGATE_DEPARTMENTS[subject.branch].includes(activeBranch));
       const yearMatch =
         activeYear === 'All' ||
         (subject.year &&

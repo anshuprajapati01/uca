@@ -1,11 +1,21 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '../../lib/supabase.js';
 import { Trash2 } from 'lucide-react';
+import { useHodContext } from '../../context/HodContext.jsx';
+import { AGGREGATE_DEPARTMENTS } from '../../config/constants.js';
 import './ManageAnnouncements.css';
 
 const ANNOUNCEMENT_TYPES = ['General', 'Academic', 'Event', 'Urgent'];
 
+const YEAR_TO_SEMESTERS = {
+  '1st Year': ['Semester 1', 'Semester 2'],
+  '2nd Year': ['Semester 3', 'Semester 4'],
+  '3rd Year': ['Semester 5', 'Semester 6'],
+  '4th Year': ['Semester 7', 'Semester 8'],
+};
+
 export default function ManageAnnouncements() {
+  const { hodDepartmentsData } = useHodContext();
   const [announcements, setAnnouncements] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,6 +31,26 @@ export default function ManageAnnouncements() {
   const [selectedYear, setSelectedYear] = useState('');
   const [selectedBranch, setSelectedBranch] = useState('');
   const [selectedSemester, setSelectedSemester] = useState('');
+
+  const availableYears = useMemo(() => {
+    return [...new Set(hodDepartmentsData.map((d) => d.description))].filter(Boolean).sort();
+  }, [hodDepartmentsData]);
+
+  const availableBranches = useMemo(() => {
+    if (!selectedYear) return [];
+    const yearFiltered = hodDepartmentsData.filter((d) => d.description === selectedYear);
+    const branches = [];
+    yearFiltered.forEach((d) => {
+      const code = d.code || d.name;
+      const name = d.name || d.code;
+      if (AGGREGATE_DEPARTMENTS[code]) {
+        AGGREGATE_DEPARTMENTS[code].forEach(sub => branches.push({ id: sub, code: sub, name: sub }));
+      } else {
+        branches.push({ id: code || name, code: code || name, name: name });
+      }
+    });
+    return branches;
+  }, [selectedYear, hodDepartmentsData]);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,15 +86,13 @@ export default function ManageAnnouncements() {
     }
   };
 
-  const getAvailableSemesters = () => {
-    if (!selectedYear) return [];
-    if (selectedYear === '2nd') return [3, 4];
-    if (selectedYear === '3rd') return [5, 6];
-    return [];
-  };
+  const availableSemesters = useMemo(() => {
+    return YEAR_TO_SEMESTERS[selectedYear] || [];
+  }, [selectedYear]);
 
   const handleYearChange = (e) => {
     setSelectedYear(e.target.value);
+    setSelectedBranch('');
     setSelectedSemester('');
   };
 
@@ -175,7 +203,6 @@ export default function ManageAnnouncements() {
     }
   };
 
-  const availableSemesters = getAvailableSemesters();
   const isSemesterDisabled = !selectedYear || !selectedBranch;
 
   if (isLoading) {
@@ -220,8 +247,11 @@ export default function ManageAnnouncements() {
                 onChange={handleYearChange}
               >
                 <option value="">Select Year</option>
-                <option value="2nd">2nd</option>
-                <option value="3rd">3rd</option>
+                {availableYears.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -232,10 +262,14 @@ export default function ManageAnnouncements() {
                 name="selectedBranch"
                 value={selectedBranch}
                 onChange={handleBranchChange}
+                disabled={!selectedYear}
               >
                 <option value="">Select Branch</option>
-                <option value="CS">CS</option>
-                <option value="IT">IT</option>
+                {availableBranches.map((branch) => (
+                  <option key={branch.code} value={branch.code}>
+                    {branch.name}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -250,7 +284,7 @@ export default function ManageAnnouncements() {
               >
                 <option value="">Select Semester</option>
                 {availableSemesters.map((sem) => (
-                  <option key={sem} value={sem}>
+                  <option key={sem} value={sem.replace('Semester ', '')}>
                     {sem}
                   </option>
                 ))}

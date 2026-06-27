@@ -23,3 +23,8 @@ export const USER_ROLES = {
   DIRECTOR: 'director',
   HOD: 'hod',
 };
+
+export const AGGREGATE_DEPARTMENTS = {
+  'ASH 1': ['CSE A', 'CSE B', 'CSE C', 'CS', 'ECE'],
+  'ASH 2': ['AI ML', 'DS', 'IT', 'ME', 'CE', 'VLSI']
+};

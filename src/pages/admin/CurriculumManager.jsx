@@ -3,6 +3,7 @@ import { Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase.js';
 import { useHodContext } from '../../context/HodContext.jsx';
 import { useAuth } from '../../hooks/useAuth.js';
+import { AGGREGATE_DEPARTMENTS } from '../../config/constants.js';
 import './CurriculumManager.css';
 
 const FACULTY_AVATAR_FALLBACK = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Faculty';
@@ -51,6 +52,7 @@ export default function CurriculumManager() {
   const [selectedYear, setSelectedYear] = useState(null);
   const [selectedSemester, setSelectedSemester] = useState(null);
   const [selectedBranch, setSelectedBranch] = useState(null);
+  const [selectedSubBranch, setSelectedSubBranch] = useState(null);
   const [dbSubjectsList, setDbSubjectsList] = useState([]);
   const [dbFacultyList, setDbFacultyList] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -92,8 +94,21 @@ export default function CurriculumManager() {
     if (!year) return [];
     return hodDepartmentsData.filter((d) => {
       const branchCode = d.code || d.name;
-      return d.description === year && hodAuthorizedBranches.some((b) => b.code === branchCode);
+      return d.description === year && hodAuthorizedBranches.some((b) => b.code === branchCode || AGGREGATE_DEPARTMENTS[b.code]?.includes(d.code));
     });
+  };
+
+  const isAggregateHod = useMemo(() => {
+    return hodAuthorizedBranches.some((b) => AGGREGATE_DEPARTMENTS[b.code]);
+  }, [hodAuthorizedBranches]);
+
+  const getSubBranchesForAggregate = (branchCode) => {
+    if (!AGGREGATE_DEPARTMENTS[branchCode]) return [];
+    return AGGREGATE_DEPARTMENTS[branchCode].map((sub) => ({
+      id: sub,
+      code: sub,
+      name: sub
+    }));
   };
 
   // ── Derived Values ──
@@ -105,9 +120,12 @@ export default function CurriculumManager() {
     return activeDepartmentRows.some((d) => d[`is_sem${semNum}_live`]);
   };
 
-  const effectiveBranchCode = selectedBranch || (hodAuthorizedBranches.length === 1 ? hodAuthorizedBranches[0].code : null);
+  const effectiveBranchCode = isAggregateHod && selectedSubBranch
+    ? selectedSubBranch
+    : (hodAuthorizedBranches.length === 1 && !isAggregateHod ? hodAuthorizedBranches[0].code : selectedBranch);
+
   const activeDepartmentRow = effectiveBranchCode && selectedYear
-    ? getDepartmentRow(effectiveBranchCode, selectedYear)
+    ? getDepartmentRow(effectiveBranchCode, selectedYear) || (isAggregateHod && selectedSubBranch && getDepartmentRow(selectedBranch, selectedYear))
     : null;
 
   const selectedSemesterDetails = selectedSemester
@@ -129,12 +147,12 @@ export default function CurriculumManager() {
   );
 
   const branchFilteredTheorySubjects = useMemo(
-    () => theorySubjects.filter((subject) => subject.department === selectedBranch),
-    [theorySubjects, selectedBranch]
+    () => theorySubjects.filter((subject) => subject.department === effectiveBranchCode),
+    [theorySubjects, effectiveBranchCode]
   );
   const branchFilteredPracticalSubjects = useMemo(
-    () => practicalSubjects.filter((subject) => subject.department === selectedBranch),
-    [practicalSubjects, selectedBranch]
+    () => practicalSubjects.filter((subject) => subject.department === effectiveBranchCode),
+    [practicalSubjects, effectiveBranchCode]
   );
 
   const filteredSemesterSubjects =
@@ -153,12 +171,12 @@ export default function CurriculumManager() {
     }
   }, []);
 
-  const fetchSubjects = useCallback(async () => {
+const fetchSubjects = useCallback(async () => {
     const semesterDetails = selectedSemester
       ? getSemestersForYear(selectedYear).find((sem) => sem.id === selectedSemester)
       : null;
 
-    if (!semesterDetails || !selectedBranch) {
+    if (!semesterDetails || !effectiveBranchCode) {
       setDbSubjectsList([]);
       return;
     }
@@ -168,7 +186,7 @@ export default function CurriculumManager() {
       const { data, error } = await supabase
         .from('subjects')
          .select('*, faculty:faculty_id(id, full_name, avatar_url, expertise_tags)')
-         .eq('department', selectedBranch)
+         .eq('department', effectiveBranchCode)
          .eq('year', selectedYear)
          .eq('semester', semesterDetails.name)
          .order('created_at', { ascending: false });
@@ -181,12 +199,21 @@ export default function CurriculumManager() {
     } finally {
       setIsLoadingSubjects(false);
     }
-  }, [selectedBranch, selectedSemester, selectedYear]);
+  }, [effectiveBranchCode, selectedSemester, selectedYear]);
 
-  // ── useEffect Hooks ──
   useEffect(() => {
-    console.log('showAddModal changed:', showAddModal);
-  }, [showAddModal]);
+    if (!selectedYear) {
+      setSelectedSemester(null);
+      setSelectedBranch(null);
+      setSelectedSubBranch(null);
+    }
+  }, [selectedYear]);
+
+  useEffect(() => {
+    if (!selectedBranch) {
+      setSelectedSubBranch(null);
+    }
+  }, [selectedBranch]);
 
   useEffect(() => {
     fetchFaculty();
@@ -194,27 +221,24 @@ export default function CurriculumManager() {
 
   useEffect(() => {
     if (!isAssigned) return;
-  }, [isAssigned]);
-
-  useEffect(() => {
-    if (!selectedYear) {
-      setSelectedSemester(null);
-      setSelectedBranch(null);
-    }
-  }, [selectedYear]);
-
-  useEffect(() => {
-    if (selectedBranch && selectedSemester && selectedYear) {
-      fetchSubjects();
-    }
-  }, [fetchSubjects]);
-
-  useEffect(() => {
-    if (!isAssigned) return;
     if (!selectedYear && hodAssignedYears.length > 0) {
       setSelectedYear(hodAssignedYears[0]);
     }
   }, [isAssigned, selectedYear, hodAssignedYears]);
+
+  const isStandardSingleBranchHod = hodAuthorizedBranches.length === 1 && !isAggregateHod;
+
+  useEffect(() => {
+    if (isStandardSingleBranchHod && selectedSemester && !selectedBranch) {
+      setSelectedBranch(hodAuthorizedBranches[0].code);
+    }
+  }, [isStandardSingleBranchHod, selectedSemester, selectedBranch, hodAuthorizedBranches]);
+
+  useEffect(() => {
+    if (effectiveBranchCode && selectedSemester && selectedYear) {
+      fetchSubjects();
+    }
+  }, [effectiveBranchCode, selectedSemester, selectedYear, fetchSubjects]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -229,7 +253,7 @@ export default function CurriculumManager() {
   // ── Handler Functions ──
   const handleSubmitSubject = async (e) => {
     e.preventDefault();
-    if (!selectedFacultyData || !selectedSemesterDetails || !selectedBranch || !activeSemesterLive) return;
+    if (!selectedFacultyData || !selectedSemesterDetails || !effectiveBranchCode || !activeSemesterLive) return;
 
     setIsSubmitting(true);
     try {
@@ -238,7 +262,7 @@ export default function CurriculumManager() {
         code: subjectCode,
         type: subjectType.toLowerCase(),
         faculty_id: selectedFacultyData.id,
-        department: selectedBranch,
+        department: effectiveBranchCode,
         year: selectedYear,
         semester: selectedSemesterDetails.name,
         credits,
@@ -291,10 +315,6 @@ export default function CurriculumManager() {
     setDeleteSubjectId(null);
   };
 
-  const handleDeleteSubject = (subjectId) => {
-    setDeleteSubjectId(subjectId);
-  };
-
   const toggleSemesterLive = async (e, semesterId) => {
     e.stopPropagation();
     if (activeDepartmentRows.length === 0) return;
@@ -308,7 +328,7 @@ export default function CurriculumManager() {
 
       for (let i = 1; i <= 8; i++) {
         const col = 'is_sem' + i + '_live';
-        if (deptRow.hasOwnProperty(col)) {
+        if (Object.prototype.hasOwnProperty.call(deptRow, col)) {
           payload[col] = false;
         }
       }
@@ -351,10 +371,6 @@ export default function CurriculumManager() {
     );
   }
 
-  const yearOptions = hodAssignedYears;
-
-  console.log('Button Disabled Status:', !activeSemesterLive, 'for branch:', selectedBranch, 'activeDepartmentRow:', activeDepartmentRow);
-
   // ── JSX Return ──
   return (
     <div className="curriculum-manager">
@@ -373,8 +389,8 @@ export default function CurriculumManager() {
       {!selectedSemester ? (
         <>
           {/* Year Tabs */}
-          <div className="year-selector-container" style={{ marginBottom: '1.75rem' }}>
-            {yearOptions.map((year) => (
+<div className="year-selector-container" style={{ marginBottom: '1.75rem' }}>
+            {hodAssignedYears.map((year) => (
               <button
                 key={year}
                 type="button"
@@ -431,7 +447,7 @@ export default function CurriculumManager() {
         </>
       ) : !selectedBranch ? (
         <>
-          {/* State 2: Branch Cards only */}
+          {/* State 2: Branch Cards (for multi-branch HODs and aggregate HODs) */}
           <button className="curriculum-manager__back" onClick={() => setSelectedSemester(null)}>
             &larr; Back to Semesters
           </button>
@@ -450,15 +466,54 @@ export default function CurriculumManager() {
           </div>
 
           <div className="branch-cards-grid semester-branch-cards">
-            {hodAuthorizedBranches.map((branch) => (
+            {hodAuthorizedBranches.map((branch) => {
+              const isAggregate = AGGREGATE_DEPARTMENTS[branch.code];
+              const branchLabel = isAggregate ? `${branch.name} Branch` : branch.name;
+              return (
+                <button
+                  key={branch.code}
+                  type="button"
+                  className="branch-card"
+                  onClick={() => setSelectedBranch(branch.code)}
+                >
+                  <div className="branch-card__code">{branch.code}</div>
+                  <div className="branch-card__name">{branchLabel}</div>
+                  <div className="branch-card__action">{isAggregate ? 'Select Sub-Branch' : 'Manage Subjects'}</div>
+                </button>
+              );
+            })}
+          </div>
+        </>
+      ) : isAggregateHod && !selectedSubBranch ? (
+        <>
+          {/* State 2b: Sub-Branch Cards (only for aggregate HODs) */}
+          <button className="curriculum-manager__back" onClick={() => setSelectedBranch(null)}>
+            &larr; Back to Branches
+          </button>
+
+          <div className="semester-detail-card">
+            <div className="semester-detail-card__top">
+              <div>
+                <p className="curriculum-manager__eyebrow">{selectedYear}</p>
+                <h4 className="semester-detail-card__title">{selectedSemesterDetails?.name} · {selectedBranch}</h4>
+                <p className="semester-detail-card__meta">
+                  {activeSemesterLive ? 'Live curriculum planning is active' : 'Upcoming curriculum planning'}
+                </p>
+              </div>
+              {activeSemesterLive && <span className="live-badge">LIVE</span>}
+            </div>
+          </div>
+
+          <div className="branch-cards-grid semester-branch-cards">
+            {getSubBranchesForAggregate(selectedBranch).map((subBranch) => (
               <button
-                key={branch.code}
+                key={subBranch.code}
                 type="button"
                 className="branch-card"
-                onClick={() => setSelectedBranch(branch.code)}
+                onClick={() => setSelectedSubBranch(subBranch.code)}
               >
-                <div className="branch-card__code">{branch.code}</div>
-                <div className="branch-card__name">{branch.name}</div>
+                <div className="branch-card__code">{subBranch.code}</div>
+                <div className="branch-card__name">{subBranch.name}</div>
                 <div className="branch-card__action">Manage Subjects</div>
               </button>
             ))}
@@ -466,9 +521,15 @@ export default function CurriculumManager() {
         </>
       ) : (
         <>
-          {/* State 3: Subject Management only */}
-          <button className="curriculum-manager__back" onClick={() => setSelectedBranch(null)}>
-            &larr; Back to Branches
+          {/* State 3: Subject Management */}
+          <button className="curriculum-manager__back" onClick={() => {
+            if (isAggregateHod) {
+              setSelectedSubBranch(null);
+            } else {
+              setSelectedBranch(null);
+            }
+          }}>
+            &larr; Back to {isAggregateHod ? 'Sub-Branches' : 'Branches'}
           </button>
           {toastMsg && (
             <div className="cm-toast">
@@ -479,7 +540,7 @@ export default function CurriculumManager() {
             <div className="semester-detail-card__top">
               <div>
                 <p className="curriculum-manager__eyebrow">{selectedYear}</p>
-                <h4 className="semester-detail-card__title">{selectedSemesterDetails?.name} · {selectedBranch}</h4>
+                <h4 className="semester-detail-card__title">{selectedSemesterDetails?.name} · {effectiveBranchCode}</h4>
                 <p className="semester-detail-card__meta">
                   {activeSemesterLive ? 'Live curriculum planning is active' : 'Upcoming curriculum planning'}
                 </p>

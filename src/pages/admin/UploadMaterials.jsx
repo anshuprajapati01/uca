@@ -1,15 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../../lib/supabase';
 import { sanitizeFileName, validateAcademicFile } from '../../services/resourceService.js';
+import { useHodContext } from '../../context/HodContext.jsx';
+import { AGGREGATE_DEPARTMENTS } from '../../config/constants.js';
 import './DirectorDashboard-v2.css';
-
 
 const MATERIAL_CATEGORIES = ['Syllabus', 'Class Notes', 'Toppers Notes', 'Reference Books', 'PYQs', 'Exam Cheatsheets', 'Lecture', 'Assignment', 'Tutorial'];
 
-const YEAR_OPTIONS = ['2nd Year', '3rd Year'];
-const BRANCH_OPTIONS = ['CS', 'IT'];
-
 export default function UploadMaterials() {
+  const { hodDepartmentsData } = useHodContext();
+
   const [subjects, setSubjects] = useState([]);
   const [selectedYear, setSelectedYear] = useState('');
   const [selectedBranch, setSelectedBranch] = useState('');
@@ -26,7 +26,27 @@ export default function UploadMaterials() {
   const [manageFilter, setManageFilter] = useState('All');
   const [deleteId, setDeleteId] = useState(null);
 
-const fetchSubjects = useCallback(async () => {
+  const availableYears = useMemo(() => {
+    return [...new Set(hodDepartmentsData.map((d) => d.description))].filter(Boolean).sort();
+  }, [hodDepartmentsData]);
+
+  const availableBranches = useMemo(() => {
+    if (!selectedYear) return [];
+    const yearFiltered = hodDepartmentsData.filter((d) => d.description === selectedYear);
+    const branches = [];
+    yearFiltered.forEach((d) => {
+      const code = d.code || d.name;
+      const name = d.name || d.code;
+      if (AGGREGATE_DEPARTMENTS[code]) {
+        AGGREGATE_DEPARTMENTS[code].forEach(sub => branches.push({ id: sub, code: sub, name: sub }));
+      } else {
+        branches.push({ id: code || name, code: code || name, name: name });
+      }
+    });
+    return branches;
+  }, [selectedYear, hodDepartmentsData]);
+
+  const fetchSubjects = useCallback(async () => {
     if (!selectedYear || !selectedBranch) {
       setSubjects([]);
       return;
@@ -47,7 +67,6 @@ const fetchSubjects = useCallback(async () => {
   }, [selectedYear, selectedBranch]);
 
   const fetchUploadedMaterials = async () => {
-    // Yahan humne explicitly * lagaya hai taaki file_url pakka aaye
     const { data: materials, error } = await supabase.from('study_materials').select('*');
     if (!error && materials) {
       const { data: subjects } = await supabase.from('subjects').select('id, code');
@@ -75,7 +94,7 @@ const fetchSubjects = useCallback(async () => {
           subject_code: subjectMap[m.subject_id] || 'N/A',
           uploader_name: uploaderName,
           uploader_role: uploaderRole,
-          file_url: m.file_url // Pura link yahan pass ho raha hai
+          file_url: m.file_url
         };
       });
       setUploadedMaterials(enriched);
@@ -135,7 +154,7 @@ const fetchSubjects = useCallback(async () => {
         title: formData.title,
         type: formData.category,
         subject_id: formData.subject_id,
-        file_url: finalFileUrl, // URL database me ja rahi hai
+        file_url: finalFileUrl,
       };
 
       if (user) {
@@ -184,7 +203,7 @@ const fetchSubjects = useCallback(async () => {
     setTimeout(() => setToast({ message: '', type: '' }), 3000);
   };
 
-return (
+  return (
     <div className="relative min-h-screen">
       <div className="premium-glass-card p-6">
         {toast.message && (
@@ -245,7 +264,7 @@ return (
                 className="broadcast-input w-full"
               >
                 <option value="">-- Select Year --</option>
-                {YEAR_OPTIONS.map((year) => (
+                {availableYears.map((year) => (
                   <option key={year} value={year}>
                     {year}
                   </option>
@@ -268,9 +287,9 @@ return (
                 className="broadcast-input w-full"
               >
                 <option value="">-- Select Branch --</option>
-                {BRANCH_OPTIONS.map((branch) => (
-                  <option key={branch} value={branch}>
-                    {branch}
+                {availableBranches.map((branch) => (
+                  <option key={branch.code} value={branch.code}>
+                    {branch.name}
                   </option>
                 ))}
               </select>

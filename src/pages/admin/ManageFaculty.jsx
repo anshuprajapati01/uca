@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { supabase, createTempClient } from '../../lib/supabase.js';
+import toast from 'react-hot-toast';
 
 export default function ManageFaculty() {
   const [faculties, setFaculties] = useState([]);
   const [branches, setBranches] = useState([]);
   const [formData, setFormData] = useState({ fullName: '', email: '', phone: '', branchId: '' });
-  const [toast, setToast] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Naya State: Delete Modal ke liye
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, facultyId: null });
 
   const fetchBranches = async () => {
     try {
@@ -42,7 +44,7 @@ export default function ManageFaculty() {
     setIsSubmitting(true);
 
     if (!formData.branchId) {
-      setToast({ message: 'Error: Please select a Department/Branch.', type: 'error' });
+      toast.error('Error: Please select a Department/Branch.');
       setIsSubmitting(false);
       return;
     }
@@ -66,7 +68,7 @@ export default function ManageFaculty() {
 
         if (updateError) throw updateError;
 
-        setToast({ message: 'Existing user granted Faculty access!', type: 'success' });
+        toast.success('Existing user granted Faculty access!');
         setFormData({ fullName: '', email: '', phone: '', branchId: '' });
         fetchFaculties();
         return;
@@ -96,37 +98,54 @@ export default function ManageFaculty() {
         is_active: true
       }]);
 
+     // ... upar ka supabase add wala code ...
       if (profileError) throw profileError;
 
-      setToast({ message: 'Faculty added successfully. Default password is Test@123', type: 'success' });
+      toast.success('Faculty added successfully. Default password is Test@123');
+      alert('SUCCESS: Nayi faculty add ho gayi!');
+      
       setFormData({ fullName: '', email: '', phone: '', branchId: '' });
       fetchFaculties();
     } catch (error) {
-      setToast({ message: 'Error: ' + error.message, type: 'error' });
+      toast.error('Error: ' + error.message);
+      
+      // 👉 ERROR CATCH KARNE WALA ALERT
+      alert('ERROR AAYI HAI ADD MEIN: ' + error.message);
+      
     } finally {
       setIsSubmitting(false);
-      setTimeout(() => setToast(null), 4000);
     }
   };
 
-  const handleDeleteFaculty = async (facultyId) => {
-    if (window.confirm("Are you sure?")) {
-      const { error } = await supabase.from('user_profiles').delete().eq('id', facultyId);
-      if (!error) {
-        setFaculties(prev => prev.filter(f => f.id !== facultyId));
-      }
+  // Naya Function: Jo actual me delete karta hai aur Toast dikhata hai
+ const confirmDelete = async () => {
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .delete()
+        .eq('id', deleteModal.facultyId);
+
+      if (error) throw error;
+
+      setFaculties(prev => prev.filter(f => f.id !== deleteModal.facultyId));
+      
+      toast.success('Faculty deleted successfully!');
+      alert('SUCCESS: Code yahan tak pahunch gaya! Delete ho gaya.');
+      
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error('Failed to delete faculty.');
+      
+      // 👉 ERROR CATCH KARNE WALA ALERT
+      alert('ERROR AAYI HAI DELETE MEIN: ' + error.message); 
+      
+    } finally {
+      setDeleteModal({ isOpen: false, facultyId: null });
     }
   };
-
   return (
     <div style={containerStyle}>
       <h2 style={headingStyle}>Manage Faculty 👨‍🏫</h2>
-
-      {toast && (
-        <div style={{ ...toastStyle, background: toast.type === 'success' ? '#22c55e' : '#ef4444' }}>
-          {toast.message}
-        </div>
-      )}
 
       <div style={formContainerStyle}>
         <form onSubmit={handleAddFaculty} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -138,7 +157,6 @@ export default function ManageFaculty() {
             <input type="text" placeholder="Phone Number" required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} style={inputStyle} />
           </div>
           
-          {/* STRICT DARK STYLING APPLIED TO SELECT AND OPTIONS */}
           <select 
             required 
             value={formData.branchId || ""} 
@@ -176,13 +194,43 @@ export default function ManageFaculty() {
                 <td style={tableCellStyle}>{faculty.email || 'N/A'}</td>
                 <td style={tableCellStyle}>{faculty.phone || 'N/A'}</td>
                 <td style={tableCellStyle}>
-                  <button onClick={() => handleDeleteFaculty(faculty.id)} style={deleteButtonStyle}>🗑️ Remove</button>
+                  {/* BUTTON KI ONCLICK CHANGE KI HAI MODAL OPEN KARNE KE LIYE */}
+                  <button onClick={() => setDeleteModal({ isOpen: true, facultyId: faculty.id })} style={deleteButtonStyle}>🗑️ Remove</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* 🛑 PREMIUM DELETE CONFIRMATION MODAL */}
+      {deleteModal.isOpen && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999 }}>
+          <div style={{ backgroundColor: '#1c1d2e', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '16px', padding: '24px', width: '100%', maxWidth: '400px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', textAlign: 'center' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white', margin: '0 0 8px 0' }}>Delete Faculty?</h3>
+            <p style={{ color: '#9ca3af', fontSize: '0.875rem', margin: '0 0 24px 0', lineHeight: '1.5' }}>Are you sure you want to remove this faculty member? This action cannot be undone.</p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
+              <button 
+                onClick={() => setDeleteModal({ isOpen: false, facultyId: null })}
+                style={{ padding: '10px 20px', borderRadius: '8px', fontWeight: '600', color: '#d1d5db', backgroundColor: '#2d314d', border: 'none', cursor: 'pointer', transition: 'background-color 0.2s' }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#3b4063'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2d314d'}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmDelete}
+                style={{ padding: '10px 20px', borderRadius: '8px', fontWeight: '600', color: 'white', backgroundColor: '#ef4444', border: 'none', cursor: 'pointer', boxShadow: '0 10px 15px -3px rgba(239, 68, 68, 0.3)', transition: 'background-color 0.2s' }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
@@ -190,7 +238,6 @@ export default function ManageFaculty() {
 // STYLES
 const containerStyle = { padding: '30px', minHeight: '100vh', background: '#0d0d14', color: '#e0e0e0', fontFamily: "'Inter', sans-serif" };
 const headingStyle = { fontSize: '26px', fontWeight: '700', marginBottom: '25px', color: '#ffffff' };
-const toastStyle = { padding: '14px 20px', borderRadius: '10px', fontWeight: '600', marginBottom: '20px', color: '#fff' };
 const formContainerStyle = { background: 'rgba(26, 26, 38, 0.6)', backdropFilter: 'blur(12px)', padding: '28px', borderRadius: '16px', marginBottom: '30px', border: '1px solid rgba(255, 255, 255, 0.06)' };
 const inputStyle = { flex: 1, minWidth: '240px', padding: '13px 16px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.08)', background: 'rgba(45, 45, 61, 0.5)', color: '#fff', outline: 'none', WebkitAppearance: 'none' };
 const selectStyle = { ...inputStyle, width: '100%', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none' };

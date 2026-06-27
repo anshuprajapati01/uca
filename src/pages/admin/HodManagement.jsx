@@ -150,17 +150,17 @@ if (error) {
     setAssignments(mapped);
   }, [showToast]);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
+   
   useEffect(() => {
     fetchFaculty();
   }, []);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
+   
   useEffect(() => {
     fetchDepartments();
   }, []);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
+   
   useEffect(() => {
     refreshAssignments();
   }, []);

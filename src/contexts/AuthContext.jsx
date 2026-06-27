@@ -10,6 +10,7 @@ import { createContext } from 'react';
  * @property {string | null} [full_name]
  * @property {boolean} [can_view_faculty]
  * @property {boolean} [can_view_hod]
+ * @property {string | null} [branch_id]
  */
 
 /**

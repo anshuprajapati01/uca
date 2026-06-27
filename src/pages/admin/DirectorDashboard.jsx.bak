@@ -87,8 +87,8 @@ const getDirectorSubjectFaculty = (subject) => {
 
 const getSemestersForYear = (year, liveSemesterIds = new Set()) => {
   if (year === '1st Year') return [
-    { id: 'sem1', name: 'Semester 1', isLive: liveSemesterIds.has('sem1') },
-    { id: 'sem2', name: 'Semester 2', isLive: liveSemesterIds.has('sem2') }
+    { id: 'ash1', name: 'ASH 1', isLive: liveSemesterIds.has('ash1') },
+    { id: 'ash2', name: 'ASH 2', isLive: liveSemesterIds.has('ash2') }
   ];
   if (year === '2nd Year') return [
     { id: 'sem3', name: 'Semester 3', isLive: liveSemesterIds.has('sem3') },
@@ -131,14 +131,14 @@ const StatCard = ({ icon: Icon, label, value, gradient }) => (
   </div>
 );
 
-const DepartmentCard = ({ department, onBranchClick, onDepartmentClick }) => {
+const DepartmentCard = ({ department, onBranchClick }) => {
   const name = department.department_name || department.name;
   const hod = department.hod_name || 'Not Assigned';
   const year = department.year_level || '1st Year';
   const branches = Array.isArray(department.branches) ? department.branches : [];
 
   return (
-    <div className="director-dept-card" onClick={onDepartmentClick ? () => onDepartmentClick(name, department) : undefined} style={{ cursor: onDepartmentClick ? "pointer" : "default" }}>
+    <div className="director-dept-card">
       <div className="director-dept-card__header">
         <h3 className="director-dept-card__name">{name}</h3>
         <span className="director-dept-card__year">{year}</span>
@@ -154,7 +154,7 @@ const DepartmentCard = ({ department, onBranchClick, onDepartmentClick }) => {
                 <span 
                     key={idx} 
                     className="director-dept-card__tag director-dept-card__tag--clickable"
-                    onClick={(e) => { e.stopPropagation(); onBranchClick(branchName, department); }}
+                    onClick={() => onBranchClick(branchName, department)}
                     style={{ cursor: 'pointer' }}
                 >
                     {branchName}
@@ -307,20 +307,21 @@ useEffect(() => {
     return { theory, practical };
   }, [dbSemesterSubjects, subjectsLoading, subjectsError]);
 
-const handleBranchClick = (branchName, departmentInfo) => {
-    const deptName = departmentInfo?.name || departmentInfo?.department_name;
-    setSelectedBranch({ name: deptName, dept: departmentInfo });
-    setSelectedSubBranch(branchName);
+  const handleBranchClick = (branchName, departmentInfo) => {
+    const isAggregate = isAggregateDepartment(branchName);
+    setSelectedBranch({ name: branchName, dept: departmentInfo });
+    if (isAggregate) {
+      setSelectedSubBranch(null);
+    } else {
+      setSelectedSubBranch(branchName);
+    }
     setSelectedSemester(null);
     setSubjectType('theory');
   };
 
-const handleDepartmentClick = (deptName, departmentInfo) => {
-    setSelectedBranch({ name: deptName, dept: departmentInfo });
-    setSelectedSemester(null);
-    setSubjectType('theory');
+  const handleSubBranchClick = (subBranchName) => {
+    setSelectedSubBranch(subBranchName);
   };
-
 
   const handleSemesterSelect = (semester) => {
     console.log('handleSemesterSelect:', semester);
@@ -333,8 +334,16 @@ const handleDepartmentClick = (deptName, departmentInfo) => {
     setSubjectType('theory');
   };
 
+  const handleBackToBranches = () => {
+    setSelectedSubBranch(null);
+  };
+
   const isAggregateDepartment = (deptName) => {
     return Object.prototype.hasOwnProperty.call(AGGREGATE_DEPARTMENTS, deptName);
+  };
+
+  const getSubBranchesForAggregate = (aggregateName) => {
+    return AGGREGATE_DEPARTMENTS[aggregateName] || [];
   };
 
   const fetchDirectorSubjects = useCallback(async () => {
@@ -837,90 +846,113 @@ const handleAddFaculty = async (e) => {
                   </h2>
                 </div>
                 
-<div className="director-depts-grid">
+                <div className="director-depts-grid">
                    {getDepartmentsForYear(selectedAcademicYear).map((dept, idx) => (
-                       <DepartmentCard
-                         key={dept.id || idx}
-                         department={dept}
-                         onBranchClick={handleBranchClick}
-                         onDepartmentClick={!isAggregateDepartment(dept.department_name || dept.name) ? handleDepartmentClick : null}
-                       />
-                    ))}
-                   {getDepartmentsForYear(selectedAcademicYear).length === 0 && (
-                     <div className="director-empty-state">No departments found for {selectedAcademicYear}.</div>
-                   )}
-                 </div>
+                       <DepartmentCard key={dept.id || idx} department={dept} onBranchClick={handleBranchClick} />
+                   ))}
+                  {getDepartmentsForYear(selectedAcademicYear).length === 0 && (
+                    <div className="director-empty-state">No departments found for {selectedAcademicYear}.</div>
+                  )}
+                </div>
               </div>
             )}
 
            {/* STATE 3: EXACT DESIGN COPY WITH NO SUBJECT LIST */}
 {selectedBranch && !selectedSemester && (
-                <div className="director-branch-view-wrapper">
-                  <button
-                    className="director-back-btn director-back-btn--premium"
-                    onClick={() => {
-                      setSelectedBranch(null);
-                      setSelectedSubBranch(null);
-                    }}
-                  >
-                    <ArrowLeft size={18} /> Back to Departments
-                  </button>
+               <div className="director-branch-view-wrapper">
+                 <button
+                   className="director-back-btn director-back-btn--premium"
+                   onClick={() => {
+                     if (isAggregateDepartment(selectedBranch.name)) {
+                       setSelectedSubBranch(null);
+                     }
+                     setSelectedBranch(null);
+                   }}
+                 >
+                   <ArrowLeft size={18} /> Back to Departments
+                 </button>
 
-                  <>
-                    <div className="director-branch-subtabs" role="tablist" aria-label="Branch view">
-                      <button
-                          type="button"
-                          className={`director-branch-subtab ${branchViewTab === 'academic' ? 'director-branch-subtab--active' : ''}`}
-                          role="tab"
-                          aria-selected={branchViewTab === 'academic'}
-                          onClick={() => setBranchViewTab('academic')}
-                      >
-                          Academic
-                      </button>
-                      <button
-                          type="button"
-                          className={`director-branch-subtab ${branchViewTab === 'announcements' ? 'director-branch-subtab--active' : ''}`}
-                          role="tab"
-                          aria-selected={branchViewTab === 'announcements'}
-                          onClick={() => setBranchViewTab('announcements')}
-                      >
-                          Batch Announcements
-                      </button>
-                    </div>
+                 {isAggregateDepartment(selectedBranch.name) && !selectedSubBranch ? (
+                   <div className="director-subbranch-view">
+                     <h3 className="director-subbranch-title">Select Sub-Branch for {selectedBranch.name}</h3>
+                     <div className="director-subbranches-grid">
+                       {getSubBranchesForAggregate(selectedBranch.name).map((subBranch) => (
+                         <div
+                           key={subBranch}
+                           className="director-subbranch-card"
+                           onClick={() => handleSubBranchClick(subBranch)}
+                         >
+                           {subBranch}
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                 ) : (
+                   <>
+                     <div className="director-branch-subtabs" role="tablist" aria-label="Branch view">
+                       <button
+                           type="button"
+                           className={`director-branch-subtab ${branchViewTab === 'academic' ? 'director-branch-subtab--active' : ''}`}
+                           role="tab"
+                           aria-selected={branchViewTab === 'academic'}
+                           onClick={() => setBranchViewTab('academic')}
+                       >
+                           Academic
+                       </button>
+                       <button
+                           type="button"
+                           className={`director-branch-subtab ${branchViewTab === 'announcements' ? 'director-branch-subtab--active' : ''}`}
+                           role="tab"
+                           aria-selected={branchViewTab === 'announcements'}
+                           onClick={() => setBranchViewTab('announcements')}
+                       >
+                           Batch Announcements
+                       </button>
+                       {isAggregateDepartment(selectedBranch.name) && (
+                         <button
+                           type="button"
+                           className="director-back-btn--subbranch"
+                           onClick={handleBackToBranches}
+                         >
+                           <ArrowLeft size={16} /> Back to Sub-Branches
+                         </button>
+                       )}
+                     </div>
 
-                    {branchViewTab === 'academic' ? (
-                        <div className="sem-grid-container">
-                            {getSemestersForYear(selectedAcademicYear, buildLiveSemesterIdsSet(liveDeptRows)).map((sem) => (
-                                <div
-                                    key={sem.id}
-                                    className="sem-card-glass"
-                                    role="button"
-                                    tabIndex={0}
-                                    aria-label={`Open ${sem.name} subjects`}
-                                    onClick={() => handleSemesterSelect(sem)}
-                                    onKeyDown={(event) => {
-                                        if (event.key === 'Enter' || event.key === ' ') {
-                                            event.preventDefault();
-                                            handleSemesterSelect(sem);
-                                        }
-                                    }}
-                                >
-                                    <h3 className="sem-title">{sem.name}</h3>
-                                    {sem.isLive && (
-                                        <span className="live-badge">LIVE</span>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="director-branch-announcements-placeholder">
-                            <h3>Batch Announcements</h3>
-                            <p>Batch Announcements list will go here</p>
-                        </div>
-                    )}
-                  </>
-                </div>
-              )}
+                     {branchViewTab === 'academic' ? (
+                         <div className="sem-grid-container">
+                             {getSemestersForYear(selectedAcademicYear, buildLiveSemesterIdsSet(liveDeptRows)).map((sem) => (
+                                 <div
+                                     key={sem.id}
+                                     className="sem-card-glass"
+                                     role="button"
+                                     tabIndex={0}
+                                     aria-label={`Open ${sem.name} subjects`}
+                                     onClick={() => handleSemesterSelect(sem)}
+                                     onKeyDown={(event) => {
+                                         if (event.key === 'Enter' || event.key === ' ') {
+                                             event.preventDefault();
+                                             handleSemesterSelect(sem);
+                                         }
+                                     }}
+                                 >
+                                     <h3 className="sem-title">{sem.name}</h3>
+                                     {sem.isLive && (
+                                         <span className="live-badge">LIVE</span>
+                                     )}
+                                 </div>
+                             ))}
+                         </div>
+                     ) : (
+                         <div className="director-branch-announcements-placeholder">
+                             <h3>Batch Announcements</h3>
+                             <p>Batch Announcements list will go here</p>
+                         </div>
+                     )}
+                   </>
+                 )}
+               </div>
+             )}
 
             {selectedAcademicYear && selectedBranch && selectedSemester && (
                 <div className="director-branch-view-wrapper">
@@ -967,9 +999,9 @@ const handleAddFaculty = async (e) => {
                             <div className="director-subject-view">
                                 <div className="director-subject-view__header">
                                     <div>
-<p className="director-subject-view__eyebrow">
-                                             {selectedSubBranch || selectedBranch.name} · {selectedBranch.dept?.department_name || selectedBranch.dept?.name}
-                                         </p>
+                                        <p className="director-subject-view__eyebrow">
+                                            {selectedBranch.name} · {selectedBranch.dept?.department_name || selectedBranch.dept?.name}
+                                        </p>
                                         <h2 className="director-subject-view__title">Subject View</h2>
                                     </div>
                                     <span className="director-subject-view__semester">{selectedSemester.name}</span>
