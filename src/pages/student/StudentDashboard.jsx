@@ -280,15 +280,6 @@ const navItems = [
   },
 ];
 
-const LIBRARY_FILTERS = [
-  "All",
-  "Syllabus",
-  "Class Notes",
-  "Toppers Notes",
-  "Reference Books",
-  "PYQs",
-  "Exam Cheatsheets",
-];
 const UPLOAD_TYPES = ["Notes", "Lectures", "Assignments", "PYQs", "Syllabus"];
 
 const MOCK_LIBRARY_ITEMS = [
@@ -593,6 +584,23 @@ export default function StudentDashboard() {
   }, [selectedSubject]);
 
   useEffect(() => {
+    if (activeTab !== "library" && activeTab !== "bookmarks") return;
+    let cancelled = false;
+    async function fetchCategories() {
+      const { data: catData } = await supabase
+        .from('material_categories')
+        .select('name')
+        .eq('is_active', true)
+        .order('priority', { ascending: true });
+      if (!cancelled && catData) {
+        setDynamicCategories(['All', ...catData.map(c => c.name)]);
+      }
+    }
+    fetchCategories();
+    return () => { cancelled = true; };
+  }, [activeTab]);
+
+  useEffect(() => {
     localStorage.setItem(
       "uca_student_bookmarks",
       JSON.stringify(bookmarkedIds),
@@ -725,28 +733,15 @@ export default function StudentDashboard() {
     return matchesSearch && matchesFilter;
   });
 
-  const libraryPills = LIBRARY_FILTERS.map((f) => (
+  const libraryPills = dynamicCategories.map((cat) => (
     <button
-      key={f}
-      className={`student-lib-filter-pill ${libraryFilter === f ? "student-lib-filter-pill--active" : ""}`}
-      onClick={() => setLibraryFilter(f)}
+      key={cat}
+      className={`student-lib-filter-pill ${libraryFilter === cat ? "student-lib-filter-pill--active" : ""}`}
+      onClick={() => setLibraryFilter(cat)}
     >
-      {f}
+      {cat}
     </button>
   ));
-
-  const BOOKMARK_FILTERS = [
-    "All",
-    "Syllabus",
-    "Class Notes",
-    "Toppers Notes",
-    "Reference Books",
-    "PYQs",
-    "Exam Cheatsheets",
-    "Lecture",
-    "Assignment",
-    "Tutorial",
-  ];
 
   const libraryCards = filteredLibraryItems.map((item) => {
     const iconType =
@@ -766,34 +761,23 @@ export default function StudentDashboard() {
       .toLowerCase()
       .replace(/\s+/g, "-");
     return (
-      <div key={item.id} className="student-lib-card">
-        <div className="student-lib-card__glow" />
-        <div className="student-lib-card__icon">{getLibIcon(iconType)}</div>
-        <div className="student-lib-card__body">
-          <h4 className="student-lib-card__title">{item.title}</h4>
+      <div key={item.id} className="student-material-card">
+        <div className="student-material-card__left">
+          {getLibIcon(iconType)}
+        </div>
+        <div className="student-material-card__center">
+          <h4 className="student-material-card__title">
+            {item.title}
+          </h4>
           <span
-            className={`student-lib-card__badge student-lib-card__badge--${badgeType}`}
+            className={`student-material-card__badge student-material-card__badge--${badgeType}`}
           >
             {item.category || item.type || "Resource"}
           </span>
         </div>
-        <div className="student-lib-card__actions">
+        <div className="student-material-card__right">
           <button
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "8px 16px",
-              marginRight: "15px",
-              background: "#3b82f6",
-              color: "#fff",
-              border: "none",
-              borderRadius: "8px",
-              cursor: "pointer",
-              fontWeight: "bold",
-              fontSize: "14px",
-              transition: "0.2s",
-            }}
+            className="student-workspace__view-btn"
             onClick={() => handleViewFile(item.file_url)}
           >
             <svg
@@ -808,11 +792,11 @@ export default function StudentDashboard() {
             >
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
               <circle cx="12" cy="12" r="3" />
-            </svg>{" "}
+            </svg>
             View
           </button>
           <button
-            className={`student-lib-card__bookmark-btn ${bookmarkedIds.includes(item.id) ? "student-lib-card__bookmark-btn--active" : ""}`}
+            className={`student-bookmark-btn ${bookmarkedIds.includes(item.id) ? "student-bookmark-btn--active" : ""}`}
             onClick={() => toggleBookmark(item.id)}
           >
             <IconBookmark filled={bookmarkedIds.includes(item.id)} />
@@ -1955,7 +1939,7 @@ export default function StudentDashboard() {
                 />
               </div>
               <div className="student-lib-filter-row">{libraryPills}</div>
-              <div className="student-lib-grid">
+              <div className="student-materials-list">
                 {filteredLibraryItems.length > 0
                   ? libraryCards
                   : libraryEmptyState}
@@ -1974,13 +1958,13 @@ export default function StudentDashboard() {
                 )}
               </h3>
               <div className="student-material-filters">
-                {BOOKMARK_FILTERS.map((f) => (
+                {dynamicCategories.map((cat) => (
                   <button
-                    key={f}
-                    className={`student-filter-pill ${bookmarkFilter === f ? "student-filter-pill--active" : ""}`}
-                    onClick={() => setBookmarkFilter(f)}
+                    key={cat}
+                    className={`student-filter-pill ${bookmarkFilter === cat ? "student-filter-pill--active" : ""}`}
+                    onClick={() => setBookmarkFilter(cat)}
                   >
-                    {f}
+                    {cat}
                   </button>
                 ))}
               </div>
