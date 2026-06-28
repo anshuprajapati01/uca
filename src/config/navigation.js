@@ -9,6 +9,7 @@ import {
   Users,
   UserCheck,
   UserPlus,
+  Tags,
 } from 'lucide-react';
 import { ROUTES } from './constants.js';
 
@@ -115,6 +116,12 @@ export const HOD_NAV_ITEMS = [
     label: 'Curriculum',
     path: `${ROUTES.HOD_DASHBOARD}/curriculum`,
     icon: BookOpen,
+  },
+  {
+    id: 'categories',
+    label: 'Categories',
+    path: `${ROUTES.HOD_DASHBOARD}/categories`,
+    icon: Tags,
   },
 ];
 

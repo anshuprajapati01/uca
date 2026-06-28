@@ -1,0 +1,308 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.student-my-subjects {
+  position: relative;
+  min-height: 100%;
+  padding: 2rem;
+  color: #f1f5f9;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 20%, rgba(99, 102, 241, 0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 85% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 55%),
+    #0a0a13;
+}
+
+.student-my-subjects__header {
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.student-my-subjects__header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  letter-spacing: -0.01em;
+}
+
+.student-my-subjects__subtitle {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #818cf8;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  display: inline-block;
+  width: fit-content;
+}
+
+/* ── Semester Tabs ──────────────────────────────────── */
+.student-my-subjects__tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.75rem;
+  flex-wrap: wrap;
+}
+
+.student-my-subjects__tab {
+  cursor: pointer;
+  padding: 0.55rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  font-family: inherit;
+}
+
+.student-my-subjects__tab:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+}
+
+.student-my-subjects__tab--active {
+  color: #fff;
+  background: #8b5cf6;
+  border-color: #8b5cf6;
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
+}
+
+.student-my-subjects__tab-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.student-my-subjects__tab-live {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  line-height: 1.4;
+}
+
+/* ── Type Filter Pills ──────────────────────────────── */
+.student-my-subjects__type-filter {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.75rem;
+  flex-wrap: wrap;
+}
+
+.student-my-subjects__type-pill {
+  cursor: pointer;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: #94a3b8;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  font-family: inherit;
+}
+
+.student-my-subjects__type-pill:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #e2e8f0;
+}
+
+.student-my-subjects__type-pill--active {
+  color: #fff;
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.5);
+}
+
+/* ── Subject Grid ───────────────────────────────────── */
+.student-my-subjects__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.25rem;
+}
+
+/* ── Subject Card ───────────────────────────────────── */
+.student-my-subjects__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 24px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease-in-out;
+}
+
+.student-my-subjects__card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 0px;
+  background: linear-gradient(180deg, #22c55e, #15803d);
+  border-radius: 20px 0 0 20px;
+  transition: width 0.3s ease;
+}
+
+.student-my-subjects__card:hover::before {
+  width: 4px;
+}
+
+.student-my-subjects__card:hover {
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.3), 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.student-my-subjects__card__code {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4ade80;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.04em;
+}
+
+/* ── Empty State ────────────────────────────────────── */
+.student-my-subjects__empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem 1rem;
+  color: #64748b;
+  text-align: center;
+  background: rgba(16, 16, 30, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.student-my-subjects__empty-state h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.student-my-subjects__empty-state p {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #94a3b8;
+  max-width: 28rem;
+  line-height: 1.6;
+}
+
+.student-my-subjects__debug {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.6rem 0.85rem;
+  border-radius: 10px;
+  max-width: 32rem;
+  word-break: break-word;
+}
+
+/* ── Error State ────────────────────────────────────── */
+.student-my-subjects__error-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.student-my-subjects__error-card h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.student-my-subjects__error-card p {
+  margin: 0;
+  font-size: 0.9rem;
+  max-width: 28rem;
+  line-height: 1.6;
+  color: #94a3b8;
+}
+
+/* ── Skeleton ───────────────────────────────────────── */
+.student-my-subjects__skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.25rem;
+}
+
+.student-my-subjects__skeleton-card {
+  min-height: 160px;
+  border-radius: 16px;
+  background: linear-gradient(90deg, #12122a 25%, #1c1c36 50%, #12122a 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ── Responsive ─────────────────────────────────────── */
+@media (max-width: 720px) {
+  .student-my-subjects {
+    padding: 1.25rem;
+  }
+
+  .student-my-subjects__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .student-my-subjects__skeleton-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .student-my-subjects__tabs {
+    gap: 0.4rem;
+  }
+
+  .student-my-subjects__tab {
+    padding: 0.5rem 0.85rem;
+    font-size: 0.78rem;
+  }
+}

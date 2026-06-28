@@ -30,14 +30,20 @@ export default function Overview() {
 
      // Recent Activity ko filter karne ka sahi tarika:
       // Join karo study_materials ko user_profiles ke sath aur check karo branch_id
-      const { data: materials } = await supabase.from('study_materials')
+      let recentQuery = supabase
+        .from('study_materials')
         .select(`
           *, 
           user_profiles!inner(full_name, branch_id)
         `)
-        .eq('user_profiles.branch_id', userBranchId) // Yahan hum user_profiles ke through filter kar rahe hain!
         .order('created_at', { ascending: false })
         .limit(5);
+
+      if (userBranchId) {
+        recentQuery = recentQuery.eq('user_profiles.branch_id', userBranchId);
+      }
+
+      const { data: materials } = await recentQuery;
 
       const activityItems = materials?.map(m => ({
         id: m.id,

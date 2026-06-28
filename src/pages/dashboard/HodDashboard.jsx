@@ -7,6 +7,7 @@ import ManageStudents from '../admin/ManageStudents.jsx';
 import UploadMaterials from '../admin/UploadMaterials.jsx';
 import ManageAnnouncements from '../admin/ManageAnnouncements.jsx';
 import CurriculumManager from '../admin/CurriculumManager.jsx';
+import ManageCategories from './ManageCategories.jsx';
 
 const HOD_TAB_COMPONENTS = {
   overview: AdminOverview,
@@ -15,6 +16,7 @@ const HOD_TAB_COMPONENTS = {
   'upload-material': UploadMaterials,
   announcement: ManageAnnouncements,
   curriculum: CurriculumManager,
+  categories: ManageCategories,
 };
 
 function getActiveTabId(pathname) {

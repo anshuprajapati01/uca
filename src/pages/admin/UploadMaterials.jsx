@@ -1,11 +1,10 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { sanitizeFileName, validateAcademicFile } from '../../services/resourceService.js';
 import { useHodContext } from '../../context/HodContext.jsx';
 import { AGGREGATE_DEPARTMENTS } from '../../config/constants.js';
+import { ChevronDown } from 'lucide-react';
 import './DirectorDashboard-v2.css';
-
-const MATERIAL_CATEGORIES = ['Syllabus', 'Class Notes', 'Toppers Notes', 'Reference Books', 'PYQs', 'Exam Cheatsheets', 'Lecture', 'Assignment', 'Tutorial'];
 
 export default function UploadMaterials() {
   const { hodDepartmentsData } = useHodContext();
@@ -25,6 +24,37 @@ export default function UploadMaterials() {
   const [uploadedMaterials, setUploadedMaterials] = useState([]);
   const [manageFilter, setManageFilter] = useState('All');
   const [deleteId, setDeleteId] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+  const [categorySearchQuery, setCategorySearchQuery] = useState('');
+  const categoryDropdownRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target)) {
+        setIsCategoryDropdownOpen(false);
+        setCategorySearchQuery('');
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const fetchCategories = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('material_categories')
+      .select('name')
+      .eq('is_active', true)
+      .order('priority', { ascending: true });
+
+    if (!error && data) {
+      setCategories(data.map(c => c.name));
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   const availableYears = useMemo(() => {
     return [...new Set(hodDepartmentsData.map((d) => d.description))].filter(Boolean).sort();
@@ -67,27 +97,18 @@ export default function UploadMaterials() {
   }, [selectedYear, selectedBranch]);
 
   const fetchUploadedMaterials = async () => {
-    const { data: materials, error } = await supabase.from('study_materials').select('*');
+    const { data: materials, error } = await supabase
+      .from('study_materials')
+      .select('*, uploader:user_profiles!uploaded_by(full_name, role)')
+      .order('created_at', { ascending: false });
+
     if (!error && materials) {
       const { data: subjects } = await supabase.from('subjects').select('id, code');
       const subjectMap = Object.fromEntries((subjects || []).map(s => [s.id, s.code]));
 
-      const { data: users } = await supabase.from('user_profiles').select('id, full_name, role');
-      const userMap = Object.fromEntries((users || []).map(u => [u.id, { name: u.full_name, role: u.role }]));
-
       const enriched = materials.map(m => {
-        let uploaderName = 'Unknown';
-        if (m.uploaded_by) {
-            if (userMap[m.uploaded_by]) {
-                uploaderName = userMap[m.uploaded_by].name;
-            } else {
-                uploaderName = "Profile Missing in DB";
-            }
-        } else {
-            uploaderName = "ID Not Saved by Faculty";
-        }
-
-        const uploaderRole = m.uploaded_by && userMap[m.uploaded_by] ? userMap[m.uploaded_by].role : 'Unknown';
+        const uploaderName = m.uploader?.full_name || 'Unknown';
+        const uploaderRole = m.uploader?.role || 'Unknown';
 
         return { 
           ...m, 
@@ -232,21 +253,98 @@ export default function UploadMaterials() {
 
             <div className="broadcast-form-row">
               <label htmlFor="category" style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#a1a1aa', marginBottom: '0.375rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Category</label>
-              <select
-                id="category"
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                required
-                className="broadcast-input w-full"
-              >
-                <option value="">-- Select Category --</option>
-                {MATERIAL_CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
+              <div style={{ position: 'relative' }} ref={categoryDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                  style={{
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    padding: '0.75rem 1rem',
+                    border: '1px solid rgba(148, 163, 184, 0.18)',
+                    borderRadius: '0.5rem',
+                    background: 'rgba(15, 23, 42, 0.65)',
+                    color: formData.category ? '#f8fafc' : '#64748b',
+                    fontSize: '0.95rem',
+                    fontWeight: '500',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}
+                >
+                  <span>{formData.category || '-- Select Category --'}</span>
+                  <ChevronDown size={16} style={{ color: '#94a3b8' }} />
+                </button>
+                {isCategoryDropdownOpen && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    zIndex: 50,
+                    background: '#1e1e2d',
+                    border: '1px solid #2d2d3f',
+                    borderRadius: '0.5rem',
+                    marginTop: '0.25rem',
+                    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)',
+                    maxHeight: '200px',
+                    overflow: 'hidden'
+                  }}>
+                    <input
+                      type="text"
+                      placeholder="Search category..."
+                      value={categorySearchQuery}
+                      onChange={(e) => setCategorySearchQuery(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.5rem 0.75rem',
+                        border: 'none',
+                        borderBottom: '1px solid #2d2d3f',
+                        background: '#13131a',
+                        color: '#fff',
+                        fontSize: '0.85rem',
+                        outline: 'none'
+                      }}
+                    />
+                    <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
+                      {categories.filter(cat => cat.toLowerCase().includes(categorySearchQuery.toLowerCase())).length === 0 ? (
+                        <div style={{ padding: '0.75rem', color: '#cbd5e1', fontSize: '0.85rem', textAlign: 'center' }}>No category found</div>
+                      ) : (
+                        categories
+                          .filter(cat => cat.toLowerCase().includes(categorySearchQuery.toLowerCase()))
+                          .map((cat) => (
+                            <button
+                              key={cat}
+                              type="button"
+                              onClick={() => {
+                                setFormData(prev => ({ ...prev, category: cat }));
+                                setIsCategoryDropdownOpen(false);
+                                setCategorySearchQuery('');
+                              }}
+                              style={{
+                                width: '100%',
+                                padding: '12px 16px',
+                                border: 'none',
+                                background: 'transparent',
+                                color: '#e2e8f0',
+                                textAlign: 'left',
+                                cursor: 'pointer',
+                                fontSize: '0.85rem',
+                                transition: 'all 0.15s ease'
+                              }}
+                              onMouseEnter={(e) => { e.target.style.background = 'rgba(139, 92, 246, 0.15)'; e.target.style.color = '#fff'; }}
+                              onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#e2e8f0'; }}
+                            >
+                              {cat}
+                            </button>
+                          ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="broadcast-form-row">
@@ -361,7 +459,7 @@ export default function UploadMaterials() {
           <h3 style={{ color: '#f8fafc', fontSize: '1.25rem', fontWeight: '700', marginBottom: '16px', letterSpacing: '-0.01em' }}>Manage Uploaded Materials</h3>
 
           <div className="pill-group" style={{ marginBottom: '20px' }}>
-            {['All', 'Syllabus', 'Class Notes', 'Toppers Notes', 'Reference Books', 'PYQs', 'Exam Cheatsheets', 'Lecture', 'Assignment', 'Tutorial'].map((f) => (
+            {['All', ...categories].map((f) => (
               <button
                 key={f}
                 className={`pill-btn ${manageFilter === f ? 'pill-btn--active' : ''}`}

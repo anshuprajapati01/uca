@@ -1,14 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase.js';
-import { Trash2, ArrowLeft, Eye } from 'lucide-react';
+import { Trash2, ArrowLeft, Eye, FileText, Link as LinkIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import UploadResourceModal from '../../components/faculty/UploadResourceModal.jsx';
 import AnnouncementsTab from '../../components/faculty/AnnouncementsTab.jsx';
 import { deleteResource } from '../../services/resourceService.js';
-import './SubjectWorkspace.css'; 
-
-const FILTERS = ['All', 'Syllabus', 'Class Notes', 'Toppers Notes', 'Reference Books', 'PYQs', 'Exam Cheatsheets', 'Lecture', 'Assignment', 'Tutorial'];
+import './SubjectWorkspace.css';
 
 export default function SubjectWorkspace() {
   const { subjectId } = useParams();
@@ -21,6 +19,7 @@ export default function SubjectWorkspace() {
   const [activeFilter, setActiveFilter] = useState('All');
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, resourceId: null });
   const [mainTab, setMainTab] = useState('Resources');
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -54,6 +53,22 @@ export default function SubjectWorkspace() {
     load();
     return () => { cancelled = true; };
   }, [subjectId]);
+
+  const fetchCategories = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('material_categories')
+      .select('name')
+      .eq('is_active', true)
+      .order('priority', { ascending: true });
+
+    if (!error && data) {
+      setCategories(['All', ...data.map(c => c.name)]);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   const filteredResources = resources.filter((r) => {
     if (activeFilter === 'All') return true;
@@ -124,17 +139,14 @@ export default function SubjectWorkspace() {
   return (
     <div className="w-full relative"> 
       
-      {/* MAIN PREMIUM CONTAINER */}
       <div className="subject-workspace text-left flex flex-col items-start w-full">
         
-        {/* TOP BAR */}
         <div className="subject-workspace__top-bar">
           <button onClick={() => navigate('/faculty/subjects')} className="subject-workspace__back">
             <ArrowLeft size={18} /> Back to Subjects
           </button>
         </div>
 
-        {/* HERO CARD */}
         <div className="w-full subject-workspace__header">
           <div className="text-left">
             <h1 className="subject-workspace__title">{headerTitle}</h1>
@@ -143,7 +155,6 @@ export default function SubjectWorkspace() {
           <div className="subject-workspace__badge">LIVE</div>
         </div>
 
-        {/* MAIN TABS */}
         <div style={{ display: 'flex', gap: '16px', borderBottom: '1px solid rgba(255,255,255,0.1)', marginBottom: '24px', paddingBottom: '16px', marginTop: '24px', width: '100%' }}>
           <button
             onClick={() => setMainTab('Resources')}
@@ -179,11 +190,9 @@ export default function SubjectWorkspace() {
           </button>
         </div>
 
-        {/* RESOURCES CONTENT */}
         {mainTab === 'Resources' && (
           <div className="resources-section w-full">
             
-            {/* Header & Add Button (Forced right side) */}
             <div className="subject-workspace__section-header relative z-50">
               <h2 className="subject-workspace__section-title">Manage Resources</h2>
               <div style={{ display: 'flex', gap: '12px' }}>
@@ -196,78 +205,124 @@ export default function SubjectWorkspace() {
               </div>
             </div>
 
-            {/* Filter Tabs */}
             <div className="subject-workspace__tabs-container hide-scrollbar" style={{ overflowX: 'auto', flexWrap: 'nowrap' }}>
-              {FILTERS.map(tab => (
+              {categories.map(filterName => (
                 <button 
-                  key={tab} onClick={() => setActiveFilter(tab)}
-                  className={`subject-workspace__tab ${activeFilter === tab ? 'subject-workspace__tab--active' : ''}`}
+                  key={filterName} onClick={() => setActiveFilter(filterName)}
+                  className={`subject-workspace__tab ${activeFilter === filterName ? 'subject-workspace__tab--active' : ''}`}
                   style={{ flexShrink: 0 }}
                 >
-                  {tab}
+                  {filterName}
                 </button>
               ))}
             </div>
 
-            {/* Table Area */}
             {filteredResources.length === 0 ? (
               <div className="subject-workspace__empty w-full">
                 <p>No resources uploaded yet. Click <strong>+ Add Resource</strong> to begin.</p>
               </div>
             ) : (
-              <div className="subject-workspace__table-wrapper w-full mt-4">
-                <table className="subject-workspace__table w-full text-left">
-                  <thead>
-                    <tr style={{ backgroundColor: '#1e1b4b', borderBottom: '2px solid #3730a3' }}>
-                      <th style={{ color: '#818cf8', fontSize: '13px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', padding: '16px' }}>Title</th>
-                      <th style={{ color: '#818cf8', fontSize: '13px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', padding: '16px' }}>Type</th>
-                      <th style={{ color: '#818cf8', fontSize: '13px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', padding: '16px' }}>Date</th>
-                      <th style={{ color: '#818cf8', fontSize: '13px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', padding: '16px' }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredResources.map(resource => (
-                      <tr key={resource.id}>
-                        <td style={{ padding: '16px' }}>{resource.title}</td>
-                        <td style={{ padding: '16px' }}>{resource.type}</td>
-                        <td style={{ padding: '16px' }}>{new Date(resource.created_at).toLocaleDateString()}</td>
-                        <td style={{ padding: '16px', display: 'flex', gap: '32px', alignItems: 'center' }}>
-                          
-                          {(resource.external_url || resource.file_url) && (
-                            <a
-                              href={resource.external_url || resource.file_url}
-                              target="_blank" rel="noopener noreferrer"
-                              style={{ color: '#818cf8', cursor: 'pointer', padding: '8px' }}
-                              title="View Material"
-                            >
-                              <Eye size={32} strokeWidth={2.5} />
-                            </a>
-                          )}
+              <div className="subject-workspace__cards w-full mt-4" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {filteredResources.map(resource => (
+                  <div key={resource.id} className="subject-resource-card" style={{
+                    background: '#1e1e2d',
+                    border: '1px solid #2d2d3f',
+                    borderRadius: '12px',
+                    padding: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px'
+                  }}>
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '8px',
+                      background: 'rgba(129, 140, 248, 0.15)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      {resource.file_url ? <FileText size={20} color="#818cf8" /> : <LinkIcon size={20} color="#818cf8" />}
+                    </div>
 
-                          <button
-                            style={{ color: '#f87171', background: 'transparent', border: 'none', cursor: 'pointer', padding: '8px' }}
-                            onClick={() => handleDelete(resource.id)}
-                            title="Delete Material"
-                          >
-                            <Trash2 size={28} strokeWidth={2.5} />
-                          </button>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <span style={{ color: '#f8fafc', fontWeight: '600', fontSize: '0.95rem' }}>{resource.title}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>{new Date(resource.created_at).toLocaleDateString()}</span>
+                        <span style={{
+                          background: 'rgba(129, 140, 248, 0.15)',
+                          color: '#a5b4fc',
+                          padding: '2px 8px',
+                          borderRadius: '9999px',
+                          fontSize: '0.7rem',
+                          fontWeight: '600',
+                          textTransform: 'uppercase'
+                        }}>{resource.type}</span>
+                      </div>
+                    </div>
 
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      {(resource.external_url || resource.file_url) && (
+                        <a
+                          href={resource.external_url || resource.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '8px 14px',
+                            borderRadius: '9999px',
+                            background: '#3b82f6',
+                            color: '#fff',
+                            textDecoration: 'none',
+                            fontSize: '0.85rem',
+                            fontWeight: '600',
+                            transition: 'background-color 0.2s'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = '#60a5fa'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = '#3b82f6'}
+                        >
+                          <Eye size={14} />
+                          View
+                        </a>
+                      )}
+
+                      <button
+                        onClick={() => handleDelete(resource.id)}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '8px 14px',
+                          borderRadius: '9999px',
+                          background: 'rgba(239, 68, 68, 0.1)',
+                          color: '#ef4444',
+                          border: '1px solid rgba(239, 68, 68, 0.2)',
+                          fontSize: '0.85rem',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = '#ef4444'; e.currentTarget.style.color = '#fff'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'; e.currentTarget.style.color = '#ef4444'; }}
+                      >
+                        <Trash2 size={14} />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
         )}
 
-        {/* ANNOUNCEMENTS CONTENT */}
-      {mainTab === 'Announcements' && <AnnouncementsTab subjectId={subjectId} />}
+        {mainTab === 'Announcements' && <AnnouncementsTab subjectId={subjectId} />}
         
-      </div> {/* END MAIN PREMIUM CONTAINER */}
+      </div>
 
-      {/* MODAL FREE FROM CSS BLUR */}
       {isModalOpen && (
         <UploadResourceModal 
           subjectId={subjectId} 
@@ -276,7 +331,6 @@ export default function SubjectWorkspace() {
         />
       )}
 
-      {/* 🛑 DELETE CONFIRMATION MODAL */}
       {deleteModal.isOpen && (
         <div 
           className="delete-overlay"

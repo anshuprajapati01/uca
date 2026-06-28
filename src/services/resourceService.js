@@ -72,6 +72,11 @@ export const sanitizeFileName = (fileName) => {
  */
 
 export async function uploadNewResource(resourceData, file) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    resourceData.uploaded_by = user.id;
+  }
+
   if (file) {
     validateAcademicFile(file);
     const filePath = `uploads/${sanitizeFileName(file.name)}`;
