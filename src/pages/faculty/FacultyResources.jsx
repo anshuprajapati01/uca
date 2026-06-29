@@ -5,14 +5,13 @@ import UploadResourceModal from '../../components/faculty/UploadResourceModal.js
 import { deleteResource } from '../../services/resourceService.js';
 import './FacultyResources.css';
 
-const FILTERS = ['All', 'Notes', 'Lectures', 'Assignments', 'PYQs', 'Syllabus'];
-
 export default function FacultyResources() {
   const [resources, setResources] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState('All');
+  const [dynamicCategories, setDynamicCategories] = useState(['All']);
 
   useEffect(() => {
     let cancelled = false;
@@ -33,6 +32,22 @@ export default function FacultyResources() {
       }
     }
     load();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchCategories() {
+      const { data: catData } = await supabase
+        .from('material_categories')
+        .select('name')
+        .eq('is_active', true)
+        .order('priority', { ascending: true });
+      if (!cancelled && catData) {
+        setDynamicCategories(['All', ...catData.map(c => c.name)]);
+      }
+    }
+    fetchCategories();
     return () => { cancelled = true; };
   }, []);
 
@@ -103,7 +118,7 @@ export default function FacultyResources() {
       </header>
 
       <nav className="faculty-resources__tabs">
-        {FILTERS.map((filter) => (
+        {dynamicCategories.map((filter) => (
           <button
             key={filter}
             type="button"

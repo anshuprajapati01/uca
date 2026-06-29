@@ -8,11 +8,13 @@ import UploadMaterials from '../admin/UploadMaterials.jsx';
 import ManageAnnouncements from '../admin/ManageAnnouncements.jsx';
 import CurriculumManager from '../admin/CurriculumManager.jsx';
 import ManageCategories from './ManageCategories.jsx';
+import ManageCR from './ManageCR.jsx';
 
 const HOD_TAB_COMPONENTS = {
   overview: AdminOverview,
   'faculty-workload': FacultyWorkload,
   'manage-student': ManageStudents,
+  'manage-cr': ManageCR,
   'upload-material': UploadMaterials,
   announcement: ManageAnnouncements,
   curriculum: CurriculumManager,

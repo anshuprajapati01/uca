@@ -1,16 +1,9 @@
 import { useState, useEffect, useRef } from "react";
+import { Upload, FileText, Eye, Trash2, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase.js";
 import { ROUTES } from "../../config/constants.js";
-import {
-  Upload,
-  UploadCloud,
-  Link as LinkIcon,
-  FileText,
-  ChevronLeft,
-  Eye,
-} from "lucide-react";
-import { uploadNewResource } from "../../services/resourceService.js";
+import { uploadNewResource, deleteResource } from "../../services/resourceService.js";
 import "./StudentDashboard.css";
 
 const IconOverview = () => (
@@ -266,22 +259,24 @@ const IconBook = () => (
 );
 
 const navItems = [
-  { id: "overview", label: "🏠 Overview", icon: <IconOverview /> },
-  { id: "subjects", label: "📚 My Subjects", icon: <IconSubjects /> },
-  { id: "library", label: "📂 Mega Library", icon: <IconLibrary /> },
-  {
-    id: "bookmarks",
-    label: "🔖 Bookmarks",
-    icon: <IconBookmark filled={false} />,
-  },
-  {
-    id: "announcements",
-    label: "📢 Announcements",
-    icon: <IconAnnouncement />,
-  },
-];
+   { id: "overview", label: "🏠 Overview", icon: <IconOverview /> },
+   { id: "subjects", label: "📚 My Subjects", icon: <IconSubjects /> },
+   { id: "library", label: "📂 Mega Library", icon: <IconLibrary /> },
+   {
+     id: "bookmarks",
+     label: "🔖 Bookmarks",
+     icon: <IconBookmark filled={false} />,
+   },
+   {
+     id: "announcements",
+     label: "📢 Announcements",
+     icon: <IconAnnouncement />,
+   },
+ ];
 
-const UPLOAD_TYPES = ["Notes", "Lectures", "Assignments", "PYQs", "Syllabus"];
+const crNavItems = [
+   { id: "my-uploads", label: "📁 My Uploads", icon: <FileText /> },
+];
 
 const MOCK_LIBRARY_ITEMS = [
   {
@@ -344,106 +339,127 @@ const getLibIcon = (type) => {
 const THEORY_PRACTICAL_FILTERS = ["All", "Theory", "Practical"];
 
 export default function StudentDashboard() {
-  const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
-  const [studentProfile, setStudentProfile] = useState(null);
-  const [announcements, setAnnouncements] = useState([]);
-  const [allMaterials, setAllMaterials] = useState([]);
-  const [semester, setSemester] = useState(null);
-  const [gridSubjects, setGridSubjects] = useState([]);
-  const [activeTab, setActiveTab] = useState("overview");
-  const [selectedSubject, setSelectedSubject] = useState(null);
-  const [activeFilter, setActiveFilter] = useState("All");
-  const [bookmarkedIds, setBookmarkedIds] = useState([]);
-  const bookmarkedIdsRef = useRef([]);
-  const [bookmarkFilter, setBookmarkFilter] = useState("All");
-  const [isLoading, setIsLoading] = useState(true);
-  const [librarySearch, setLibrarySearch] = useState("");
-  const [libraryFilter, setLibraryFilter] = useState("All");
-  const [selectedSemester, setSelectedSemester] = useState(null);
-  const [liveSemester, setLiveSemester] = useState(null);
-  const [availableSemesters, setAvailableSemesters] = useState([]);
-  const [subjectMaterials, setSubjectMaterials] = useState([]);
-  const [dynamicCategories, setDynamicCategories] = useState(["All"]);
+   const navigate = useNavigate();
+   const [user, setUser] = useState(null);
+   const [profile, setProfile] = useState(null);
+   const [studentProfile, setStudentProfile] = useState(null);
+   const [announcements, setAnnouncements] = useState([]);
+   const [allMaterials, setAllMaterials] = useState([]);
+   const [semester, setSemester] = useState(null);
+   const [gridSubjects, setGridSubjects] = useState([]);
+   const [activeTab, setActiveTab] = useState("overview");
+   const [selectedSubject, setSelectedSubject] = useState(null);
+   const [activeFilter, setActiveFilter] = useState("All");
+   const [bookmarkedIds, setBookmarkedIds] = useState([]);
+   const bookmarkedIdsRef = useRef([]);
+   const [bookmarkFilter, setBookmarkFilter] = useState("All");
+   const [isLoading, setIsLoading] = useState(true);
+   const [librarySearch, setLibrarySearch] = useState("");
+   const [libraryFilter, setLibraryFilter] = useState("All");
+   const [selectedSemester, setSelectedSemester] = useState(null);
+   const [liveSemester, setLiveSemester] = useState(null);
+   const [availableSemesters, setAvailableSemesters] = useState([]);
+   const [subjectMaterials, setSubjectMaterials] = useState([]);
+   const [dynamicCategories, setDynamicCategories] = useState(["All"]);
+   const [crDetails, setCrDetails] = useState(null);
+   const [crSubjects, setCrSubjects] = useState([]);
 
-  useEffect(() => {
-    bookmarkedIdsRef.current = bookmarkedIds;
-  }, [bookmarkedIds]);
+   useEffect(() => {
+     bookmarkedIdsRef.current = bookmarkedIds;
+   }, [bookmarkedIds]);
 
-  // CR FEATURE
-  const [isCR, setIsCR] = useState(false);
+const [uploadLoading, setUploadLoading] = useState(false);
+    const fileInputRef = useRef(null);
+    const typeDropdownRef = useRef(null);
+    const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
+    const [typeSearchQuery, setTypeSearchQuery] = useState('');
+    const [uploadForm, setUploadForm] = useState({
+      title: "",
+      description: "",
+      subject_id: "",
+      type: "Notes",
+      uploadMethod: "file",
+      file: null,
+      url: "",
+    });
+    const [myUploads, setMyUploads] = useState([]);
+    const [showUploadModal, setShowUploadModal] = useState(false);
+    const [uploadModalSubject, setUploadModalSubject] = useState(null);
+    const [deleteLoading, setDeleteLoading] = useState(false);
+    const [toast, setToast] = useState(null);
+    const [deleteTargetId, setDeleteTargetId] = useState(null);
 
-  // UPLOAD TAB STATES
-  const [uploadLoading, setUploadLoading] = useState(false);
-  const [uploadSuccessUI, setUploadSuccessUI] = useState(false);
-  const fileInputRef = useRef(null);
-  const [uploadForm, setUploadForm] = useState({
-    title: "",
-    description: "",
-    subject_id: "",
-    type: "Notes",
-    uploadMethod: "file",
-    file: null,
-    url: "",
-  });
+useEffect(() => {
+      let cancelled = false;
 
-  useEffect(() => {
-    let cancelled = false;
+      async function loadStudentData() {
+        setIsLoading(true);
 
-    async function loadStudentData() {
-      setIsLoading(true);
+        try {
+          const {
+            data: { user: authUser },
+          } = await supabase.auth.getUser();
+          if (!cancelled) setUser(authUser);
+          if (!authUser) return;
 
-      try {
-        const {
-          data: { user: authUser },
-        } = await supabase.auth.getUser();
-        if (!cancelled) setUser(authUser);
-        if (!authUser) return;
+          const { data: crData, error: crError } = await supabase
+            .from("class_representatives")
+            .select("branch, year, semester")
+            .eq("student_id", authUser.id)
+            .maybeSingle();
 
-        const { data: crData } = await supabase
-          .from("cr_students")
-          .select("user_id")
-          .eq("user_id", authUser.id)
-          .eq("is_active", true)
-          .maybeSingle();
+          if (crError) {
+            console.error("Failed to fetch CR details:", crError);
+          } else if (!cancelled) {
+            setCrDetails(crData);
+          }
 
-        if (!cancelled) setIsCR(!!crData);
+          const { data: profileData, error: profileError } = await supabase
+            .from("user_profiles")
+            .select("*, batches(*)")
+            .eq("id", authUser.id)
+            .single();
 
-        const { data: profileData, error: profileError } = await supabase
-          .from("user_profiles")
-          .select("*, batches(*)")
-          .eq("id", authUser.id)
-          .single();
+          if (profileError) throw profileError;
+          if (!cancelled) {
+            setProfile(profileData);
+            setStudentProfile(profileData);
+          }
 
-        if (profileError) throw profileError;
-        if (!cancelled) {
-          setProfile(profileData);
-          setStudentProfile(profileData);
-        }
+          const { data: bookmarkData, error: bookmarkError } = await supabase
+            .from("bookmarks")
+            .select("resource_id")
+            .eq("user_id", authUser.id);
+          if (bookmarkError) console.error("Failed to fetch bookmarks:", bookmarkError);
+          if (!cancelled) {
+            setBookmarkedIds((bookmarkData || []).map((b) => b.resource_id));
+          }
 
-        const { data: bookmarkData, error: bookmarkError } = await supabase
-          .from("bookmarks")
-          .select("resource_id")
-          .eq("user_id", authUser.id);
-        if (bookmarkError) console.error("Failed to fetch bookmarks:", bookmarkError);
-        if (!cancelled) {
-          setBookmarkedIds((bookmarkData || []).map((b) => b.resource_id));
-        }
+          const { data: announcementData } = await supabase
+            .from("announcements")
+            .select("*")
+            .order("created_at", { ascending: false })
+            .limit(5);
 
-        const { data: announcementData } = await supabase
-          .from("announcements")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(5);
+          if (!cancelled) setAnnouncements(announcementData || []);
 
-        if (!cancelled) setAnnouncements(announcementData || []);
+          const studentSemester = profileData?.batches?.semester;
+          if (!cancelled) setSemester(studentSemester ?? null);
 
-        const studentSemester = profileData?.batches?.semester;
-        if (!cancelled) setSemester(studentSemester ?? null);
-
-        const studentBranch = profileData?.selected_branch || profileData?.batches?.branch;
-        const studentYear = profileData?.selected_year || profileData?.batches?.year;
+          const studentBranch =
+            profileData?.selected_branch ||
+            profileData?.branch ||
+            profileData?.branch_id ||
+            profileData?.department ||
+            profileData?.batches?.department ||
+            profileData?.batches?.branch ||
+            null;
+          const studentYear =
+            profileData?.selected_year ||
+            profileData?.year ||
+            profileData?.batches?.year ||
+            profileData?.batches?.academic_year ||
+            null;
 
         const { data: deptData } = await supabase
           .from("departments")
@@ -470,13 +486,21 @@ export default function StudentDashboard() {
         }
 
         if (!cancelled) setLiveSemester(liveSem);
-        if (liveSem !== null && !cancelled) {
-          setSelectedSemester(liveSem);
+
+        let defaultSemester = null;
+        if (liveSem !== null) {
+          defaultSemester = liveSem;
+        } else if (studentYear && yearSemesterMap[studentYear]) {
+          defaultSemester = yearSemesterMap[studentYear][yearSemesterMap[studentYear].length - 1];
         }
 
-        const visibleSemesters = profileData.selected_year === '2nd Year'
+        if (!cancelled && defaultSemester !== null) {
+          setSelectedSemester(defaultSemester);
+        }
+
+        const visibleSemesters = studentYear === '2nd Year'
           ? [3, 4]
-          : (yearSemesterMap[profileData.selected_year] || []);
+          : (yearSemesterMap[studentYear] || []);
 
         if (!cancelled) {
           setAvailableSemesters(visibleSemesters);
@@ -495,31 +519,83 @@ export default function StudentDashboard() {
   }, []);
 
   useEffect(() => {
-    if (activeTab !== "upload") {
+    if (activeTab !== "my-uploads") {
       setSelectedSubject(null);
-      setUploadSuccessUI(false);
     }
+    setShowUploadModal(false);
     setActiveFilter("All");
     setLibrarySearch("");
     setLibraryFilter("All");
     setBookmarkFilter("All");
-  }, [activeTab]);
+}, [activeTab]);
 
   useEffect(() => {
-    if (profile && profile.selected_branch) {
-      fetchSubjectsForGrid(profile);
-    }
-  }, [profile, selectedSemester]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function refreshOnTabChange() {
-      if (activeTab === "library" || activeTab === "bookmarks") {
-        const data = await fetchAllMaterials();
-        if (!cancelled) setAllMaterials(data);
+    function handleTypeClickOutside(event) {
+      if (typeDropdownRef.current && !typeDropdownRef.current.contains(event.target)) {
+        setIsTypeDropdownOpen(false);
+        setTypeSearchQuery('');
       }
     }
+    document.addEventListener('mousedown', handleTypeClickOutside);
+    return () => document.removeEventListener('mousedown', handleTypeClickOutside);
+  }, []);
+
+   useEffect(() => {
+    if (activeTab !== "my-uploads") return;
+    let cancelled = false;
+    async function fetchMyUploads() {
+      let materials = [];
+      if (user?.id) {
+        const { data } = await supabase
+          .from("study_materials")
+          .select("*")
+          .eq("uploaded_by", user.id)
+          .order("created_at", { ascending: false });
+        materials = data || [];
+      }
+      const { data: subjectsData } = await supabase.from("subjects").select("*");
+      const merged = (materials || []).map((m) => ({
+        ...m,
+        subjects: (subjectsData || []).find((s) => s.id === m.subject_id) || {
+          name: "Unknown Subject",
+          code: "N/A",
+        },
+      }));
+      if (!cancelled) setMyUploads(merged);
+    }
+    fetchMyUploads();
+    return () => { cancelled = true; };
+  }, [activeTab, user?.id]);
+
+useEffect(() => {
+      if (profile && profile.selected_branch) {
+        fetchSubjectsForGrid(profile);
+      }
+    }, [profile, selectedSemester]);
+
+    useEffect(() => {
+      if (crDetails && crDetails.branch && crDetails.semester) {
+        async function fetchCRSubjects() {
+          const { data: subjects } = await supabase
+            .from('subjects')
+            .select('*, faculty:faculty_id(id, full_name, avatar_url, profile_image_url)')
+            .eq('department', crDetails.branch)
+            .eq('semester', `Semester ${crDetails.semester}`);
+          setCrSubjects(subjects || []);
+        }
+        fetchCRSubjects();
+      }
+    }, [crDetails]);
+
+    useEffect(() => {
+      let cancelled = false;
+
+      async function refreshOnTabChange() {
+        if (activeTab === "library" || activeTab === "bookmarks") {
+          const data = await fetchAllMaterials();
+          if (!cancelled) setAllMaterials(data);
+        }
+      }
 
     refreshOnTabChange();
     return () => {
@@ -577,14 +653,21 @@ async function fetchAllMaterials() {
   }
 
   async function fetchSubjectsForGrid(profileData) {
-    if (!profileData?.selected_branch || selectedSemester === null) {
+    const branch =
+      profileData?.selected_branch ||
+      profileData?.branch ||
+      profileData?.branch_id ||
+      profileData?.department ||
+      profileData?.batches?.department ||
+      profileData?.batches?.branch;
+    if (!branch || selectedSemester === null) {
       setGridSubjects([]);
       return;
     }
     const { data: subjects, error: subjectsError } = await supabase
       .from('subjects')
       .select('*, faculty:faculty_id(id, full_name, avatar_url, profile_image_url)')
-      .eq('department', profileData.selected_branch)
+      .eq('department', branch)
       .eq('semester', `Semester ${selectedSemester}`);
     if (subjectsError) console.error("Error fetching subjects:", subjectsError);
     setGridSubjects(subjects || []);
@@ -689,11 +772,10 @@ async function fetchAllMaterials() {
     setUploadLoading(true);
     try {
       const payload = {
-        title: uploadForm.title, // Title ko wapas normal kar diya
+        title: uploadForm.title,
         subject_id: uploadForm.subject_id,
         type: uploadForm.type,
         file_url: uploadForm.uploadMethod === "link" ? uploadForm.url : null,
-        // 👇 YAHAN HAI ASLI MAGIC! Hum tera User ID bhej rahe hain 👇
         uploaded_by: user.id,
       };
 
@@ -701,35 +783,98 @@ async function fetchAllMaterials() {
         uploadForm.uploadMethod === "file" ? uploadForm.file : null;
 
       await uploadNewResource(payload, fileToUpload);
+      closeUploadModal();
 
-      const updatedMaterials = await fetchAllMaterials();
-      if (updatedMaterials.length > 0) {
-        setAllMaterials(updatedMaterials);
+      setToast({ message: "Material uploaded successfully!", type: "success" });
+      setTimeout(() => setToast(null), 3500);
+
+      if (selectedSubject) {
+        const { data } = await supabase
+          .from("study_materials")
+          .select("*")
+          .eq("subject_id", selectedSubject.id);
+        if (data) setSubjectMaterials(data);
       }
 
-      setUploadSuccessUI(true);
-
-      setTimeout(() => {
-        setUploadForm({
-          title: "",
-          description: "",
-          subject_id: "",
-          type: "Notes",
-          uploadMethod: "file",
-          file: null,
-          url: "",
-        });
-        setUploadSuccessUI(false);
-        setActiveTab("subjects");
-      }, 2500);
+      if (activeTab === "my-uploads") {
+        const { data: myData } = await supabase
+          .from("study_materials")
+          .select("*")
+          .eq("uploaded_by", user.id)
+          .order("created_at", { ascending: false });
+        const { data: subjectsData } = await supabase
+          .from("subjects")
+          .select("*");
+        const merged = (myData || []).map((m) => ({
+          ...m,
+          subjects: (subjectsData || []).find((s) => s.id === m.subject_id) || {
+            name: "Unknown Subject",
+            code: "N/A",
+          },
+        }));
+        setMyUploads(merged);
+      }
     } catch (error) {
       console.error("Upload Error Details:", error);
       alert(`UPLOAD FAILED ERROR:\n\n${error.message}`);
     } finally {
       setUploadLoading(false);
+      setUploadForm({
+        title: "",
+        description: "",
+        subject_id: "",
+        type: "Notes",
+        uploadMethod: "file",
+        file: null,
+        url: "",
+      });
     }
   };
   // ------------------------
+  const openUploadModal = (subject) => {
+    setUploadModalSubject(subject);
+    setUploadForm({
+      title: "",
+      description: "",
+      subject_id: subject.id,
+      type: "Notes",
+      uploadMethod: "file",
+      file: null,
+      url: "",
+    });
+    setShowUploadModal(true);
+  };
+
+  const closeUploadModal = () => {
+    setShowUploadModal(false);
+    setUploadModalSubject(null);
+    setIsTypeDropdownOpen(false);
+    setTypeSearchQuery('');
+  };
+
+  const handleDeleteResource = (id) => {
+    setDeleteTargetId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTargetId) return;
+    const id = deleteTargetId;
+    setDeleteTargetId(null);
+    setDeleteLoading(true);
+    try {
+      await deleteResource(id);
+      setMyUploads((prev) => prev.filter((m) => m.id !== id));
+      setSubjectMaterials((prev) => prev.filter((m) => m.id !== id));
+      setToast({ message: "Material deleted successfully.", type: "error" });
+      setTimeout(() => setToast(null), 3500);
+    } catch (error) {
+      console.error("Delete error:", error);
+      setToast({ message: "Failed to delete material. Please try again.", type: "error" });
+      setTimeout(() => setToast(null), 3500);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   const displayName =
     studentProfile?.full_name ||
@@ -896,42 +1041,57 @@ async function fetchAllMaterials() {
           <h1 className="student-sidebar__brand">UCA</h1>
         </div>
 
-        <nav className="student-sidebar__nav">
-          {navItems.map(({ id, label, icon }) => (
-            <button
-              key={id}
-              className={`student-sidebar__link ${activeTab === id ? "student-sidebar__link--active" : ""}`}
-              onClick={() => setActiveTab(id)}
-            >
-              <span className="student-sidebar__link-icon">{icon}</span>
-              <span className="student-sidebar__link-label">{label}</span>
-            </button>
-          ))}
-        </nav>
+<nav className="student-sidebar__nav">
+           {navItems.map(({ id, label, icon }) => (
+             <button
+               key={id}
+               className={`student-sidebar__link ${activeTab === id ? "student-sidebar__link--active" : ""}`}
+               onClick={() => setActiveTab(id)}
+             >
+               <span className="student-sidebar__link-icon">{icon}</span>
+               <span className="student-sidebar__link-label">{label}</span>
+             </button>
+           ))}
+           {crDetails && crNavItems.map(({ id, label, icon }) => (
+             <button
+               key={id}
+               className={`student-sidebar__link ${activeTab === id ? "student-sidebar__link--active" : ""}`}
+               onClick={() => setActiveTab(id)}
+             >
+               <span className="student-sidebar__link-icon">{icon}</span>
+               <span className="student-sidebar__link-label">{label}</span>
+             </button>
+           ))}
+         </nav>
 
-        <div className="student-sidebar__footer">
-          <span>Student Portal · v1.0</span>
-        </div>
-      </aside>
+         <div className="student-sidebar__footer">
+           <span>Student Portal · v1.0</span>
+         </div>
+       </aside>
 
-      <main className="student-main">
-        <header className="student-header">
-          <div className="student-header__title-wrap">
-            <h2 className="student-header__title">Student Dashboard</h2>
-            <span className="student-header__welcome">
-              Welcome back, {displayName.split(" ")[0]}
-            </span>
-          </div>
+       <main className="student-main">
+         <header className="student-header">
+           <div className="student-header__title-wrap">
+             <h2 className="student-header__title">Student Dashboard</h2>
+             <span className="student-header__welcome">
+               Welcome back, {displayName.split(" ")[0]}
+             </span>
+           </div>
 
-          <div className="student-header__right">
-            <div className="student-header__user">
-              <div className="student-header__avatar">{initials}</div>
-              <div className="student-header__meta">
-                <span className="student-header__name">{displayName}</span>
-                <span className="student-header__role">{displayRole}</span>
-              </div>
-            </div>
-            <button className="student-header__signout" onClick={handleSignOut}>
+           <div className="student-header__right">
+             <div className="student-header__user">
+               <div className="student-header__avatar">{initials}</div>
+               <div className="student-header__meta">
+                 <span className="student-header__name">{displayName}</span>
+                 {crDetails && (
+                   <span className="student-header__role" style={{ background: 'rgba(139, 92, 246, 0.15)', color: '#c4b5fd', padding: '2px 8px', borderRadius: '9999px', fontSize: '0.7rem', marginLeft: '8px' }}>
+                     CR Mode
+                   </span>
+                 )}
+                 <span className="student-header__role">{displayRole}</span>
+               </div>
+             </div>
+             <button className="student-header__signout" onClick={handleSignOut}>
               <svg
                 width="15"
                 height="15"
@@ -1068,560 +1228,240 @@ async function fetchAllMaterials() {
             </div>
           )}
 
-          {activeTab === "upload" && (
-            <section className="student-section">
-              <div
-                style={{
-                  maxWidth: "800px",
-                  margin: "0 auto",
-                  width: "100%",
-                  boxSizing: "border-box",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: "24px",
-                  }}
-                >
-                  <div>
-                    <h3
-                      className="student-section__title"
-                      style={{ margin: 0, fontSize: "1.5rem" }}
-                    >
-                      Upload Study Material
-                    </h3>
-                    <p
-                      style={{
-                        color: "#94a3b8",
-                        margin: "5px 0 0 0",
-                        fontSize: "0.9rem",
-                      }}
-                    >
-                      Share resources with your class
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setActiveTab("subjects")}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      padding: "8px 16px",
-                      borderRadius: "8px",
-                      background: "#2d2d3f",
-                      color: "#e2e8f0",
-                      border: "none",
-                      cursor: "pointer",
-                      fontWeight: "500",
-                    }}
-                  >
-                    <ChevronLeft size={16} /> Cancel
-                  </button>
-                </div>
 
-                <div
-                  style={{
-                    background: "#1e1e2d",
-                    border: "1px solid #2d2d3f",
-                    borderRadius: "16px",
-                    padding: "32px",
-                    boxSizing: "border-box",
-                    position: "relative",
-                  }}
-                >
-                  {uploadSuccessUI ? (
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        padding: "40px 0",
-                        animation: "fadeIn 0.5s",
-                      }}
-                    >
-                      <div
-                        style={{
-                          background: "rgba(16, 185, 129, 0.15)",
-                          padding: "24px",
-                          borderRadius: "50%",
-                          marginBottom: "24px",
-                        }}
-                      >
-                        <svg
-                          width="64"
-                          height="64"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="#10b981"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                          <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                        </svg>
-                      </div>
-                      <h2
-                        style={{
-                          color: "white",
-                          margin: "0 0 12px 0",
-                          fontSize: "1.8rem",
-                        }}
-                      >
-                        Upload Successful!
-                      </h2>
-                      <p
-                        style={{
-                          color: "#94a3b8",
-                          margin: "0 0 20px 0",
-                          fontSize: "1rem",
-                        }}
-                      >
-                        Your material has been added to the library.
-                      </p>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          color: "#6366f1",
-                          fontSize: "0.9rem",
-                          fontWeight: "500",
-                        }}
-                      >
-                        <svg
-                          width="18"
-                          height="18"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
-                        </svg>
-                        Redirecting to subjects...
-                      </div>
+           {activeTab === "my-uploads" && crDetails && (
+             <section className="student-section" style={{ animation: "fadeIn 0.25s ease" }}>
+               <div style={{ maxWidth: "800px", margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
+                 <h3 className="student-section__title" style={{ margin: 0, fontSize: "1.5rem" }}>My Uploads</h3>
+                 <p style={{ color: "#94a3b8", fontSize: "0.9rem", margin: 0 }}>Manage your uploaded study materials</p>
+
+                 {myUploads.length === 0 ? (
+                   <div className="student-material-empty">
+                     <p>You haven't uploaded any materials yet.</p>
+                   </div>
+                 ) : (
+                   <div className="student-uploads-table-wrap">
+                     <table className="student-uploads-table">
+                       <thead>
+                         <tr>
+                           <th>Title</th>
+                           <th>Subject</th>
+                           <th>Type</th>
+                           <th>Date</th>
+                           <th>Actions</th>
+                         </tr>
+                       </thead>
+                       <tbody>
+                         {myUploads.map((material) => (
+                           <tr key={material.id}>
+                             <td className="student-uploads-title">{material.title}</td>
+                             <td className="student-uploads-subject">
+                               {material.subjects?.name || "Unknown"} ({material.subjects?.code || "—"})
+                             </td>
+                             <td>
+                               <span className={`student-material-card__badge student-material-card__badge--${(material.type || material.category || "resource").toLowerCase().replace(/\s+/g, "-")}`}>
+                                 {material.type || material.category || "Resource"}
+                               </span>
+                             </td>
+                             <td className="student-uploads-date">
+                               {new Date(material.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                             </td>
+                             <td>
+                               <button className="student-uploads-delete-btn" onClick={() => handleDeleteResource(material.id)} disabled={deleteLoading}>
+                                 <Trash2 size={16} /> Delete
+                               </button>
+                             </td>
+                           </tr>
+                         ))}
+                       </tbody>
+                     </table>
+                   </div>
+                 )}
+               </div>
+             </section>
+           )}
+
+           {showUploadModal && (
+             <div className="student-upload-modal__overlay" onClick={closeUploadModal}>
+               <div className="student-upload-modal__content" onClick={(e) => e.stopPropagation()}>
+                 <header className="student-upload-modal__header">
+                   <h2>Upload Study Material</h2>
+                   <button type="button" className="student-upload-modal__close" onClick={closeUploadModal} aria-label="Close modal">
+                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                       <line x1="18" y1="6" x2="6" y2="18" />
+                       <line x1="6" y1="6" x2="18" y2="18" />
+                     </svg>
+                   </button>
+                 </header>
+<form onSubmit={handleUploadSubmit} className="student-upload-modal__form">
+                    <div className="student-upload-modal__field">
+                      <label style={{ color: "#cbd5e1", marginBottom: "8px", fontSize: "0.9rem", fontWeight: "500", display: "block" }}>Resource Title</label>
+                      <input type="text" name="title" value={uploadForm.title} onChange={handleUploadChange} placeholder="e.g. OS Chapter 1 Notes" required style={{ boxSizing: "border-box", background: "#13131a", border: "1px solid #2d2d3f", color: "white", padding: "14px", borderRadius: "10px", width: "100%" }} />
                     </div>
-                  ) : (
-                    <form onSubmit={handleUploadSubmit}>
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: "24px",
-                          marginBottom: "24px",
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        <div
+                    <div className="student-upload-modal__field">
+                      <label style={{ color: "#cbd5e1", marginBottom: "8px", fontSize: "0.9rem", fontWeight: "500", display: "block" }}>Type</label>
+                      <div style={{ position: 'relative' }} ref={typeDropdownRef}>
+                        <button
+                          type="button"
+                          onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
                           style={{
-                            flex: 1,
-                            minWidth: "200px",
-                            display: "flex",
-                            flexDirection: "column",
+                            width: '100%',
+                            boxSizing: 'border-box',
+                            padding: '14px',
+                            border: '1px solid #2d2d3f',
+                            borderRadius: '10px',
+                            background: '#13131a',
+                            color: uploadForm.type ? '#f8fafc' : '#64748b',
+                            fontSize: '0.95rem',
+                            fontWeight: '500',
+                            textAlign: 'left',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
                           }}
                         >
-                          <label
-                            style={{
-                              color: "#cbd5e1",
-                              marginBottom: "8px",
-                              fontSize: "0.9rem",
-                              fontWeight: "500",
-                            }}
-                          >
-                            Resource Title
-                          </label>
-                          <input
-                            type="text"
-                            name="title"
-                            value={uploadForm.title}
-                            onChange={handleUploadChange}
-                            placeholder="e.g. OS Chapter 1 Notes"
-                            required
-                            style={{
-                              boxSizing: "border-box",
-                              background: "#13131a",
-                              border: "1px solid #2d2d3f",
-                              color: "white",
-                              padding: "14px",
-                              borderRadius: "10px",
-                              width: "100%",
-                            }}
-                          />
-                        </div>
-                        <div
-                          style={{
-                            flex: 1,
-                            minWidth: "200px",
-                            display: "flex",
-                            flexDirection: "column",
-                          }}
-                        >
-                          <label
-                            style={{
-                              color: "#cbd5e1",
-                              marginBottom: "8px",
-                              fontSize: "0.9rem",
-                              fontWeight: "500",
-                            }}
-                          >
-                            Type
-                          </label>
-                          <select
-                            name="type"
-                            value={uploadForm.type}
-                            onChange={handleUploadChange}
-                            required
-                            style={{
-                              boxSizing: "border-box",
-                              background: "#13131a",
-                              border: "1px solid #2d2d3f",
-                              color: "white",
-                              padding: "14px",
-                              borderRadius: "10px",
-                              width: "100%",
-                            }}
-                          >
-                            {UPLOAD_TYPES.map((t) => (
-                              <option
-                                key={t}
-                                value={t}
-                                style={{ background: "#1e1e2d" }}
-                              >
-                                {t}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          marginBottom: "24px",
-                        }}
-                      >
-                        <label
-                          style={{
-                            color: "#cbd5e1",
-                            marginBottom: "8px",
-                            fontSize: "0.9rem",
-                            fontWeight: "500",
-                          }}
-                        >
-                          Subject
-                        </label>
-                        <select
-                          name="subject_id"
-                          value={uploadForm.subject_id}
-                          onChange={handleUploadChange}
-                          required
-                          style={{
-                            boxSizing: "border-box",
-                            background: "#13131a",
-                            border: "1px solid #2d2d3f",
-                            color: "white",
-                            padding: "14px",
-                            borderRadius: "10px",
-                            width: "100%",
-                          }}
-                        >
-                          <option value="" style={{ background: "#1e1e2d" }}>
-                            -- Select Subject --
-                          </option>
-                          {gridSubjects.map((sub) => (
-                            <option
-                              key={sub.id}
-                              value={sub.id}
-                              style={{ background: "#1e1e2d" }}
-                            >
-                              {sub.name} ({sub.code})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          marginBottom: "32px",
-                        }}
-                      >
-                        <label
-                          style={{
-                            color: "#cbd5e1",
-                            marginBottom: "8px",
-                            fontSize: "0.9rem",
-                            fontWeight: "500",
-                          }}
-                        >
-                          Description (Optional)
-                        </label>
-                        <textarea
-                          name="description"
-                          value={uploadForm.description}
-                          onChange={handleUploadChange}
-                          rows={3}
-                          placeholder="Add details..."
-                          style={{
-                            boxSizing: "border-box",
-                            background: "#13131a",
-                            border: "1px solid #2d2d3f",
-                            color: "white",
-                            padding: "14px",
-                            borderRadius: "10px",
-                            resize: "vertical",
-                            width: "100%",
-                          }}
-                        />
-                      </div>
-
-                      <div
-                        style={{
-                          background: "#13131a",
-                          border: "1px solid #2d2d3f",
-                          borderRadius: "12px",
-                          overflow: "hidden",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            borderBottom: "1px solid #2d2d3f",
-                          }}
-                        >
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setUploadForm((p) => ({
-                                ...p,
-                                uploadMethod: "file",
-                              }))
-                            }
-                            style={{
-                              flex: 1,
-                              padding: "16px",
-                              background:
-                                uploadForm.uploadMethod === "file"
-                                  ? "rgba(139, 92, 246, 0.08)"
-                                  : "transparent",
-                              color:
-                                uploadForm.uploadMethod === "file"
-                                  ? "#8b5cf6"
-                                  : "#94a3b8",
-                              border: "none",
-                              borderBottom:
-                                uploadForm.uploadMethod === "file"
-                                  ? "2px solid #8b5cf6"
-                                  : "none",
-                              cursor: "pointer",
-                              display: "flex",
-                              justifyContent: "center",
-                              alignItems: "center",
-                              gap: "8px",
-                              fontWeight: "500",
-                              boxSizing: "border-box",
-                            }}
-                          >
-                            <UploadCloud size={18} /> File
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setUploadForm((p) => ({
-                                ...p,
-                                uploadMethod: "link",
-                              }))
-                            }
-                            style={{
-                              flex: 1,
-                              padding: "16px",
-                              background:
-                                uploadForm.uploadMethod === "link"
-                                  ? "rgba(139, 92, 246, 0.08)"
-                                  : "transparent",
-                              color:
-                                uploadForm.uploadMethod === "link"
-                                  ? "#8b5cf6"
-                                  : "#94a3b8",
-                              border: "none",
-                              borderBottom:
-                                uploadForm.uploadMethod === "link"
-                                  ? "2px solid #8b5cf6"
-                                  : "none",
-                              cursor: "pointer",
-                              display: "flex",
-                              justifyContent: "center",
-                              alignItems: "center",
-                              gap: "8px",
-                              fontWeight: "500",
-                              boxSizing: "border-box",
-                            }}
-                          >
-                            <LinkIcon size={18} /> Link
-                          </button>
-                        </div>
-
-                        {uploadForm.uploadMethod === "file" ? (
-                          <div
-                            onClick={() => fileInputRef.current?.click()}
-                            style={{
-                              padding: "40px 20px",
-                              textAlign: "center",
-                              cursor: "pointer",
-                              boxSizing: "border-box",
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                            }}
-                          >
+                          <span>{uploadForm.type || '-- Select Type --'}</span>
+                          <ChevronDown size={16} style={{ color: '#94a3b8' }} />
+                        </button>
+                        {isTypeDropdownOpen && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: 0,
+                            right: 0,
+                            zIndex: 50,
+                            background: '#1e1e2d',
+                            border: '1px solid #2d2d3f',
+                            borderRadius: '0.5rem',
+                            marginTop: '0.25rem',
+                            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)',
+                            maxHeight: '220px',
+                            overflow: 'hidden'
+                          }}>
                             <input
-                              type="file"
-                              ref={fileInputRef}
-                              style={{ display: "none" }}
-                              onChange={handleUploadChange}
-                              name="file"
-                            />
-                            {uploadForm.file ? (
-                              <div
-                                style={{
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  alignItems: "center",
-                                  gap: "10px",
-                                  wordBreak: "break-word",
-                                  maxWidth: "100%",
-                                }}
-                              >
-                                <FileText size={40} color="#10b981" />
-                                <p
-                                  style={{
-                                    color: "white",
-                                    margin: 0,
-                                    fontWeight: "500",
-                                    fontSize: "1rem",
-                                    textAlign: "center",
-                                  }}
-                                >
-                                  {uploadForm.file.name}
-                                </p>
-                                <p style={{ color: "#94a3b8", margin: 0 }}>
-                                  {(uploadForm.file.size / 1024 / 1024).toFixed(
-                                    2,
-                                  )}{" "}
-                                  MB
-                                </p>
-                              </div>
-                            ) : (
-                              <>
-                                <UploadCloud
-                                  size={40}
-                                  color="#6366f1"
-                                  style={{ marginBottom: "15px" }}
-                                />
-                                <p
-                                  style={{
-                                    color: "#cbd5e1",
-                                    margin: "0 0 8px 0",
-                                    fontSize: "1rem",
-                                  }}
-                                >
-                                  Click to browse file
-                                </p>
-                                <p
-                                  style={{
-                                    color: "#64748b",
-                                    margin: 0,
-                                    fontSize: "0.85rem",
-                                  }}
-                                >
-                                  PDF, DOCX, PPTX
-                                </p>
-                              </>
-                            )}
-                          </div>
-                        ) : (
-                          <div
-                            style={{
-                              padding: "24px",
-                              position: "relative",
-                              boxSizing: "border-box",
-                            }}
-                          >
-                            <LinkIcon
-                              size={20}
+                              type="text"
+                              placeholder="Search type..."
+                              value={typeSearchQuery}
+                              onChange={(e) => setTypeSearchQuery(e.target.value)}
                               style={{
-                                position: "absolute",
-                                left: "40px",
-                                top: "50%",
-                                transform: "translateY(-50%)",
-                                color: "#94a3b8",
+                                width: '100%',
+                                padding: '0.5rem 0.75rem',
+                                border: 'none',
+                                borderBottom: '1px solid #2d2d3f',
+                                background: '#13131a',
+                                color: '#fff',
+                                fontSize: '0.85rem',
+                                outline: 'none'
                               }}
                             />
-                            <input
-                              type="url"
-                              name="url"
-                              value={uploadForm.url}
-                              onChange={handleUploadChange}
-                              placeholder="Paste Drive/YouTube link..."
-                              style={{
-                                width: "100%",
-                                boxSizing: "border-box",
-                                background: "#1e1e2d",
-                                border: "1px dashed #475569",
-                                color: "white",
-                                padding: "16px 16px 16px 45px",
-                                borderRadius: "8px",
-                              }}
-                            />
+                            <div style={{ maxHeight: '175px', overflowY: 'auto' }}>
+                              {dynamicCategories.filter(cat => cat !== "All" && cat.toLowerCase().includes(typeSearchQuery.toLowerCase())).length === 0 ? (
+                                <div style={{ padding: '0.75rem', color: '#cbd5e1', fontSize: '0.85rem', textAlign: 'center' }}>No type found</div>
+                              ) : (
+                                dynamicCategories
+                                  .filter(cat => cat !== "All" && cat.toLowerCase().includes(typeSearchQuery.toLowerCase()))
+                                  .map((t) => (
+                                    <button
+                                      key={t}
+                                      type="button"
+                                      onClick={() => {
+                                        setUploadForm(prev => ({ ...prev, type: t }));
+                                        setIsTypeDropdownOpen(false);
+                                        setTypeSearchQuery('');
+                                      }}
+                                      style={{
+                                        width: '100%',
+                                        padding: '12px 16px',
+                                        border: 'none',
+                                        background: 'transparent',
+                                        color: '#e2e8f0',
+                                        textAlign: 'left',
+                                        cursor: 'pointer',
+                                        fontSize: '0.85rem',
+                                        transition: 'all 0.15s ease'
+                                      }}
+                                      onMouseEnter={(e) => { e.target.style.background = 'rgba(139, 92, 246, 0.15)'; e.target.style.color = '#fff'; }}
+                                      onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#e2e8f0'; }}
+                                    >
+                                      {t}
+                                    </button>
+                                  ))
+                              )}
+                            </div>
                           </div>
                         )}
                       </div>
-
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "flex-end",
-                          marginTop: "30px",
-                          paddingTop: "24px",
-                          borderTop: "1px solid #2d2d3f",
-                        }}
-                      >
-                        <button
-                          type="submit"
-                          disabled={uploadLoading}
-                          style={{
-                            background:
-                              "linear-gradient(135deg, #6366f1, #8b5cf6)",
-                            color: "white",
-                            padding: "12px 24px",
-                            border: "none",
-                            borderRadius: "8px",
-                            fontWeight: "600",
-                            cursor: uploadLoading ? "not-allowed" : "pointer",
-                            opacity: uploadLoading ? 0.5 : 1,
-                          }}
-                        >
-                          {uploadLoading ? "Uploading..." : "Publish Material"}
-                        </button>
+                    </div>
+                    <div className="student-upload-modal__col-span-2">
+                      <label style={{ color: "#cbd5e1", marginBottom: "8px", fontSize: "0.9rem", fontWeight: "500", display: "block" }}>Subject</label>
+                      <div style={{ background: "#13131a", border: "1px solid #2d2d3f", color: "white", padding: "14px", borderRadius: "10px", display: "flex", alignItems: "center", gap: "8px", boxSizing: "border-box" }}>
+                        <span style={{ fontWeight: "600" }}>{uploadModalSubject?.name || uploadModalSubject?.subject_name || "Selected Subject"}</span>
+                        {uploadModalSubject?.code && <span style={{ color: "#8b5cf6", fontSize: "0.8rem" }}>({uploadModalSubject?.code || uploadModalSubject?.subject_code || ""})</span>}
+                        <span style={{ marginLeft: "auto", fontSize: "0.75rem", color: "#64748b" }}>Locked</span>
                       </div>
-                    </form>
-                  )}
-                </div>
-              </div>
-</section>
-          )}
+                    </div>
+                    <div className="student-upload-modal__col-span-2">
+                      <label style={{ color: "#cbd5e1", marginBottom: "8px", fontSize: "0.9rem", fontWeight: "500", display: "block" }}>Description (Optional)</label>
+                      <textarea name="description" value={uploadForm.description} onChange={handleUploadChange} rows={3} placeholder="Add details..." style={{ boxSizing: "border-box", background: "#13131a", border: "1px solid #2d2d3f", color: "white", padding: "14px", borderRadius: "10px", resize: "vertical", width: "100%" }} />
+                    </div>
+                    <div className="student-upload-modal__col-span-2">
+                      <span style={{ color: "#cbd5e1", marginBottom: "8px", fontSize: "0.9rem", fontWeight: "500", display: "block" }}>Upload Method</span>
+                      <div className="student-upload-modal__radios">
+                        <label>
+                          <input type="radio" name="uploadMethod" value="file" checked={uploadForm.uploadMethod === "file"} onChange={handleUploadChange} />
+                          <span>Upload File</span>
+                        </label>
+                        <label>
+                          <input type="radio" name="uploadMethod" value="link" checked={uploadForm.uploadMethod === "link"} onChange={handleUploadChange} />
+                          <span>Provide Link</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div className="student-upload-modal__col-span-2">
+                      {uploadForm.uploadMethod === "file" ? (
+                        <div className="student-upload-modal__field">
+                          <label style={{ color: "#cbd5e1", marginBottom: "8px", fontSize: "0.9rem", fontWeight: "500", display: "block" }}>File</label>
+                          <input type="file" ref={fileInputRef} onChange={handleUploadChange} name="file" style={{ boxSizing: "border-box", background: "#13131a", border: "1px solid #2d2d3f", color: "white", padding: "14px", borderRadius: "10px", width: "100%" }} />
+                          {uploadForm.file && (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginTop: '12px', padding: '10px 16px', backgroundColor: 'rgba(31, 41, 55, 0.7)', borderRadius: '8px', border: '1px solid rgba(75, 85, 99, 0.6)' }}>
+                              <span style={{ color: '#d1d5db', fontSize: '0.875rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {uploadForm.file.name}
+                              </span>
+                              <button 
+                                type="button" 
+                                onClick={() => setUploadForm(prev => ({ ...prev, file: null }))} 
+                                style={{ backgroundColor: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5', border: 'none', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}
+                                title="Clear file"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="student-upload-modal__field">
+                          <label style={{ color: "#cbd5e1", marginBottom: "8px", fontSize: "0.9rem", fontWeight: "500", display: "block" }}>URL</label>
+                          <input type="url" name="url" value={uploadForm.url} onChange={handleUploadChange} placeholder="Paste Drive/YouTube link..." style={{ boxSizing: "border-box", background: "#13131a", border: "1px solid #2d2d3f", color: "white", padding: "14px", borderRadius: "10px", width: "100%" }} />
+                        </div>
+                      )}
+                    </div>
+                   <div className="student-upload-modal__col-span-2">
+                     <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "8px", paddingTop: "16px", borderTop: "1px solid #2d2d3f" }}>
+                       <button type="button" onClick={closeUploadModal} style={{ background: "rgba(255,255,255,0.05)", color: "#cbd5e1", border: "1px solid rgba(255,255,255,0.1)", padding: "12px 24px", borderRadius: "8px", cursor: "pointer", fontWeight: "600", fontSize: "14px", fontFamily: "inherit", transition: "all 0.2s ease" }}>Cancel</button>
+                       <button type="submit" disabled={uploadLoading} style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "white", padding: "12px 24px", border: "none", borderRadius: "8px", fontWeight: "600", cursor: uploadLoading ? "not-allowed" : "pointer", opacity: uploadLoading ? 0.5 : 1, fontSize: "14px", fontFamily: "inherit", transition: "all 0.2s ease" }}>{uploadLoading ? "Uploading..." : "Publish Material"}</button>
+                     </div>
+                   </div>
+                 </form>
+               </div>
+             </div>
+            )}
 
-          {activeTab === "subjects" && (
-            <section className="student-section">
-              {selectedSubject ? (
+
+
+           {activeTab === "subjects" && (
+             <section className="student-section">
+               {selectedSubject ? (
                 <>
                   <div
                     className="student-subject-detail-header"
@@ -1697,9 +1537,9 @@ async function fetchAllMaterials() {
                         </span>
                       </h3>
                     </div>
-                    {isCR && (
-                      <button
-                        onClick={() => setActiveTab("upload")}
+                    {crDetails && (
+                       <button
+                        onClick={() => openUploadModal(selectedSubject)}
                         style={{
                           display: "inline-flex",
                           alignItems: "center",
@@ -2162,6 +2002,129 @@ async function fetchAllMaterials() {
           )}
         </div>
       </main>
+
+      {toast && (
+        <div
+          style={{
+            position: "fixed",
+            top: "1.5rem",
+            right: "1.5rem",
+            zIndex: 999999,
+            background: toast.type === "success"
+              ? "rgba(22, 101, 52, 0.95)"
+              : "rgba(127, 29, 29, 0.95)",
+            border: `1px solid ${toast.type === "success" ? "#22c55e" : "#ef4444"}`,
+            borderLeft: toast.type === "success" ? "4px solid #22c55e" : "4px solid #ef4444",
+            color: "#fff",
+            padding: "0.9rem 1.25rem",
+            borderRadius: "12px",
+            fontSize: "0.9rem",
+            fontWeight: "600",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+            backdropFilter: "blur(8px)",
+            animation: "toast-slide-in 0.3s ease",
+            maxWidth: "360px",
+          }}
+        >
+          {toast.message}
+        </div>
+      )}
+
+      {deleteTargetId !== null && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 999998,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "rgba(0, 0, 0, 0.6)",
+            backdropFilter: "blur(6px)",
+            animation: "upload-modal-fade-in 0.2s ease",
+          }}
+          onClick={() => setDeleteTargetId(null)}
+        >
+          <div
+            style={{
+              background: "rgba(15, 23, 42, 0.95)",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+              borderRadius: "20px",
+              padding: "2rem",
+              maxWidth: "420px",
+              width: "90%",
+              boxShadow: "0 20px 50px rgba(0,0,0,0.5)",
+              textAlign: "center",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3
+              style={{
+                margin: "0 0 0.5rem",
+                fontSize: "1.2rem",
+                fontWeight: "700",
+                color: "#fca5a5",
+              }}
+            >
+              Are you sure you want to delete?
+            </h3>
+            <p
+              style={{
+                margin: "0 0 1.75rem",
+                fontSize: "0.9rem",
+                color: "#94a3b8",
+              }}
+            >
+              This action cannot be undone.
+            </p>
+            <div
+              style={{
+                display: "flex",
+                gap: "0.75rem",
+                justifyContent: "center",
+              }}
+            >
+              <button
+                onClick={() => setDeleteTargetId(null)}
+                style={{
+                  padding: "0.65rem 1.5rem",
+                  borderRadius: "12px",
+                  fontSize: "0.9rem",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  background: "rgba(255,255,255,0.05)",
+                  color: "#cbd5e1",
+                  fontFamily: "inherit",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleteLoading}
+                style={{
+                  padding: "0.65rem 1.5rem",
+                  borderRadius: "12px",
+                  fontSize: "0.9rem",
+                  fontWeight: "600",
+                  cursor: deleteLoading ? "not-allowed" : "pointer",
+                  border: "none",
+                  background: "linear-gradient(135deg, #ef4444, #dc2626)",
+                  color: "#fff",
+                  fontFamily: "inherit",
+                  opacity: deleteLoading ? 0.6 : 1,
+                  boxShadow: "0 4px 14px rgba(239, 68, 68, 0.35)",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                {deleteLoading ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -263,9 +263,26 @@ export default function UploadResourceModal({ onClose, onSubmit, onSuccess, subj
 
           <div className="col-span-2">
             {formData.uploadMethod === 'file' ? (
-              <FormField id="file" label="File">
-                <input type="file" id="file" name="file" onChange={handleChange} />
-              </FormField>
+              <>
+                <FormField id="file" label="File">
+                  <input type="file" id="file" name="file" onChange={handleChange} />
+                </FormField>
+                {formData.file && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginTop: '12px', padding: '10px 16px', backgroundColor: 'rgba(31, 41, 55, 0.7)', borderRadius: '8px', border: '1px solid rgba(75, 85, 99, 0.6)' }}>
+                    <span style={{ color: '#d1d5db', fontSize: '0.875rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {formData.file.name}
+                    </span>
+                    <button 
+                      type="button" 
+                      onClick={() => setFormData(prev => ({ ...prev, file: null }))} 
+                      style={{ backgroundColor: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5', border: 'none', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}
+                      title="Clear file"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+              </>
             ) : (
               <FormField id="url" label="URL">
                 <input

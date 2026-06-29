@@ -100,6 +100,12 @@ export const HOD_NAV_ITEMS = [
     icon: Users,
   },
   {
+    id: 'manage-cr',
+    label: 'Manage CRs',
+    path: `${ROUTES.HOD_DASHBOARD}/manage-cr`,
+    icon: UserCheck,
+  },
+  {
     id: 'upload-material',
     label: 'Upload Material',
     path: `${ROUTES.HOD_DASHBOARD}/upload-material`,

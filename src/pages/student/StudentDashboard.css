@@ -686,6 +686,11 @@
   100% { background-position: 200% 0; }
 }
 
+@keyframes toast-slide-in {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
 /* ── Scrollbar ──────────────────────────────────────── */
 .student-main::-webkit-scrollbar,
 .student-content::-webkit-scrollbar { width: 6px; }
@@ -1336,4 +1341,487 @@ select option {
   border-color: rgba(139, 92, 246, 0.45);
   color: #fff;
   box-shadow: 0 2px 12px rgba(99, 102, 241, 0.28);
+}
+
+/* ── Upload Modal (Student CR) ─────────────────────────── */
+.student-upload-modal__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 11, 18, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 1rem;
+  animation: upload-modal-fade-in 0.25s ease;
+}
+
+@keyframes upload-modal-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.student-upload-modal__content {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 20px;
+  background: rgba(15, 23, 42, 0.58);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  padding: 2rem;
+}
+
+.student-upload-modal__content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.student-upload-modal__content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 999px;
+}
+
+.student-upload-modal__content::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.4);
+  border-radius: 999px;
+}
+
+.student-upload-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.75rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.student-upload-modal__header h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  letter-spacing: -0.02em;
+}
+
+.student-upload-modal__close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: #94a3b8;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.student-upload-modal__close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.student-upload-modal__form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.1rem;
+}
+
+.student-upload-modal__col-span-2 {
+  grid-column: 1 / -1;
+}
+
+.student-upload-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.student-upload-modal__field label,
+.student-upload-modal__col-span-2 label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.student-upload-modal__radios {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.student-upload-modal__radios label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: #94a3b8;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  user-select: none;
+}
+
+.student-upload-modal__radios label:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+}
+
+.student-upload-modal__radios input[type="radio"] {
+  accent-color: #8b5cf6;
+  width: 16px;
+  height: 16px;
+}
+
+.student-upload-modal__radios input[type="radio"]:checked + span,
+.student-upload-modal__radios label:has(input[type="radio"]:checked) {
+  background: rgba(139, 92, 246, 0.18);
+  border-color: rgba(139, 92, 246, 0.45);
+  color: #f1f5f9;
+}
+
+.student-upload-modal__actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+.student-upload-modal__cancel,
+.student-upload-modal__submit {
+  padding: 0.7rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.student-upload-modal__cancel {
+  background: rgba(255, 255, 255, 0.05);
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.student-upload-modal__cancel:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.student-upload-modal__submit {
+  background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+  color: #fff;
+  border: 0;
+  box-shadow: 0 10px 24px rgba(99, 102, 241, 0.28);
+}
+
+.student-upload-modal__submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(99, 102, 241, 0.38);
+  filter: brightness(1.08);
+}
+
+.student-upload-modal__submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.student-upload-modal__form input[type="text"],
+.student-upload-modal__form input[type="url"],
+.student-upload-modal__form textarea,
+.student-upload-modal__form select {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  border-radius: 8px;
+  background: #11131f;
+  border: 1px solid #2d314d;
+  color: #f1f5f9;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.student-upload-modal__form input::placeholder,
+.student-upload-modal__form textarea::placeholder {
+  color: #64748b;
+}
+
+.student-upload-modal__form input:focus,
+.student-upload-modal__form textarea:focus,
+.student-upload-modal__form select:focus {
+  outline: none;
+  border-color: rgba(139, 92, 246, 0.55);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+}
+
+.student-upload-modal__form textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+.student-upload-modal__form select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  padding-right: 2.5rem;
+}
+
+.student-upload-modal__form select option {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 0.6rem;
+}
+
+.student-upload-modal__form input[type="file"] {
+  padding: 0.5rem;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.student-upload-modal__form input[type="file"]::file-selector-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  margin-right: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.student-upload-modal__form input[type="file"]::file-selector-button:hover {
+  background: rgba(139, 92, 246, 0.18);
+  border-color: rgba(139, 92, 246, 0.45);
+  color: #f1f5f9;
+}
+
+.student-upload-modal__form input[type="text"],
+.student-upload-modal__form input[type="url"],
+.student-upload-modal__form textarea,
+.student-upload-modal__form select {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  border-radius: 8px;
+  background: #11131f;
+  border: 1px solid #2d314d;
+  color: #f1f5f9;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.student-upload-modal__form input::placeholder,
+.student-upload-modal__form textarea::placeholder {
+  color: #64748b;
+}
+
+.student-upload-modal__form input:focus,
+.student-upload-modal__form textarea:focus,
+.student-upload-modal__form select:focus {
+  outline: none;
+  border-color: rgba(139, 92, 246, 0.55);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+}
+
+.student-upload-modal__form textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+.student-upload-modal__form select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  padding-right: 2.5rem;
+}
+
+.student-upload-modal__form select option {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 0.6rem;
+}
+
+.student-upload-modal__form input[type="file"] {
+  padding: 0.5rem;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.student-upload-modal__form input[type="file"]::file-selector-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  margin-right: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.student-upload-modal__form input[type="file"]::file-selector-button:hover {
+  background: rgba(139, 92, 246, 0.18);
+  border-color: rgba(139, 92, 246, 0.45);
+  color: #f1f5f9;
+}
+
+@media (max-width: 640px) {
+  .student-upload-modal__content {
+    padding: 1.25rem;
+    border-radius: 16px;
+  }
+
+  .student-upload-modal__form {
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+  }
+
+  .student-upload-modal__col-span-2 {
+    grid-column: 1;
+  }
+
+  .student-upload-modal__header h2 {
+    font-size: 1.15rem;
+  }
+
+  .student-upload-modal__actions {
+    flex-direction: column-reverse;
+  }
+
+  .student-upload-modal__cancel,
+  .student-upload-modal__submit {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+/* ── My Uploads Table ─────────────────────────────────── */
+.student-uploads-table-wrap {
+  overflow-x: auto;
+  margin-top: 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(16, 16, 30, 0.55);
+}
+
+.student-uploads-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.student-uploads-table thead th {
+  text-align: left;
+  padding: 0.85rem 1.1rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  white-space: nowrap;
+}
+
+.student-uploads-table tbody td {
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: #e2e8f0;
+  vertical-align: middle;
+}
+
+.student-uploads-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.student-uploads-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.student-uploads-title {
+  font-weight: 600;
+  color: #f1f5f9;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.student-uploads-subject {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.student-uploads-date {
+  color: #64748b;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.student-uploads-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.student-uploads-delete-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fff;
+}
+
+.student-uploads-delete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
