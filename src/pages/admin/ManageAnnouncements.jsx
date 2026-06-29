@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '../../lib/supabase.js';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Eye } from 'lucide-react';
 import { useHodContext } from '../../context/HodContext.jsx';
 import { AGGREGATE_DEPARTMENTS } from '../../config/constants.js';
 import './ManageAnnouncements.css';
@@ -20,11 +20,14 @@ export default function ManageAnnouncements() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [announcementToDelete, setAnnouncementToDelete] = useState(null);
   const [toast, setToast] = useState({ message: '', type: '' });
   const [formData, setFormData] = useState({
     title: '',
     content: '',
     type: 'General',
+    link: '',
   });
   const [file, setFile] = useState(null);
   const fileInputRef = useRef(null);
@@ -133,16 +136,14 @@ export default function ManageAnnouncements() {
         .from('announcements')
         .insert([{
           title: formData.title,
-          content: formData.content,
+          content: formData.content || null,
           type: formData.type,
+          link: formData.link || null,
           file_url: finalFileUrl,
-          selected_year: selectedYear || null,
-          selected_branch: selectedBranch || null,
-          selected_semester: selectedSemester ? parseInt(selectedSemester, 10) : null,
         }]);
       if (insertError) throw insertError;
 
-      setFormData({ title: '', content: '', type: 'General' });
+      setFormData({ title: '', content: '', type: 'General', link: '' });
       setSelectedYear('');
       setSelectedBranch('');
       setSelectedSemester('');
@@ -165,28 +166,39 @@ export default function ManageAnnouncements() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this announcement?')) {
-      try {
-        const { error: deleteError } = await supabase
-          .from('announcements')
-          .delete()
-          .eq('id', id);
-        if (deleteError) throw deleteError;
+  const openDeleteModal = (id) => {
+    setAnnouncementToDelete(id);
+    setDeleteModalOpen(true);
+  };
 
-        const { data } = await supabase
-          .from('announcements')
-          .select('*')
-          .order('created_at', { ascending: false });
-        setAnnouncements(data || []);
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setAnnouncementToDelete(null);
+  };
 
-        setToast({ message: 'Announcement deleted.', type: 'success' });
-        setTimeout(() => setToast({ message: '', type: '' }), 3000);
-      } catch (err) {
-        console.error('Delete failed:', err);
-        setToast({ message: 'Failed to delete announcement.', type: 'error' });
-        setTimeout(() => setToast({ message: '', type: '' }), 3000);
-      }
+  const confirmDelete = async () => {
+    if (!announcementToDelete) return;
+    try {
+      const { error: deleteError } = await supabase
+        .from('announcements')
+        .delete()
+        .eq('id', announcementToDelete);
+      if (deleteError) throw deleteError;
+
+      const { data } = await supabase
+        .from('announcements')
+        .select('*')
+        .order('created_at', { ascending: false });
+      setAnnouncements(data || []);
+
+      setToast({ message: 'Announcement deleted successfully!', type: 'success' });
+      setTimeout(() => setToast({ message: '', type: '' }), 3000);
+    } catch (err) {
+      console.error('Delete failed:', err);
+      setToast({ message: 'Failed to delete announcement.', type: 'error' });
+      setTimeout(() => setToast({ message: '', type: '' }), 3000);
+    } finally {
+      closeDeleteModal();
     }
   };
 
@@ -232,6 +244,18 @@ export default function ManageAnnouncements() {
       {toast.message && (
         <div className={`custom-toast ${toast.type}`}>
           {toast.message}
+        </div>
+      )}
+
+      {deleteModalOpen && (
+        <div className="delete-modal-overlay">
+          <div className="delete-modal">
+            <p className="delete-modal__text">Are you sure you want to delete this announcement?</p>
+            <div className="delete-modal__actions">
+              <button type="button" className="delete-modal__cancel" onClick={closeDeleteModal}>Cancel</button>
+              <button type="button" className="delete-modal__confirm" onClick={confirmDelete}>Delete</button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -332,8 +356,19 @@ export default function ManageAnnouncements() {
               value={formData.content}
               onChange={handleChange}
               rows={4}
-              required
               placeholder="Enter announcement content"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="link">External Link (Optional)</label>
+            <input
+              id="link"
+              name="link"
+              type="url"
+              value={formData.link}
+              onChange={handleChange}
+              placeholder="e.g., https://example.com"
             />
           </div>
 
@@ -345,7 +380,7 @@ export default function ManageAnnouncements() {
                 type="file"
                 id="notice-file-upload"
                 onChange={handleFileChange}
-                accept=".pdf,.jpg,.jpeg,.png,.gif"
+                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
                 className="file-input-hidden"
               />
               <button
@@ -356,7 +391,18 @@ export default function ManageAnnouncements() {
                 📎 Choose File
               </button>
               {file && (
-                <span className="file-name-display" style={{ marginLeft: '12px', color: '#9ca3af', fontSize: '13px' }}>{file.name}</span>
+                <>
+                  <span className="file-name-display" style={{ marginLeft: '12px', color: '#9ca3af', fontSize: '13px' }}>{file.name}</span>
+                  <button
+                    type="button"
+                    className="file-clear-btn"
+                    onClick={() => setFile(null)}
+                    aria-label="Clear file"
+                    style={{ marginLeft: '8px', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}
+                  >
+                    X
+                  </button>
+                </>
               )}
             </div>
           </div>
@@ -376,17 +422,7 @@ export default function ManageAnnouncements() {
           {announcements.map((announcement) => (
             <div key={announcement.id} className="announcement-card">
               <div className="announcement-card__body">
-                <div className="announcement-card__row">
-                  <h3 className="announcement-card__title">{announcement.title}</h3>
-                  <button
-                    type="button"
-                    className="delete-btn"
-                    onClick={() => handleDelete(announcement.id)}
-                    aria-label="Delete announcement"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
+                <h3 className="announcement-card__title">{announcement.title}</h3>
                 <p className="announcement-card__content">{announcement.content}</p>
                 <div className="announcement-card__meta">
                   <span className={`announcement-badge ${getTypeBadgeClass(announcement.type)}`}>
@@ -395,6 +431,26 @@ export default function ManageAnnouncements() {
                   <time className="announcement-card__date">
                     {new Date(announcement.created_at).toLocaleDateString()}
                   </time>
+                </div>
+                <div className="announcement-card__actions">
+                  {announcement.file_url || announcement.link ? (
+                    <button
+                      type="button"
+                      className="action-btn action-btn--view"
+                      onClick={() => window.open(announcement.file_url || announcement.link, '_blank')}
+                    >
+                      <Eye size={16} />
+                      View
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="action-btn action-btn--delete"
+                    onClick={() => openDeleteModal(announcement.id)}
+                  >
+                    <Trash2 size={16} />
+                    Delete
+                  </button>
                 </div>
               </div>
             </div>

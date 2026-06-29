@@ -99,6 +99,7 @@ export async function uploadNewResource(resourceData, file) {
     .insert([resourceData]);
     
   if (insertError) throw insertError;
+  
   return data;
 }
 

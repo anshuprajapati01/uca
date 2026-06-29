@@ -8,6 +8,7 @@ import {
   Link as LinkIcon,
   FileText,
   ChevronLeft,
+  Eye,
 } from "lucide-react";
 import { uploadNewResource } from "../../services/resourceService.js";
 import "./StudentDashboard.css";
@@ -354,9 +355,8 @@ export default function StudentDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [activeFilter, setActiveFilter] = useState("All");
-  const [bookmarkedIds, setBookmarkedIds] = useState(
-    () => JSON.parse(localStorage.getItem("uca_student_bookmarks")) || [],
-  );
+  const [bookmarkedIds, setBookmarkedIds] = useState([]);
+  const bookmarkedIdsRef = useRef([]);
   const [bookmarkFilter, setBookmarkFilter] = useState("All");
   const [isLoading, setIsLoading] = useState(true);
   const [librarySearch, setLibrarySearch] = useState("");
@@ -366,6 +366,10 @@ export default function StudentDashboard() {
   const [availableSemesters, setAvailableSemesters] = useState([]);
   const [subjectMaterials, setSubjectMaterials] = useState([]);
   const [dynamicCategories, setDynamicCategories] = useState(["All"]);
+
+  useEffect(() => {
+    bookmarkedIdsRef.current = bookmarkedIds;
+  }, [bookmarkedIds]);
 
   // CR FEATURE
   const [isCR, setIsCR] = useState(false);
@@ -418,6 +422,15 @@ export default function StudentDashboard() {
           setStudentProfile(profileData);
         }
 
+        const { data: bookmarkData, error: bookmarkError } = await supabase
+          .from("bookmarks")
+          .select("resource_id")
+          .eq("user_id", authUser.id);
+        if (bookmarkError) console.error("Failed to fetch bookmarks:", bookmarkError);
+        if (!cancelled) {
+          setBookmarkedIds((bookmarkData || []).map((b) => b.resource_id));
+        }
+
         const { data: announcementData } = await supabase
           .from("announcements")
           .select("*")
@@ -456,13 +469,13 @@ export default function StudentDashboard() {
           }
         }
 
-        setLiveSemester(liveSem);
+        if (!cancelled) setLiveSemester(liveSem);
         if (liveSem !== null && !cancelled) {
           setSelectedSemester(liveSem);
         }
 
-        const visibleSemesters = profileData.selected_year === '2nd Year' 
-          ? [3, 4] 
+        const visibleSemesters = profileData.selected_year === '2nd Year'
+          ? [3, 4]
           : (yearSemesterMap[profileData.selected_year] || []);
 
         if (!cancelled) {
@@ -512,17 +525,34 @@ export default function StudentDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [activeTab]);
+}, [activeTab]);
 
-  const toggleBookmark = (materialId) => {
-    setBookmarkedIds((prev) =>
-      prev.includes(materialId)
-        ? prev.filter((id) => id !== materialId)
-        : [...prev, materialId],
-    );
+  const toggleBookmark = async (resourceId) => {
+    if (!user) return;
+    const isCurrentlyBookmarked = bookmarkedIdsRef.current.includes(resourceId);
+    try {
+      if (isCurrentlyBookmarked) {
+        const { error } = await supabase
+          .from("bookmarks")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("resource_id", resourceId);
+        if (error) throw error;
+        setBookmarkedIds((prev) => prev.filter((id) => id !== resourceId));
+      } else {
+        const { error } = await supabase
+          .from("bookmarks")
+          .insert([{ user_id: user.id, resource_id: resourceId }]);
+        if (error) throw error;
+        setBookmarkedIds((prev) => [...prev, resourceId]);
+      }
+    } catch (error) {
+      console.error("Bookmark operation failed:", error);
+      alert("Failed to update bookmark. Please try again.");
+    }
   };
 
-  async function fetchAllMaterials() {
+async function fetchAllMaterials() {
     const { data: materials, error: materialsError } = await supabase
       .from("study_materials")
       .select("*")
@@ -598,14 +628,7 @@ export default function StudentDashboard() {
     }
     fetchCategories();
     return () => { cancelled = true; };
-  }, [activeTab]);
-
-  useEffect(() => {
-    localStorage.setItem(
-      "uca_student_bookmarks",
-      JSON.stringify(bookmarkedIds),
-    );
-  }, [bookmarkedIds]);
+}, [activeTab]);
 
   const handleViewFile = (url) => {
     if (!url) return alert("No file link available.");
@@ -1001,60 +1024,43 @@ export default function StudentDashboard() {
                   </div>
                 ) : (
                   <div className="student-announcements">
-                    {announcements.map((a) => (
-                      <article key={a.id} className="student-announcement-card">
-                        <div className="student-announcement__header">
-                          <h4 className="student-announcement__title">
-                            {a.title}
-                          </h4>
-                          {a.type && (
-                            <span
-                              className={`student-announcement__badge student-announcement__badge--${String(a.type).toLowerCase()}`}
-                            >
-                              {a.type}
-                            </span>
-                          )}
-                        </div>
-                        {a.content && (
-                          <p className="student-announcement__content">
-                            {a.content}
-                          </p>
-                        )}
-                        <time className="student-announcement__date">
-                          {new Date(a.created_at).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
-                        </time>
-                        {a.file_url && (
-                          <button
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "6px",
-                              marginTop: "12px",
-                              padding: "6px 12px",
-                              background: "#4f46e5",
-                              color: "#fff",
-                              border: "none",
-                              borderRadius: "6px",
-                              cursor: "pointer",
-                              fontSize: "13px",
-                              fontWeight: "500",
-                            }}
-                            onClick={() =>
-                              window.open(
-                                a.file_url,
-                                "_blank",
-                                "noopener,noreferrer",
-                              )
-                            }
-                          >
-                            📎 View Official Notice
-                          </button>
-                        )}
-                      </article>
+                    {announcements.map((announcement) => (
+                      <div key={announcement.id} style={{ backgroundColor: 'rgba(31, 41, 55, 0.4)', border: '1px solid rgba(55, 65, 81, 0.5)', borderRadius: '12px', padding: '24px', marginBottom: '16px' }}>
+  
+  {/* TOP: Title on Left, Badge & Date on Right */}
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+    <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#ffffff', margin: 0, textAlign: 'left' }}>
+      {announcement.title}
+    </h3>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+      <span style={{ padding: '4px 12px', backgroundColor: 'rgba(55, 65, 81, 0.5)', color: '#60a5fa', fontSize: '0.75rem', fontWeight: '600', borderRadius: '9999px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        {announcement.type}
+      </span>
+      <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
+        {new Date(announcement.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+      </span>
+    </div>
+  </div>
+
+  {/* MIDDLE: Left-aligned content */}
+  <p style={{ color: '#d1d5db', fontSize: '0.875rem', textAlign: 'left', marginBottom: '24px', whiteSpace: 'pre-wrap', marginTop: 0 }}>
+    {announcement.content}
+  </p>
+
+  {/* BOTTOM: View Button */}
+  {(announcement.file_url || announcement.link) && (
+    <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+      <a
+        href={announcement.file_url || announcement.link}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: 'rgba(30, 58, 138, 0.4)', color: '#bfdbfe', fontSize: '0.875rem', fontWeight: '500', borderRadius: '9999px', textDecoration: 'none' }}
+      >
+        <span style={{ fontSize: '1rem' }}>🔗</span> View
+      </a>
+    </div>
+  )}
+</div>
                     ))}
                   </div>
                 )}
@@ -2112,60 +2118,43 @@ export default function StudentDashboard() {
                 </div>
               ) : (
                 <div className="student-announcements">
-                  {announcements.map((a) => (
-                    <article key={a.id} className="student-announcement-card">
-                      <div className="student-announcement__header">
-                        <h4 className="student-announcement__title">
-                          {a.title}
-                        </h4>
-                        {a.type && (
-                          <span
-                            className={`student-announcement__badge student-announcement__badge--${String(a.type).toLowerCase()}`}
-                          >
-                            {a.type}
-                          </span>
-                        )}
-                      </div>
-                      {a.content && (
-                        <p className="student-announcement__content">
-                          {a.content}
-                        </p>
-                      )}
-                      <time className="student-announcement__date">
-                        {new Date(a.created_at).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
-                      </time>
-                      {a.file_url && (
-                        <button
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            marginTop: "12px",
-                            padding: "6px 12px",
-                            background: "#4f46e5",
-                            color: "#fff",
-                            border: "none",
-                            borderRadius: "6px",
-                            cursor: "pointer",
-                            fontSize: "13px",
-                            fontWeight: "500",
-                          }}
-                          onClick={() =>
-                            window.open(
-                              a.file_url,
-                              "_blank",
-                              "noopener,noreferrer",
-                            )
-                          }
-                        >
-                          📎 View Official Notice
-                        </button>
-                      )}
-                    </article>
+                  {announcements.map((announcement) => (
+                    <div key={announcement.id} style={{ backgroundColor: 'rgba(31, 41, 55, 0.4)', border: '1px solid rgba(55, 65, 81, 0.5)', borderRadius: '12px', padding: '24px', marginBottom: '16px' }}>
+  
+  {/* TOP: Title on Left, Badge & Date on Right */}
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+    <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#ffffff', margin: 0, textAlign: 'left' }}>
+      {announcement.title}
+    </h3>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+      <span style={{ padding: '4px 12px', backgroundColor: 'rgba(55, 65, 81, 0.5)', color: '#60a5fa', fontSize: '0.75rem', fontWeight: '600', borderRadius: '9999px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        {announcement.type}
+      </span>
+      <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
+        {new Date(announcement.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+      </span>
+    </div>
+  </div>
+
+  {/* MIDDLE: Left-aligned content */}
+  <p style={{ color: '#d1d5db', fontSize: '0.875rem', textAlign: 'left', marginBottom: '24px', whiteSpace: 'pre-wrap', marginTop: 0 }}>
+    {announcement.content}
+  </p>
+
+  {/* BOTTOM: View Button */}
+  {(announcement.file_url || announcement.link) && (
+    <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+      <a
+        href={announcement.file_url || announcement.link}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: 'rgba(30, 58, 138, 0.4)', color: '#bfdbfe', fontSize: '0.875rem', fontWeight: '500', borderRadius: '9999px', textDecoration: 'none' }}
+      >
+        <span style={{ fontSize: '1rem' }}>🔗</span> View
+      </a>
+    </div>
+  )}
+</div>
                   ))}
                 </div>
               )}
