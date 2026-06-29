@@ -3,10 +3,11 @@ import { useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { supabase, createTempClient } from '../../lib/supabase.js';
 import { ROUTES, AGGREGATE_DEPARTMENTS } from '../../config/constants.js';
-import { Shield, Users, BarChart3, Layers, Bell, LayoutDashboard, BookOpen, Target, Award, ArrowLeft, UploadCloud, Send, FileText, Archive, ScrollText, PenTool, Phone, Mail, X, Trash2, GraduationCap, UserCheck } from 'lucide-react';
+import { Shield, Users, BarChart3, Layers, Bell, LayoutDashboard, BookOpen, Target, Award, ArrowLeft, UploadCloud, Send, FileText, Archive, ScrollText, PenTool, Phone, Mail, X, Trash2, GraduationCap, UserCheck, Eye } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout.jsx';
 import './DirectorDashboard-v2.css';
 import HodManagement from './HodManagement.jsx';
+import DirectorStudentDirectory from './DirectorStudentDirectory.jsx';
 
 const DIRECTOR_NAV = [
   { id: 'overview', label: 'Overview', path: ROUTES.DIRECTOR_DASHBOARD, icon: LayoutDashboard },
@@ -14,6 +15,7 @@ const DIRECTOR_NAV = [
   { id: 'faculty', label: 'Manage Faculty', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=faculty`, icon: Users },
   { id: 'departments', label: 'Manage Departments', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=departments`, icon: Layers },
   { id: 'hod-management', label: 'HOD Management', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=hod-management`, icon: UserCheck },
+  { id: 'student-directory', label: 'Student Directory', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=student-directory`, icon: Users },
   { id: 'announcements', label: 'Announcements', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=announcements`, icon: Bell },
 ];
 
@@ -87,8 +89,8 @@ const getDirectorSubjectFaculty = (subject) => {
 
 const getSemestersForYear = (year, liveSemesterIds = new Set()) => {
   if (year === '1st Year') return [
-    { id: 'sem1', name: 'Semester 1', isLive: liveSemesterIds.has('sem1') },
-    { id: 'sem2', name: 'Semester 2', isLive: liveSemesterIds.has('sem2') }
+    { id: 'ash1', name: 'ASH 1', isLive: liveSemesterIds.has('ash1') },
+    { id: 'ash2', name: 'ASH 2', isLive: liveSemesterIds.has('ash2') }
   ];
   if (year === '2nd Year') return [
     { id: 'sem3', name: 'Semester 3', isLive: liveSemesterIds.has('sem3') },
@@ -104,6 +106,38 @@ const getSemestersForYear = (year, liveSemesterIds = new Set()) => {
   ];
   return [];
 };
+
+const IconPDF = () => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+  >
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="12" y1="12" x2="8" y2="12" />
+    <line x1="12" y1="16" x2="8" y2="16" />
+    <line x1="12" y1="20" x2="8" y2="20" />
+  </svg>
+);
+const IconLink = () => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M10 13a5 5 0 0 0 7.54-.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72" />
+    <path d="M14 11a5 5 0 0 0-7.54.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72" />
+  </svg>
+);
 
 const isYearMatch = (dept, yearId) => {
   if (!dept) return false;
@@ -131,14 +165,14 @@ const StatCard = ({ icon: Icon, label, value, gradient }) => (
   </div>
 );
 
-const DepartmentCard = ({ department, onBranchClick, onDepartmentClick }) => {
+const DepartmentCard = ({ department, onBranchClick }) => {
   const name = department.department_name || department.name;
   const hod = department.hod_name || 'Not Assigned';
   const year = department.year_level || '1st Year';
   const branches = Array.isArray(department.branches) ? department.branches : [];
 
   return (
-    <div className="director-dept-card" onClick={onDepartmentClick ? () => onDepartmentClick(name, department) : undefined} style={{ cursor: onDepartmentClick ? "pointer" : "default" }}>
+    <div className="director-dept-card">
       <div className="director-dept-card__header">
         <h3 className="director-dept-card__name">{name}</h3>
         <span className="director-dept-card__year">{year}</span>
@@ -154,7 +188,7 @@ const DepartmentCard = ({ department, onBranchClick, onDepartmentClick }) => {
                 <span 
                     key={idx} 
                     className="director-dept-card__tag director-dept-card__tag--clickable"
-                    onClick={(e) => { e.stopPropagation(); onBranchClick(branchName, department); }}
+                    onClick={() => onBranchClick(branchName, department)}
                     style={{ cursor: 'pointer' }}
                 >
                     {branchName}
@@ -209,6 +243,14 @@ export default function DirectorDashboard() {
   const [subjectsLoading, setSubjectsLoading] = useState(false);
   const [subjectsError, setSubjectsError] = useState(null);
   const [liveDeptRows, setLiveDeptRows] = useState([]);
+  const [subjectViewAnnouncements, setSubjectViewAnnouncements] = useState([]);
+  const [subjectViewGeneralAnnouncements, setSubjectViewGeneralAnnouncements] = useState([]);
+  const [subjectViewAnnouncementsLoading, setSubjectViewAnnouncementsLoading] = useState(false);
+  const [announcementToDelete, setAnnouncementToDelete] = useState(null);
+  const [materialToDeleteId, setMaterialToDeleteId] = useState(null);
+  const [directorSubjectMaterials, setDirectorSubjectMaterials] = useState([]);
+  const [directorActiveFilter, setDirectorActiveFilter] = useState('All');
+  const [directorMaterialCategories, setDirectorMaterialCategories] = useState(['All']);
 
   const toggleYear = (year) => {
     setTargetYears(prev =>
@@ -307,20 +349,21 @@ useEffect(() => {
     return { theory, practical };
   }, [dbSemesterSubjects, subjectsLoading, subjectsError]);
 
-const handleBranchClick = (branchName, departmentInfo) => {
-    const deptName = departmentInfo?.name || departmentInfo?.department_name;
-    setSelectedBranch({ name: deptName, dept: departmentInfo });
-    setSelectedSubBranch(branchName);
+  const handleBranchClick = (branchName, departmentInfo) => {
+    const isAggregate = isAggregateDepartment(branchName);
+    setSelectedBranch({ name: branchName, dept: departmentInfo });
+    if (isAggregate) {
+      setSelectedSubBranch(null);
+    } else {
+      setSelectedSubBranch(branchName);
+    }
     setSelectedSemester(null);
     setSubjectType('theory');
   };
 
-const handleDepartmentClick = (deptName, departmentInfo) => {
-    setSelectedBranch({ name: deptName, dept: departmentInfo });
-    setSelectedSemester(null);
-    setSubjectType('theory');
+  const handleSubBranchClick = (subBranchName) => {
+    setSelectedSubBranch(subBranchName);
   };
-
 
   const handleSemesterSelect = (semester) => {
     console.log('handleSemesterSelect:', semester);
@@ -333,8 +376,16 @@ const handleDepartmentClick = (deptName, departmentInfo) => {
     setSubjectType('theory');
   };
 
+  const handleBackToBranches = () => {
+    setSelectedSubBranch(null);
+  };
+
   const isAggregateDepartment = (deptName) => {
     return Object.prototype.hasOwnProperty.call(AGGREGATE_DEPARTMENTS, deptName);
+  };
+
+  const getSubBranchesForAggregate = (aggregateName) => {
+    return AGGREGATE_DEPARTMENTS[aggregateName] || [];
   };
 
   const fetchDirectorSubjects = useCallback(async () => {
@@ -375,6 +426,160 @@ const handleDepartmentClick = (deptName, departmentInfo) => {
   useEffect(() => {
     fetchDirectorSubjects();
   }, [fetchDirectorSubjects]);
+
+  const fetchSubjectViewAnnouncements = useCallback(async () => {
+    if (!selectedSemester || !selectedBranch) {
+      setSubjectViewAnnouncements([]);
+      setSubjectViewGeneralAnnouncements([]);
+      return;
+    }
+
+    setSubjectViewAnnouncementsLoading(true);
+
+    try {
+      const branchName = selectedSubBranch || selectedBranch?.name;
+      const semesterId = selectedSemester.id;
+
+      console.log('Fetching subject view announcements with filters:', { branchName, semesterId, selectedSemester, selectedBranch });
+
+      const { data, error } = await supabase
+        .from('announcements')
+        .select('*, sender:user_profiles!announcements_sent_by_fkey(full_name, role)')
+        .or(`branch.eq.${branchName},branch.is.null`)
+        .or(`semester.eq.${semesterId},semester.is.null`)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.log(error);
+        throw error;
+      }
+
+      if (data && data.length > 0) {
+        setSubjectViewAnnouncements(data);
+        setSubjectViewGeneralAnnouncements([]);
+      } else {
+        setSubjectViewAnnouncements([]);
+        console.log(branchName, semesterId);
+        console.log('No specific announcements found, fetching general announcements...');
+        const { data: generalData, error: generalError } = await supabase
+          .from('announcements')
+          .select('*, sender:user_profiles!announcements_sent_by_fkey(full_name, role)')
+          .is('branch', null)
+          .is('semester', null)
+          .order('created_at', { ascending: false });
+
+        if (generalError) throw generalError;
+        setSubjectViewGeneralAnnouncements(generalData || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch subject view announcements:', err);
+      setSubjectViewAnnouncements([]);
+      setSubjectViewGeneralAnnouncements([]);
+    } finally {
+      setSubjectViewAnnouncementsLoading(false);
+    }
+  }, [selectedSemester, selectedBranch, selectedSubBranch]);
+
+  const confirmDeleteAnnouncement = async () => {
+    if (!announcementToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from('announcements')
+        .delete()
+        .eq('id', announcementToDelete);
+
+      if (error) throw error;
+
+      setSubjectViewAnnouncements(prev => prev.filter(a => a.id !== announcementToDelete));
+      setSubjectViewGeneralAnnouncements(prev => prev.filter(a => a.id !== announcementToDelete));
+      setAnnouncementToDelete(null);
+      toast.success('Announcement deleted successfully');
+    } catch (err) {
+      console.error('Failed to delete announcement:', err);
+      toast.error('Failed to delete announcement');
+    }
+  };
+
+  const confirmDeleteMaterial = async () => {
+    if (!materialToDeleteId) return;
+
+    try {
+      const { error } = await supabase
+        .from('study_materials')
+        .delete()
+        .eq('id', materialToDeleteId);
+
+      if (error) throw error;
+
+      setDirectorSubjectMaterials(prev => prev.filter(m => m.id !== materialToDeleteId));
+      setMaterialToDeleteId(null);
+      toast.success('Material deleted successfully');
+    } catch (err) {
+      console.error('Failed to delete material:', err);
+      toast.error('Failed to delete material');
+    }
+  };
+
+  const renderAnnouncementCard = (announcement) => {
+    const hasLink = announcement.file_url || announcement.link;
+    const viewHref = announcement.file_url || announcement.link || '#';
+
+    return (
+      <article
+        key={announcement.id}
+        style={{
+          backgroundColor: 'rgba(31, 41, 55, 0.4)',
+          border: '1px solid rgba(55, 65, 81, 0.5)',
+          borderRadius: '12px',
+          padding: '24px',
+          marginBottom: '16px',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#ffffff', margin: 0, textAlign: 'left' }}>
+            {announcement.title}
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+            <span style={{ padding: '4px 12px', backgroundColor: 'rgba(55, 65, 81, 0.5)', color: '#60a5fa', fontSize: '0.75rem', fontWeight: '600', borderRadius: '9999px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              {announcement.priority || announcement.type || 'General'}
+            </span>
+            <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
+              {announcement.created_at ? new Date(announcement.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+            </span>
+          </div>
+        </div>
+
+        <p style={{ color: '#d1d5db', fontSize: '0.875rem', textAlign: 'left', marginBottom: hasLink ? '24px' : 0, whiteSpace: 'pre-wrap', marginTop: 0 }}>
+          {announcement.content || announcement.message}
+        </p>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '16px' }}>
+          {(hasLink) && (
+            <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
+              <a
+                href={viewHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: 'rgba(30, 58, 138, 0.4)', color: '#bfdbfe', fontSize: '0.875rem', fontWeight: '500', borderRadius: '9999px', textDecoration: 'none' }}
+              >
+                <Eye size={16} /> View
+              </a>
+              <button
+                onClick={() => setAnnouncementToDelete(announcement.id)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e', fontSize: '0.875rem', fontWeight: '500', borderRadius: '9999px', border: '1px solid rgba(244, 63, 94, 0.4)', cursor: 'pointer' }}
+              >
+                <Trash2 size={16} /> Delete
+              </button>
+            </div>
+          )}
+          <div style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: '14px' }}>
+            Sent by: {announcement.sender?.full_name || 'Admin'} ({announcement.sender?.role || 'Admin'})
+          </div>
+        </div>
+      </article>
+    );
+  };
 
   const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
 
@@ -521,6 +726,61 @@ const handleAddFaculty = async (e) => {
   useEffect(() => {
     fetchLiveDepartments();
   }, [selectedAcademicYear]);
+
+  useEffect(() => {
+    fetchSubjectViewAnnouncements();
+  }, [fetchSubjectViewAnnouncements]);
+
+  useEffect(() => {
+    if (!selectedSubject) return;
+    let cancelled = false;
+    async function fetchDirectorMaterials() {
+      const { data, error } = await supabase
+        .from('study_materials')
+        .select('*')
+        .eq('subject_id', selectedSubject.id)
+        .order('created_at', { ascending: false });
+      if (!cancelled) setDirectorSubjectMaterials(data || []);
+      if (error) console.error('Failed to fetch director materials:', error);
+
+      const { data: catData } = await supabase
+        .from('material_categories')
+        .select('name')
+        .eq('is_active', true)
+        .order('priority', { ascending: true });
+      if (!cancelled && catData) {
+        setDirectorMaterialCategories(['All', ...catData.map(c => c.name)]);
+      }
+    }
+    fetchDirectorMaterials();
+    return () => { cancelled = true; };
+  }, [selectedSubject]);
+
+  useEffect(() => {
+    setDirectorActiveFilter('All');
+  }, [selectedSubject]);
+
+  const getDirectorFilteredMaterials = () => {
+    if (!selectedSubject) return [];
+    if (directorActiveFilter === 'All') return directorSubjectMaterials;
+    return directorSubjectMaterials.filter((m) => {
+      const type = (m.type || m.category || '').toLowerCase();
+      return type === directorActiveFilter.toLowerCase() || type.includes(directorActiveFilter.toLowerCase());
+    });
+  };
+
+  const handleViewFile = (url) => {
+    if (!url) return alert('No file link available.');
+    if (url.startsWith('local:') || !url.includes('.')) {
+      return alert(`This is a local file placeholder: ${url.replace('local:', '')}\n\nNote: To view actual uploaded PDF/Doc files, we need to configure Supabase Storage Buckets. For now, Google Drive links will work perfectly!`);
+    }
+    try {
+      const finalUrl = url.startsWith('http') ? url : `https://${url}`;
+      window.open(finalUrl, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      alert('Invalid link format.');
+    }
+  };
 
   const getLiveSemesterIdForBranch = (year, branchName) => {
     if (!year || !branchName || liveDeptRows.length === 0) return null;
@@ -837,90 +1097,97 @@ const handleAddFaculty = async (e) => {
                   </h2>
                 </div>
                 
-<div className="director-depts-grid">
+                <div className="director-depts-grid">
                    {getDepartmentsForYear(selectedAcademicYear).map((dept, idx) => (
-                       <DepartmentCard
-                         key={dept.id || idx}
-                         department={dept}
-                         onBranchClick={handleBranchClick}
-                         onDepartmentClick={!isAggregateDepartment(dept.department_name || dept.name) ? handleDepartmentClick : null}
-                       />
-                    ))}
-                   {getDepartmentsForYear(selectedAcademicYear).length === 0 && (
-                     <div className="director-empty-state">No departments found for {selectedAcademicYear}.</div>
-                   )}
-                 </div>
+                       <DepartmentCard key={dept.id || idx} department={dept} onBranchClick={handleBranchClick} />
+                   ))}
+                  {getDepartmentsForYear(selectedAcademicYear).length === 0 && (
+                    <div className="director-empty-state">No departments found for {selectedAcademicYear}.</div>
+                  )}
+                </div>
               </div>
             )}
 
            {/* STATE 3: EXACT DESIGN COPY WITH NO SUBJECT LIST */}
 {selectedBranch && !selectedSemester && (
-                <div className="director-branch-view-wrapper">
-                  <button
-                    className="director-back-btn director-back-btn--premium"
-                    onClick={() => {
-                      setSelectedBranch(null);
-                      setSelectedSubBranch(null);
-                    }}
-                  >
-                    <ArrowLeft size={18} /> Back to Departments
-                  </button>
+               <div className="director-branch-view-wrapper">
+                 <button
+                   className="director-back-btn director-back-btn--premium"
+                   onClick={() => {
+                     if (isAggregateDepartment(selectedBranch.name)) {
+                       setSelectedSubBranch(null);
+                     }
+                     setSelectedBranch(null);
+                   }}
+                 >
+                   <ArrowLeft size={18} /> Back to Departments
+                 </button>
 
-                  <>
-                    <div className="director-branch-subtabs" role="tablist" aria-label="Branch view">
-                      <button
-                          type="button"
-                          className={`director-branch-subtab ${branchViewTab === 'academic' ? 'director-branch-subtab--active' : ''}`}
-                          role="tab"
-                          aria-selected={branchViewTab === 'academic'}
-                          onClick={() => setBranchViewTab('academic')}
-                      >
-                          Academic
-                      </button>
-                      <button
-                          type="button"
-                          className={`director-branch-subtab ${branchViewTab === 'announcements' ? 'director-branch-subtab--active' : ''}`}
-                          role="tab"
-                          aria-selected={branchViewTab === 'announcements'}
-                          onClick={() => setBranchViewTab('announcements')}
-                      >
-                          Batch Announcements
-                      </button>
-                    </div>
+                 {isAggregateDepartment(selectedBranch.name) && !selectedSubBranch ? (
+                   <div className="director-subbranch-view">
+                     <h3 className="director-subbranch-title">Select Sub-Branch for {selectedBranch.name}</h3>
+                     <div className="director-subbranches-grid">
+                       {getSubBranchesForAggregate(selectedBranch.name).map((subBranch) => (
+                         <div
+                           key={subBranch}
+                           className="director-subbranch-card"
+                           onClick={() => handleSubBranchClick(subBranch)}
+                         >
+                           {subBranch}
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                 ) : (
+                   <>
+                     <div className="director-branch-subtabs" role="tablist" aria-label="Branch view">
+<button
+                            type="button"
+                            className={`director-branch-subtab ${branchViewTab === 'academic' ? 'director-branch-subtab--active' : ''}`}
+                            role="tab"
+                            aria-selected={branchViewTab === 'academic'}
+                            onClick={() => setBranchViewTab('academic')}
+                        >
+                            Academic
+                        </button>
+                        {isAggregateDepartment(selectedBranch.name) && (
+                          <button
+                            type="button"
+                            className="director-back-btn--subbranch"
+                            onClick={handleBackToBranches}
+                          >
+                            <ArrowLeft size={16} /> Back to Sub-Branches
+                          </button>
+                        )}
+                      </div>
 
-                    {branchViewTab === 'academic' ? (
-                        <div className="sem-grid-container">
-                            {getSemestersForYear(selectedAcademicYear, buildLiveSemesterIdsSet(liveDeptRows)).map((sem) => (
-                                <div
-                                    key={sem.id}
-                                    className="sem-card-glass"
-                                    role="button"
-                                    tabIndex={0}
-                                    aria-label={`Open ${sem.name} subjects`}
-                                    onClick={() => handleSemesterSelect(sem)}
-                                    onKeyDown={(event) => {
-                                        if (event.key === 'Enter' || event.key === ' ') {
-                                            event.preventDefault();
-                                            handleSemesterSelect(sem);
-                                        }
-                                    }}
-                                >
-                                    <h3 className="sem-title">{sem.name}</h3>
-                                    {sem.isLive && (
-                                        <span className="live-badge">LIVE</span>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="director-branch-announcements-placeholder">
-                            <h3>Batch Announcements</h3>
-                            <p>Batch Announcements list will go here</p>
-                        </div>
-                    )}
-                  </>
-                </div>
-              )}
+                      <div className="sem-grid-container">
+                          {getSemestersForYear(selectedAcademicYear, buildLiveSemesterIdsSet(liveDeptRows)).map((sem) => (
+                              <div
+                                  key={sem.id}
+                                  className="sem-card-glass"
+                                  role="button"
+                                  tabIndex={0}
+                                  aria-label={`Open ${sem.name} subjects`}
+                                  onClick={() => handleSemesterSelect(sem)}
+                                  onKeyDown={(event) => {
+                                      if (event.key === 'Enter' || event.key === ' ') {
+                                          event.preventDefault();
+                                          handleSemesterSelect(sem);
+                                      }
+                                  }}
+                              >
+                                  <h3 className="sem-title">{sem.name}</h3>
+                                  {sem.isLive && (
+                                      <span className="live-badge">LIVE</span>
+                                  )}
+                              </div>
+                          ))}
+                      </div>
+                    </>
+                  )}
+               </div>
+             )}
 
             {selectedAcademicYear && selectedBranch && selectedSemester && (
                 <div className="director-branch-view-wrapper">
@@ -944,22 +1211,170 @@ const handleAddFaculty = async (e) => {
                                 <span className="subject-detail-code">{selectedSubject.code}</span>
                             </div>
 
-                            <div className="material-cards-grid" aria-label="Material categories">
-                                {[
-                                    { name: 'All Lecture Notes', icon: BookOpen, count: '12 Files' },
-                                    { name: 'Assignments', icon: FileText, count: '8 Files' },
-                                    { name: 'Tutorials', icon: PenTool, count: '5 Files' },
-                                    { name: 'PYQs', icon: Archive, count: '15 Files' },
-                                    { name: 'Syllabus', icon: ScrollText, count: '3 Files' },
-                                ].map((material) => (
-                                    <div key={material.name} className="material-category-card" role="button" tabIndex={0}>
-                                        <div className="material-category-card__icon">
-                                            <material.icon size={28} />
-                                        </div>
-                                        <h3 className="material-category-card__title">{material.name}</h3>
-                                        <span className="material-category-card__count">{material.count}</span>
-                                    </div>
-                                ))}
+                            <div className="director-material-filters" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.75rem' }}>
+                              {directorMaterialCategories.map((f) => (
+                                <button
+                                  key={f}
+                                  className={`director-filter-pill ${directorActiveFilter === f ? 'director-filter-pill--active' : ''}`}
+                                  onClick={() => setDirectorActiveFilter(f)}
+                                >
+                                  {f}
+                                </button>
+                              ))}
+                            </div>
+                            <div className="director-materials-list" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
+                              {getDirectorFilteredMaterials().length > 0 ? (
+                                getDirectorFilteredMaterials().map((material) => (
+                                  <div
+                                    key={material.id}
+                                    className="director-material-card"
+                                    style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '1rem',
+                                      padding: '1rem 1.25rem',
+                                      borderRadius: '14px',
+                                      background: 'rgba(20, 20, 40, 0.72)',
+                                      backdropFilter: 'blur(12px)',
+                                      border: '1px solid rgba(255, 255, 255, 0.07)',
+                                      transition: 'all 0.2s ease',
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.3)';
+                                      e.currentTarget.style.boxShadow = '0 4px 18px rgba(99, 102, 241, 0.08)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.07)';
+                                      e.currentTarget.style.boxShadow = 'none';
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        width: '36px',
+                                        height: '36px',
+                                        borderRadius: '10px',
+                                        background: 'rgba(139, 92, 246, 0.12)',
+                                        border: '1px solid rgba(139, 92, 246, 0.22)',
+                                        color: '#a5b4fc',
+flexShrink: 0,
+                                       }}
+                                     >
+                                       {material.file_type === 'pdf' || material.type === 'PYQ' || material.type === 'Syllabus' ? (
+                                         <IconPDF />
+                                       ) : (
+                                         <IconLink />
+                                       )}
+                                     </div>
+                                     <div style={{ flex: 1, minWidth: 0 }}>
+                                       <h4
+                                         style={{
+                                           fontSize: '0.88rem',
+                                           fontWeight: 600,
+                                           color: '#e2e8f0',
+                                           margin: '0 0 0.35rem',
+                                           lineHeight: 1.3,
+                                         }}
+                                       >
+                                         {material.title || material.name || 'Untitled'}
+                                       </h4>
+                                       <span
+                                         className={`director-material-card__badge director-material-card__badge--${(material.type || material.category || 'resource').toLowerCase().replace(/\s+/g, '-')}`}
+                                         style={{
+                                           display: 'inline-block',
+                                           fontSize: '0.68rem',
+                                           fontWeight: 700,
+                                           textTransform: 'uppercase',
+                                           letterSpacing: '0.08em',
+                                           padding: '0.2rem 0.65rem',
+                                           borderRadius: '999px',
+                                           border: '1px solid transparent',
+                                         }}
+                                       >
+                                         {material.type || material.category || 'Resource'}
+                                       </span>
+                                     </div>
+                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                                       <button
+                                         style={{
+                                           display: 'inline-flex',
+                                           alignItems: 'center',
+                                           gap: '8px',
+                                           padding: '8px 16px',
+                                           background: '#3b82f6',
+                                           color: '#fff',
+                                           border: 'none',
+                                           borderRadius: '8px',
+                                           cursor: 'pointer',
+                                           fontWeight: 'bold',
+                                           fontSize: '14px',
+                                           transition: '0.2s',
+                                         }}
+                                         onClick={() => handleViewFile(material.file_url)}
+                                         onMouseEnter={(e) => {
+                                           e.currentTarget.style.background = '#2563eb';
+                                         }}
+                                         onMouseLeave={(e) => {
+                                           e.currentTarget.style.background = '#3b82f6';
+                                         }}
+                                       >
+                                         <svg
+                                           width="14"
+                                           height="14"
+                                           viewBox="0 0 24 24"
+                                           fill="none"
+                                           stroke="currentColor"
+                                           strokeWidth="2.5"
+                                           strokeLinecap="round"
+                                           strokeLinejoin="round"
+                                         >
+                                           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                           <circle cx="12" cy="12" r="3" />
+                                         </svg>
+                                         View
+                                       </button>
+                                       <button
+                                         onClick={() => setMaterialToDeleteId(material.id)}
+                                         style={{
+                                           display: 'inline-flex',
+                                           alignItems: 'center',
+                                           gap: '8px',
+                                           padding: '8px 16px',
+                                           backgroundColor: 'rgba(244, 63, 94, 0.15)',
+                                           color: '#f43f5e',
+                                           fontSize: '0.875rem',
+                                           fontWeight: '500',
+                                           borderRadius: '9999px',
+                                           border: '1px solid rgba(244, 63, 94, 0.4)',
+                                           cursor: 'pointer',
+                                         }}
+                                       >
+                                         <Trash2 size={16} /> Delete
+                                       </button>
+                                     </div>
+                                   </div>
+                                 ))
+                              ) : (
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '0.75rem',
+                                    padding: '2.5rem 1rem',
+                                    color: '#64748b',
+                                    fontStyle: 'italic',
+                                    textAlign: 'center',
+                                  }}
+                                >
+                                  <p>
+                                    No {directorActiveFilter} uploaded for {selectedSubject.name} yet.
+                                  </p>
+                                </div>
+                              )}
                             </div>
                         </div>
                     ) : (
@@ -967,9 +1382,9 @@ const handleAddFaculty = async (e) => {
                             <div className="director-subject-view">
                                 <div className="director-subject-view__header">
                                     <div>
-<p className="director-subject-view__eyebrow">
-                                             {selectedSubBranch || selectedBranch.name} · {selectedBranch.dept?.department_name || selectedBranch.dept?.name}
-                                         </p>
+                                        <p className="director-subject-view__eyebrow">
+                                            {selectedBranch.name} · {selectedBranch.dept?.department_name || selectedBranch.dept?.name}
+                                        </p>
                                         <h2 className="director-subject-view__title">Subject View</h2>
                                     </div>
                                     <span className="director-subject-view__semester">{selectedSemester.name}</span>
@@ -992,16 +1407,51 @@ const handleAddFaculty = async (e) => {
                                         aria-selected={subjectType === 'practical'}
                                         onClick={() => setSubjectType('practical')}
                                     >
-                                        Practical / Lab Subjects
+                                        Practical Subjects
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`subject-tab-btn ${subjectType === 'announcements' ? 'subject-tab-btn--active' : ''}`}
+                                        role="tab"
+                                        aria-selected={subjectType === 'announcements'}
+                                        onClick={() => setSubjectType('announcements')}
+                                    >
+                                        Announcements
                                     </button>
                                 </div>
 
-                                <div className="pw-subject-grid">
-                                    {subjectsLoading ? (
+                                {subjectType === 'announcements' ? (
+                                    <div className="pw-announcements-section">
+                                        <div className="director-subject-view__header" style={{ marginBottom: '1.25rem' }}>
+                                            <h2 className="director-subject-view__title">Semester Announcements</h2>
+                                            <p className="director-subject-view__eyebrow" style={{ marginTop: '0.5rem' }}>
+                                                {selectedSemester.name} • {selectedSubBranch || selectedBranch?.name}
+                                            </p>
+                                        </div>
+                                        {subjectViewAnnouncementsLoading ? (
+                                            <div className="pw-loading-subjects">Loading announcements...</div>
+                                        ) : subjectViewAnnouncements.length > 0 ? (
+                                            <div>
+                                                {subjectViewAnnouncements.map((announcement) => renderAnnouncementCard(announcement))}
+                                            </div>
+                                        ) : subjectViewGeneralAnnouncements.length > 0 ? (
+                                            <div>
+                                                <h3 className="pw-general-announcements-title">General Announcements</h3>
+                                                <div>
+                                                    {subjectViewGeneralAnnouncements.map((announcement) => renderAnnouncementCard(announcement))}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="pw-empty-subjects">No announcements found for this semester.</div>
+                                        )}
+                                    </div>
+) : (
+                                    <div className="pw-subject-grid">
+                                      {subjectsLoading ? (
                                         <div className="pw-loading-subjects">Loading subjects...</div>
-                                    ) : subjectsError ? (
+                                      ) : subjectsError ? (
                                         <div className="pw-error-subjects">Failed to load subjects. Please try again later.</div>
-                                    ) : currentSubjects[subjectType].length > 0 ? currentSubjects[subjectType].map((subject) => {
+                                      ) : currentSubjects[subjectType].length > 0 ? currentSubjects[subjectType].map((subject) => {
                                         const facultyInfo = getDirectorSubjectFaculty(subject);
                                         return (
                                         <article
@@ -1046,15 +1496,16 @@ const handleAddFaculty = async (e) => {
                                     }) : (
                                         <div className="pw-empty-subjects">No subjects available for this semester.</div>
                                     )}
-                                </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
                 </div>
             )}
-            
-          </section>
-        )}
+             
+         </section>
+         )}
 
         {/* --- 3. BROADCAST COMMAND CENTER --- */}
         {activeTab === 'announcements' && (
@@ -1545,6 +1996,68 @@ const handleAddFaculty = async (e) => {
               )}
             </div>
           </section>
+        )}
+
+        {activeTab === 'student-directory' && (
+          <section className="director-section">
+            <DirectorStudentDirectory />
+          </section>
+        )}
+
+        {announcementToDelete !== null && (
+          <div className="delete-dept-modal-overlay" onClick={() => setAnnouncementToDelete(null)}>
+            <div className="delete-dept-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="delete-dept-modal__header">
+                <div className="delete-dept-modal__icon-box">
+                  <Trash2 size={28} />
+                </div>
+                <h3 className="delete-dept-modal__title">Delete Announcement</h3>
+                <p className="delete-dept-modal__text">This action is permanent. The announcement will be removed from the system.</p>
+              </div>
+              <div className="delete-dept-modal__actions">
+                <button
+                  className="delete-dept-modal__btn delete-dept-modal__btn--cancel"
+                  onClick={() => setAnnouncementToDelete(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="delete-dept-modal__btn delete-dept-modal__btn--delete"
+                  onClick={confirmDeleteAnnouncement}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {materialToDeleteId !== null && (
+          <div className="delete-dept-modal-overlay" onClick={() => setMaterialToDeleteId(null)}>
+            <div className="delete-dept-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="delete-dept-modal__header">
+                <div className="delete-dept-modal__icon-box">
+                  <Trash2 size={28} />
+                </div>
+                <h3 className="delete-dept-modal__title">Delete Material</h3>
+                <p className="delete-dept-modal__text">This action is permanent. The material will be removed from the system.</p>
+              </div>
+              <div className="delete-dept-modal__actions">
+                <button
+                  className="delete-dept-modal__btn delete-dept-modal__btn--cancel"
+                  onClick={() => setMaterialToDeleteId(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="delete-dept-modal__btn delete-dept-modal__btn--delete"
+                  onClick={confirmDeleteMaterial}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
       </div>

@@ -146,6 +146,7 @@ export const DIRECTOR_NAV_ITEMS = [
   },
   { label: 'Manage Faculty', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=manage-faculty`, icon: UserPlus },
   { label: 'HOD Management', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=hod-management`, icon: UserCheck },
+  { label: 'Student Directory', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=student-directory`, icon: Users },
   {
     label: 'Announcements',
     path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=announcements`,

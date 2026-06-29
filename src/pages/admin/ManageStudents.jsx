@@ -123,6 +123,7 @@ export default function ManageStudents() {
       const { error: profileError } = await supabase.from('user_profiles').insert([{
         id: authData.user.id,
         full_name: formData.fullName,
+        email: formData.email,
         roll_number: formData.rollNumber,
         phone: formData.phone,
         role: 'student',

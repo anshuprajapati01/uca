@@ -222,6 +222,16 @@ code {
   scrollbar-width: none;
 }
 
+/* Student Directory Table Styles */
+.director-student-table tr {
+  border-bottom: 1px solid #1f2937;
+  transition: background 0.2s;
+}
+
+.director-student-table tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
 
 
 

@@ -1340,6 +1340,41 @@ select option {
     }
 }
 
+.director-filter-pill {
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    border: 1px solid rgba(139, 92, 246, 0.25);
+    color: #a5b4fc;
+    background: rgba(20, 20, 40, 0.5);
+    backdrop-filter: blur(10px) saturate(160%);
+    -webkit-backdrop-filter: blur(10px) saturate(160%);
+    transition: all 0.2s ease;
+    font-family: inherit;
+    white-space: nowrap;
+}
+.director-filter-pill--active {
+    background: #8b5cf6;
+    border-color: #8b5cf6;
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(139, 92, 246, 0.35);
+}
+
+.director-material-card__badge--lecture { background: rgba(96, 165, 250, 0.14); color: #bfdbfe; border-color: rgba(96, 165, 250, 0.24); }
+.director-material-card__badge--notes { background: rgba(52, 211, 153, 0.14); color: #a7f3d0; border-color: rgba(52, 211, 153, 0.24); }
+.director-material-card__badge--assignment { background: rgba(251, 191, 36, 0.14); color: #fde68a; border-color: rgba(251, 191, 36, 0.24); }
+.director-material-card__badge--tutorial { background: rgba(168, 85, 247, 0.14); color: #d8b4fe; border-color: rgba(168, 85, 247, 0.24); }
+.director-material-card__badge--pyq { background: rgba(248, 113, 113, 0.14); color: #fecaca; border-color: rgba(248, 113, 113, 0.24); }
+.director-material-card__badge--syllabus { background: rgba(129, 140, 248, 0.14); color: #c7d2fe; border-color: rgba(129, 140, 248, 0.24); }
+.director-material-card__badge--resource { background: rgba(148, 163, 179, 0.14); color: #cbd5e1; border-color: rgba(148, 163, 179, 0.24); }
+.director-material-card__badge--toppers-notes { background: rgba(251, 191, 36, 0.14); color: #fde68a; border-color: rgba(251, 191, 36, 0.24); }
+.director-material-card__badge--reference-books { background: rgba(96, 165, 250, 0.14); color: #bfdbfe; border-color: rgba(96, 165, 250, 0.24); }
+.director-material-card__badge--exam-cheatsheets { background: rgba(52, 211, 153, 0.14); color: #a7f3d0; border-color: rgba(52, 211, 153, 0.24); }
+.director-material-card__badge--class-notes { background: rgba(52, 211, 153, 0.14); color: #a7f3d0; border-color: rgba(52, 211, 153, 0.24); }
+
 .pw-subject-card {
     position: relative;
     display: flex;
@@ -1407,16 +1442,96 @@ select option {
     border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.pw-empty-subjects {
-    grid-column: 1 / -1;
-    padding: 1rem;
-    border-radius: 14px;
-    color: #94a3b8;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px dashed rgba(148, 163, 184, 0.25);
-}
+.pw-announcements-section {
+     margin-top: 1rem;
+    }
 
-.pw-loading-subjects {
+    .pw-announcements-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1rem;
+    }
+
+    .pw-announcement-card {
+        padding: 1.25rem;
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.82), rgba(15, 23, 42, 0.76));
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .pw-announcement-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(139, 92, 246, 0.3);
+        box-shadow: 0 16px 36px rgba(99, 102, 241, 0.16), 0 6px 22px rgba(0, 0, 0, 0.35);
+    }
+
+    .pw-announcement-card__header {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        margin-bottom: 0.6rem;
+    }
+
+    .pw-announcement-card__title {
+        margin: 0;
+        color: #f8fafc;
+        font-size: 1rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+    }
+
+    .pw-announcement-card__type {
+        display: inline-flex;
+        align-self: flex-start;
+        padding: 0.25rem 0.6rem;
+        border-radius: 999px;
+        background: rgba(139, 92, 246, 0.14);
+        border: 1px solid rgba(139, 92, 246, 0.32);
+        color: #c4b5fd;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+    }
+
+    .pw-announcement-card__content {
+        color: #cbd5e1;
+        font-size: 0.85rem;
+        line-height: 1.5;
+        margin-bottom: 1rem;
+    }
+
+    .pw-announcement-card__footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .pw-announcement-card__sender {
+        color: #94a3b8;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .pw-announcement-card__date {
+        color: #94a3b8;
+        font-size: 0.78rem;
+        font-weight: 500;
+    }
+
+    .pw-empty-subjects {
+     grid-column: 1 / -1;
+     padding: 1rem;
+     border-radius: 14px;
+     color: #94a3b8;
+     background: rgba(255, 255, 255, 0.04);
+     border: 1px dashed rgba(148, 163, 184, 0.25);
+   }
+
+   .pw-loading-subjects {
     grid-column: 1 / -1;
     padding: 1.5rem;
     border-radius: 14px;
@@ -4218,4 +4333,147 @@ select option {
 .dept-toast__message {
     color: #10b981;
     font-size: 0.9rem;
+}
+
+/* --- SEMESTER ANNOUNCEMENTS VIEW --- */
+.director-semester-announcements-view {
+    background: rgba(18, 18, 34, 0.78);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 18px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.director-semester-announcements-header {
+    margin-bottom: 1.5rem;
+}
+
+.director-semester-announcements-header h3 {
+    margin: 0 0 0.25rem;
+    color: #f8fafc;
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.director-announcements-context {
+    margin: 0;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.director-semester-announcements-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.director-semester-announcement-card {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
+    padding: 1.25rem;
+    transition: all 0.2s ease;
+}
+
+.director-semester-announcement-card:hover {
+    background: rgba(30, 41, 59, 0.8);
+    border-color: rgba(139, 92, 246, 0.2);
+}
+
+.director-semester-announcement-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.director-semester-announcement-title {
+    margin: 0;
+    color: #f8fafc;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.director-semester-announcement-type {
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: rgba(139, 92, 246, 0.15);
+    color: #c7d2fe;
+}
+
+.director-semester-announcement-content {
+    margin: 0 0 1rem;
+    color: #cbd5e1;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.director-semester-announcement-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.director-semester-announcement-date {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.director-semester-announcement-sender {
+    color: #a5b4fc;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.director-semester-announcement-view-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+    background: rgba(59, 130, 246, 0.15);
+    color: #bfdbfe;
+    font-size: 0.8rem;
+    font-weight: 700;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.director-semester-announcement-view-btn:hover {
+    background: rgba(59, 130, 246, 0.25);
+    color: #fff;
+}
+
+.director-semester-announcements-loading {
+    padding: 2rem;
+    text-align: center;
+    color: #94a3b8;
+}
+
+.director-semester-announcements-empty {
+    padding: 2rem;
+    text-align: center;
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 14px;
+    border: 1px dashed rgba(148, 163, 184, 0.25);
+}
+
+.director-semester-announcements-back {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
