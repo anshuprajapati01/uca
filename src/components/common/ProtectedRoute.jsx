@@ -1,37 +1,50 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import { ROUTES, USER_ROLES } from '../../config/constants.js';
 import { useAuth } from '../../hooks/useAuth.js';
-import { getDashboardRouteForProfile } from '../../utils/roleRouting.js';
-import AuthLoading from './AuthLoading.jsx';
 
-/**
- * @param {Object} props
- * @param {string[]} props.allowedRoles
- * @param {import('react').ReactNode} props.children
- */
 export default function ProtectedRoute({ allowedRoles, children }) {
-  const { isAuthenticated, role, isLoading, profile } = useAuth();
+  const { user, loading, profile } = useAuth();
   const location = useLocation();
 
-  if (isLoading) {
-    return <AuthLoading />;
+  if (loading) {
+    return (
+      <div
+        style={{
+          height: '100vh',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: '#11131f',
+          color: 'white',
+        }}
+      >
+        Loading UCA...
+      </div>
+    );
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to={ROUTES.LOGIN} state={{ from: location }} replace />;
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (!role) {
-    return <Navigate to={ROUTES.LOGIN} replace />;
+  const currentPath = location.pathname;
+  const email = user.email?.toLowerCase() || '';
+
+  const dbRole = profile?.role?.toLowerCase() || user.user_metadata?.role || '';
+
+  const isFaculty = email.includes('faculty') || dbRole === 'faculty';
+  const isHOD = email.includes('hod') || dbRole === 'hod' || profile?.is_hod === true;
+  const isDirector = email.includes('director') || dbRole === 'director';
+
+  const isStaff = isFaculty || isHOD || isDirector;
+
+  if (!isStaff && !currentPath.startsWith('/student')) {
+    return <Navigate to="/student" replace />;
   }
 
-  // Check role-based access or permission-based access via flags
-  const hasAllowedRole = allowedRoles.includes(role);
-  const hasHodPermission = allowedRoles.includes(USER_ROLES.HOD) && profile?.can_view_hod === true;
-  const hasFacultyPermission = allowedRoles.includes(USER_ROLES.FACULTY) && profile?.can_view_faculty === true;
-
-  if (!hasAllowedRole && !hasHodPermission && !hasFacultyPermission) {
-    return <Navigate to={getDashboardRouteForProfile(profile)} replace />;
+  if (isStaff && currentPath.startsWith('/student')) {
+    if (isDirector) return <Navigate replace to="/director"/>;
+    if (isHOD) return <Navigate replace to="/hod-dashboard"/>;
+    return <Navigate replace to="/faculty"/>;
   }
 
   return children;

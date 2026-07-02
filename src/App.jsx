@@ -3,11 +3,10 @@ import { Toaster } from 'react-hot-toast';
 
 export default function App() {
   return (
-    <>
+    <div style={{ width: '100vw', minHeight: '100vh', margin: 0, padding: 0, overflowX: 'hidden' }}>
       <AppRoutes />
       <Toaster 
         position="top-right" 
-        /* 👉 YE LINE SABSE ZAROORI HAI - YE PURE TOAST SYSTEM KO SABSE AAGE LAYEGI */
         containerStyle={{
           zIndex: 9999999999, 
         }}
@@ -19,6 +18,6 @@ export default function App() {
           } 
         }} 
       />
-    </>
+    </div>
   );
 }

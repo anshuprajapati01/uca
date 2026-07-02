@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { BookOpen, LayoutDashboard, LogOut, User, ClipboardList } from 'lucide-react';
 import { supabase } from '../../lib/supabase.js';
 import { ROUTES } from '../../config/constants.js';
+import { signOut } from '../../services/authService.js';
 import FacultyAssignments from '../dashboard/FacultyAssignments.jsx';
 import './FacultyDashboard.css';
 
@@ -68,8 +69,7 @@ export default function FacultyDashboard() {
   }, [navigate]);
 
   async function handleSignOut() {
-    await supabase.auth.signOut();
-    navigate(ROUTES.LOGIN, { replace: true });
+    await signOut();
   }
 
   const canViewFaculty = facultyProfile?.can_view_faculty === true;

@@ -18,9 +18,22 @@ export async function signInWithEmail(email, password) {
 }
 
 export async function signOut() {
-  const { error } = await supabase.auth.signOut();
+  try {
+    localStorage.clear();
+    sessionStorage.clear();
 
-  if (error) {
-    throw error;
+    const keys = Object.keys(localStorage);
+    for (const key of keys) {
+      if (key.startsWith('sb-')) {
+        localStorage.removeItem(key);
+      }
+    }
+
+    supabase.auth.signOut().catch((err) => console.log("Supabase background signout:", err));
+
+    window.location.href = '/';
+  } catch (error) {
+    console.error("Sign out error:", error);
+    window.location.href = '/';
   }
 }

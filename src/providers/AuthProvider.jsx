@@ -11,7 +11,7 @@ export default function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null);
   const [role, setRole] = useState(null);
   const [profileError, setProfileError] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   const isFetchingProfile = useRef(false);
 
@@ -74,7 +74,7 @@ export default function AuthProvider({ children }) {
         }
       } finally {
         if (mounted) {
-          setIsLoading(false);
+          setLoading(false);
         }
       }
     }
@@ -104,6 +104,10 @@ export default function AuthProvider({ children }) {
           setRole(null);
           setProfileError(null);
         }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
     });
 
@@ -114,8 +118,8 @@ export default function AuthProvider({ children }) {
   }, [loadProfile]);
 
   useEffect(() => {
-    const failsafeTimeoutId = setTimeout(() => {
-      setIsLoading(false);
+  const failsafeTimeoutId = setTimeout(() => {
+      setLoading(false);
     }, 8000);
 
     return () => clearTimeout(failsafeTimeoutId);
@@ -127,14 +131,14 @@ export default function AuthProvider({ children }) {
       user,
       profile,
       role,
-      isLoading,
+      loading,
       isAuthenticated: Boolean(session),
       profileError,
     }),
-    [session, user, profile, role, isLoading, profileError],
+    [session, user, profile, role, loading, profileError],
   );
 
-  if (isLoading) {
+  if (loading) {
     return <AuthLoading />;
   }
 

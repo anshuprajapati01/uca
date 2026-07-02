@@ -19,7 +19,7 @@ import { createContext } from 'react';
  * @property {User} user
  * @property {UserProfile | null} profile
  * @property {string | null} role
- * @property {boolean} isLoading
+ * @property {boolean} loading
  * @property {boolean} isAuthenticated
  * @property {string | null} profileError
  */

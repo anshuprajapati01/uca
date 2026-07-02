@@ -3,20 +3,32 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { APP_NAME, ROUTES } from '../../config/constants.js';
 import { useAuth } from '../../hooks/useAuth.js';
 import { useLogout } from '../../hooks/useLogout.js';
-import { getDashboardRouteForProfile } from '../../utils/roleRouting.js';
+import { supabase } from '../../lib/supabase.js';
 
 export default function LandingPage() {
-  const { user, profile, isAuthenticated } = useAuth();
+  const { user, profile, isAuthenticated, loading } = useAuth();
   const { logout, isLoading: isLoggingOut, error: logoutError } = useLogout();
   const location = useLocation();
   const navigate = useNavigate();
   const loginSuccess = location.state?.loginSuccess === true;
 
   useEffect(() => {
-    if (isAuthenticated && profile) {
-      navigate(getDashboardRouteForProfile(profile), { replace: true });
-    }
-  }, [isAuthenticated, profile, navigate]);
+    const checkAndRoute = async () => {
+      if (!loading && isAuthenticated && user) {
+        const { data: dbProfile } = await supabase.from('user_profiles').select('role, can_view_hod').eq('id', user.id).single();
+        const userEmail = user.email.toLowerCase();
+        const dbRole = dbProfile?.role?.toLowerCase() || '';
+        const isHOD = dbRole === 'hod' || dbProfile?.can_view_hod === true;
+        const isDirector = dbRole === 'director';
+
+        if (isDirector) navigate('/director', { replace: true });
+        else if (isHOD) navigate('/hod-dashboard', { replace: true });
+        else if (dbRole === 'faculty' || userEmail.includes('faculty')) navigate('/faculty', { replace: true });
+        else navigate('/student', { replace: true });
+      }
+    };
+    if (!loading) checkAndRoute();
+  }, [user, loading, navigate]);
 
   async function handleLogout() {
     await logout();

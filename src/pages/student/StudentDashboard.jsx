@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from "../../hooks/useAuth.js";
 import { Upload, FileText, Eye, Trash2, ChevronDown } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase.js";
-import { ROUTES } from "../../config/constants.js";
 import { uploadNewResource, deleteResource } from "../../services/resourceService.js";
+import { signOut } from "../../services/authService.js";
 import StudentAssignments from "./StudentAssignments.jsx";
 import "./StudentDashboard.css";
 
@@ -383,7 +384,7 @@ const THEORY_PRACTICAL_FILTERS = ["All", "Theory", "Practical"];
 
 export default function StudentDashboard() {
    const navigate = useNavigate();
-   const [user, setUser] = useState(null);
+    const { user } = useAuth();
    const [profile, setProfile] = useState(null);
    const [studentProfile, setStudentProfile] = useState(null);
    const [announcements, setAnnouncements] = useState([]);
@@ -453,7 +454,7 @@ const [uploadLoading, setUploadLoading] = useState(false);
       file: null,
       url: "",
     });
-    const [myUploads, setMyUploads] = useState([]);
+const [myUploads, setMyUploads] = useState([]);
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [uploadModalSubject, setUploadModalSubject] = useState(null);
     const [deleteLoading, setDeleteLoading] = useState(false);
@@ -465,69 +466,64 @@ useEffect(() => {
 
       async function loadStudentData() {
         setIsLoading(true);
-
         try {
-          const {
-            data: { user: authUser },
-          } = await supabase.auth.getUser();
-          if (!cancelled) setUser(authUser);
-          if (!authUser) return;
+           if (!user) return;
 
-          const { data: crData, error: crError } = await supabase
-            .from("class_representatives")
-            .select("branch, year, semester")
-            .eq("student_id", authUser.id)
-            .maybeSingle();
+           const { data: crData, error: crError } = await supabase
+             .from("class_representatives")
+             .select("branch, year, semester")
+             .eq("student_id", user.id)
+             .maybeSingle();
 
-          if (crError) {
-            console.error("Failed to fetch CR details:", crError);
-          } else if (!cancelled) {
-            setCrDetails(crData);
-          }
+           if (crError) {
+             console.error("Failed to fetch CR details:", crError);
+           } else if (!cancelled) {
+             setCrDetails(crData);
+           }
 
-          const { data: profileData, error: profileError } = await supabase
-            .from("user_profiles")
-            .select("*, batches(*)")
-            .eq("id", authUser.id)
-            .single();
+const { data: profileData, error: profileError } = await supabase
+              .from("user_profiles")
+              .select("*, batches(*)")
+              .eq("id", user.id)
+              .single();
 
-          if (profileError) throw profileError;
-          if (!cancelled) {
-            setProfile(profileData);
-            setStudentProfile(profileData);
-          }
+            if (profileError) throw profileError;
+            if (!cancelled) {
+              setProfile(profileData);
+              setStudentProfile(profileData);
+            }
 
-          const { data: bookmarkData, error: bookmarkError } = await supabase
-            .from("bookmarks")
-            .select("resource_id")
-            .eq("user_id", authUser.id);
-          if (bookmarkError) console.error("Failed to fetch bookmarks:", bookmarkError);
-          if (!cancelled) {
-            setBookmarkedIds((bookmarkData || []).map((b) => b.resource_id));
-          }
+            const { data: bookmarkData, error: bookmarkError } = await supabase
+              .from("bookmarks")
+              .select("resource_id")
+              .eq("user_id", user.id);
+            if (bookmarkError) console.error("Failed to fetch bookmarks:", bookmarkError);
+            if (!cancelled) {
+              setBookmarkedIds((bookmarkData || []).map((b) => b.resource_id));
+            }
 
-          const { data: announcementData } = await supabase
-            .from("announcements")
-            .select("*")
-            .order("created_at", { ascending: false })
-            .limit(5);
+           const { data: announcementData } = await supabase
+             .from("announcements")
+             .select("*")
+             .order("created_at", { ascending: false })
+             .limit(5);
 
-          if (!cancelled) setAnnouncements(announcementData || []);
+           if (!cancelled) setAnnouncements(announcementData || []);
 
-           const { data: attendanceData, error: attendanceError } = await supabase
-             .from('attendance_records')
-             .select(`
-               status,
-               marked_at,
-               attendance_sessions (
-                 date,
-                 subjects ( name )
-               )
-             `)
-             .eq('student_id', authUser.id)
-             .order('marked_at', { ascending: false });
-           if (attendanceError) console.error("Failed to fetch attendance:", attendanceError);
-           if (!cancelled && attendanceData) {
+const { data: attendanceData, error: attendanceError } = await supabase
+              .from('attendance_records')
+              .select(`
+                status,
+                marked_at,
+                attendance_sessions (
+                  date,
+                  subjects ( name )
+                )
+              `)
+              .eq('student_id', user.id)
+              .order('marked_at', { ascending: false });
+            if (attendanceError) console.error("Failed to fetch attendance:", attendanceError);
+            if (!cancelled && attendanceData) {
              const total = attendanceData.length;
              const present = attendanceData.filter((r) => r.status === 'Present').length;
              const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
@@ -535,139 +531,143 @@ useEffect(() => {
              setAttendanceRecords(attendanceData);
            }
 
-          const studentSemester = profileData?.batches?.semester;
-          if (!cancelled) setSemester(studentSemester ?? null);
+           const studentSemester = profileData?.batches?.semester;
+           if (!cancelled) setSemester(studentSemester ?? null);
 
-          const studentBranch =
-            profileData?.selected_branch ||
-            profileData?.branch ||
-            profileData?.branch_id ||
-            profileData?.department ||
-            profileData?.batches?.department ||
-            profileData?.batches?.branch ||
-            null;
-          const studentYear =
-            profileData?.selected_year ||
-            profileData?.year ||
-            profileData?.batches?.year ||
-            profileData?.batches?.academic_year ||
-            null;
+           const studentBranch =
+             profileData?.selected_branch ||
+             profileData?.branch ||
+             profileData?.branch_id ||
+             profileData?.department ||
+             profileData?.batches?.department ||
+             profileData?.batches?.branch ||
+             null;
+           const studentYear =
+             profileData?.selected_year ||
+             profileData?.year ||
+             profileData?.batches?.year ||
+             profileData?.batches?.academic_year ||
+             null;
 
-        const { data: deptData } = await supabase
-          .from("departments")
-          .select("is_sem1_live, is_sem2_live, is_sem3_live, is_sem4_live, is_sem5_live, is_sem6_live, is_sem7_live, is_sem8_live")
-          .eq("code", studentBranch)
-          .eq("description", studentYear)
-          .maybeSingle();
+           const { data: deptData } = await supabase
+             .from("departments")
+             .select("is_sem1_live, is_sem2_live, is_sem3_live, is_sem4_live, is_sem5_live, is_sem6_live, is_sem7_live, is_sem8_live")
+             .eq("code", studentBranch)
+             .eq("description", studentYear)
+             .maybeSingle();
 
-        const yearSemesterMap = {
-          '1st Year': [1, 2],
-          '2nd Year': [3, 4],
-          '3rd Year': [5, 6],
-          '4th Year': [7, 8],
-        };
+           const yearSemesterMap = {
+             '1st Year': [1, 2],
+             '2nd Year': [3, 4],
+             '3rd Year': [5, 6],
+             '4th Year': [7, 8],
+           };
 
-        let liveSem = null;
-        if (deptData) {
-          for (let i = 1; i <= 8; i++) {
-            if (deptData[`is_sem${i}_live`]) {
-              liveSem = i;
-              break;
+           let liveSem = null;
+           if (deptData) {
+             for (let i = 1; i <= 8; i++) {
+               if (deptData[`is_sem${i}_live`]) {
+                 liveSem = i;
+                 break;
+               }
+             }
+           }
+
+           if (!cancelled) setLiveSemester(liveSem);
+
+           let defaultSemester = null;
+           if (liveSem !== null) {
+             defaultSemester = liveSem;
+           } else if (studentYear && yearSemesterMap[studentYear]) {
+             defaultSemester = yearSemesterMap[studentYear][yearSemesterMap[studentYear].length - 1];
+           }
+
+if (!cancelled && defaultSemester !== null) {
+              setSelectedSemester(defaultSemester);
             }
+
+            const visibleSemesters = studentYear === '2nd Year'
+              ? [3, 4]
+              : (yearSemesterMap[studentYear] || []);
+
+            if (!cancelled) {
+              setAvailableSemesters(visibleSemesters);
+            }
+          } catch (err) {
+            console.error("Failed to load student dashboard data:", err);
+          } finally {
+            if (!cancelled) setIsLoading(false);
           }
         }
 
-        if (!cancelled) setLiveSemester(liveSem);
+        if (user?.id) {
+          loadStudentData();
+        } else {
+          setIsLoading(false);
+        }
+        return () => {
+          cancelled = true;
+        };
+      }, [user?.id]);
 
-        let defaultSemester = null;
-        if (liveSem !== null) {
-          defaultSemester = liveSem;
-        } else if (studentYear && yearSemesterMap[studentYear]) {
-          defaultSemester = yearSemesterMap[studentYear][yearSemesterMap[studentYear].length - 1];
+    useEffect(() => {
+      if (activeTab !== "my-uploads") {
+        setSelectedSubject(null);
+      }
+      setShowUploadModal(false);
+      setActiveFilter("All");
+      setLibrarySearch("");
+      setLibraryFilter("All");
+      setBookmarkFilter("All");
+    }, [activeTab]);
+
+    useEffect(() => {
+      const fetchTodayClasses = async () => {
+        const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+
+        const branch =
+          studentProfile?.selected_branch ||
+          studentProfile?.branch ||
+          studentProfile?.branch_id ||
+          studentProfile?.department ||
+          studentProfile?.batches?.department ||
+          studentProfile?.batches?.branch ||
+          'IT';
+
+        const { data: slots, error } = await supabase
+          .from('timetable_slots')
+          .select('*, subjects(name), user_profiles(full_name)')
+          .eq('day_of_week', currentDay)
+          .eq('branch', branch);
+
+if (error) {
+          console.error("Failed to fetch today's classes:", error);
+          setTodayClasses([]);
+          return;
         }
 
-        if (!cancelled && defaultSemester !== null) {
-          setSelectedSemester(defaultSemester);
+        let filteredSlots = slots || [];
+        if (filteredSlots.length > 0) {
+          const studentSem = parseInt(String(studentProfile?.selected_semester || 4).replace(/\D/g, ''), 10);
+          const studentSec = String(studentProfile?.selected_section || 'B').replace(/Section\s*/i, '').trim().toLowerCase();
+
+          filteredSlots = filteredSlots.filter(slot => {
+            const slotSem = parseInt(slot.semester, 10);
+            const slotSec = String(slot.section).replace(/Section\s*/i, '').trim().toLowerCase();
+            return slotSem === studentSem && slotSec.includes(studentSec);
+          });
+
+          filteredSlots.sort((a, b) => a.start_time.localeCompare(b.start_time));
         }
 
-        const visibleSemesters = studentYear === '2nd Year'
-          ? [3, 4]
-          : (yearSemesterMap[studentYear] || []);
+        setTodayClasses(filteredSlots);
+      };
 
-        if (!cancelled) {
-          setAvailableSemesters(visibleSemesters);
-        }
-      } catch (err) {
-        console.error("Failed to load student dashboard data:", err);
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    }
+      fetchTodayClasses();
+    }, [studentProfile]);
 
-    loadStudentData();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (activeTab !== "my-uploads") {
-      setSelectedSubject(null);
-    }
-    setShowUploadModal(false);
-    setActiveFilter("All");
-    setLibrarySearch("");
-    setLibraryFilter("All");
-    setBookmarkFilter("All");
-  }, [activeTab]);
-
-  useEffect(() => {
-    const fetchTodayClasses = async () => {
-      const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-
-      const branch =
-        studentProfile?.selected_branch ||
-        studentProfile?.branch ||
-        studentProfile?.branch_id ||
-        studentProfile?.department ||
-        studentProfile?.batches?.department ||
-        studentProfile?.batches?.branch ||
-        'IT';
-
-      const { data: slots, error } = await supabase
-        .from('timetable_slots')
-        .select('*, subjects(name), user_profiles(full_name)')
-        .eq('day_of_week', currentDay)
-        .eq('branch', branch);
-
-      if (error) {
-        console.error("Failed to fetch today's classes:", error);
-        setTodayClasses([]);
-        return;
-      }
-
-      let filteredSlots = slots || [];
-      if (filteredSlots.length > 0) {
-        const studentSem = parseInt(String(studentProfile?.selected_semester || 4).replace(/\D/g, ''), 10);
-        const studentSec = String(studentProfile?.selected_section || 'B').replace(/Section\s*/i, '').trim().toLowerCase();
-
-        filteredSlots = filteredSlots.filter(slot => {
-          const slotSem = parseInt(slot.semester, 10);
-          const slotSec = String(slot.section).replace(/Section\s*/i, '').trim().toLowerCase();
-          return slotSem === studentSem && slotSec.includes(studentSec);
-        });
-
-        filteredSlots.sort((a, b) => a.start_time.localeCompare(b.start_time));
-      }
-
-      setTodayClasses(filteredSlots);
-    };
-
-    fetchTodayClasses();
-  }, [studentProfile]);
-
-  useEffect(() => {
-    function handleTypeClickOutside(event) {
+    useEffect(() => {
+      function handleTypeClickOutside(event) {
       if (typeDropdownRef.current && !typeDropdownRef.current.contains(event.target)) {
         setIsTypeDropdownOpen(false);
         setTypeSearchQuery('');
@@ -880,15 +880,7 @@ async function fetchAllMaterials() {
   };
 
   async function handleSignOut() {
-    try {
-      await Promise.race([
-        supabase.auth.signOut(),
-        new Promise((resolve) => setTimeout(resolve, 3000)),
-      ]);
-    } catch {
-      // ignore sign-out network errors
-    }
-    navigate(ROUTES.LOGIN, { replace: true });
+    await signOut();
   }
 
   // --- UPLOAD LOGIC ---
@@ -1127,36 +1119,6 @@ async function fetchAllMaterials() {
       <p>No materials found for your search.</p>
     </div>
   );
-
-  if (isLoading) {
-    return (
-      <div className="student-dashboard-layout">
-        <aside className="student-sidebar">
-          <div className="student-sidebar__header">
-            <h1 className="student-sidebar__brand">UCA</h1>
-          </div>
-          <nav className="student-sidebar__nav">
-            {navItems.map(({ label }) => (
-              <div
-                key={label}
-                className="student-sidebar__link skeleton-link"
-              />
-            ))}
-          </nav>
-        </aside>
-        <main className="student-main">
-          <header className="student-header">
-            <div className="student-header__skeleton" />
-          </header>
-          <div className="student-content">
-            <div className="student-skeleton-grid">
-              <div className="student-skeleton-card student-skeleton-card--profile" />
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
 
   return (
     <div className="student-dashboard-layout">
@@ -1412,7 +1374,7 @@ async function fetchAllMaterials() {
 
             {activeTab === "my-uploads" && crDetails && (
              <section className="student-section" style={{ animation: "fadeIn 0.25s ease" }}>
-               <div style={{ maxWidth: "800px", margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
+               <div style={{ width: "100%", boxSizing: "border-box" }}>
                  <h3 className="student-section__title" style={{ margin: 0, fontSize: "1.5rem" }}>My Uploads</h3>
                  <p style={{ color: "#94a3b8", fontSize: "0.9rem", margin: 0 }}>Manage your uploaded study materials</p>
 
