@@ -5,6 +5,7 @@ import { Trash2, ArrowLeft, Eye, FileText, Link as LinkIcon } from 'lucide-react
 import toast from 'react-hot-toast';
 import UploadResourceModal from '../../components/faculty/UploadResourceModal.jsx';
 import AnnouncementsTab from '../../components/faculty/AnnouncementsTab.jsx';
+import TakeAttendance from '../../components/faculty/TakeAttendance.jsx';
 import { deleteResource } from '../../services/resourceService.js';
 import './SubjectWorkspace.css';
 
@@ -188,6 +189,22 @@ export default function SubjectWorkspace() {
           >
             Announcements
           </button>
+          <button
+            onClick={() => setMainTab('Attendance')}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: mainTab === 'Attendance' ? '#818cf8' : '#9ca3af',
+              fontSize: '0.875rem',
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+              paddingBottom: '8px',
+              borderBottom: mainTab === 'Attendance' ? '2px solid #818cf8' : '2px solid transparent'
+            }}
+          >
+            Attendance
+          </button>
         </div>
 
         {mainTab === 'Resources' && (
@@ -320,6 +337,8 @@ export default function SubjectWorkspace() {
         )}
 
         {mainTab === 'Announcements' && <AnnouncementsTab subjectId={subjectId} />}
+
+        {mainTab === 'Attendance' && <TakeAttendance subjectId={subjectId} subjectDetails={subject} />}
         
       </div>
 

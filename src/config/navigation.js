@@ -10,6 +10,9 @@ import {
   UserCheck,
   UserPlus,
   Tags,
+  Calendar,
+  Grid,
+  ClipboardList,
 } from 'lucide-react';
 import { ROUTES } from './constants.js';
 
@@ -36,6 +39,11 @@ export const STUDENT_NAV_ITEMS = [
     path: `${ROUTES.STUDENT_DASHBOARD}/announcements`,
     icon: Megaphone,
   },
+  {
+    label: 'Assignments',
+    path: `${ROUTES.STUDENT_DASHBOARD}/assignments`,
+    icon: ClipboardList,
+  },
 ];
 
 /** @type {NavItem[]} */
@@ -50,6 +58,12 @@ export const FACULTY_NAV_ITEMS = [
     label: '📤 Upload Materials',
     path: `${ROUTES.FACULTY_DASHBOARD}/resources`,
     icon: Upload,
+  },
+  {
+    id: 'assignments',
+    label: 'Assignments',
+    path: `${ROUTES.FACULTY_DASHBOARD}/assignments`,
+    icon: ClipboardList,
   },
 ];
 
@@ -128,6 +142,18 @@ export const HOD_NAV_ITEMS = [
     label: 'Categories',
     path: `${ROUTES.HOD_DASHBOARD}/categories`,
     icon: Tags,
+  },
+  {
+    id: 'attendance',
+    label: 'Attendance Analytics',
+    path: `${ROUTES.HOD_DASHBOARD}/attendance`,
+    icon: Calendar,
+  },
+  {
+    id: 'manage-timetable',
+    label: 'Manage Timetable',
+    path: `${ROUTES.HOD_DASHBOARD}/manage-timetable`,
+    icon: Grid,
   },
 ];
 

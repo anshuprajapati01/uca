@@ -16,6 +16,7 @@ import FacultyOverview from '../pages/faculty/FacultyOverview.jsx';
 import FacultyResources from '../pages/faculty/FacultyResources.jsx';
 import MySubjects from '../pages/faculty/MySubjects.jsx';
 import SubjectWorkspace from '../pages/faculty/SubjectWorkspace.jsx';
+import FacultyAssignments from '../pages/dashboard/FacultyAssignments.jsx';
 import StudentDashboard from '../pages/student/StudentDashboard.jsx';
 import LandingPage from '../pages/public/LandingPage.jsx';
 import NotFoundPage from '../pages/public/NotFoundPage.jsx';
@@ -68,6 +69,7 @@ export default function AppRoutes() {
         <Route path="subjects/:subjectId" element={<MySubjects />} />
         <Route path="workspace/:subjectId" element={<SubjectWorkspace />} />
         <Route path="resources" element={<FacultyResources />} />
+        <Route path="assignments" element={<FacultyAssignments />} />
       </Route>
 
       {/* NEW: HOD ROUTE */}

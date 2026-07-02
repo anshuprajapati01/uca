@@ -9,6 +9,8 @@ import ManageAnnouncements from '../admin/ManageAnnouncements.jsx';
 import CurriculumManager from '../admin/CurriculumManager.jsx';
 import ManageCategories from './ManageCategories.jsx';
 import ManageCR from './ManageCR.jsx';
+import HODAttendance from './HODAttendance.jsx';
+import HODManageTimetable from './HODManageTimetable.jsx';
 
 const HOD_TAB_COMPONENTS = {
   overview: AdminOverview,
@@ -19,6 +21,8 @@ const HOD_TAB_COMPONENTS = {
   announcement: ManageAnnouncements,
   curriculum: CurriculumManager,
   categories: ManageCategories,
+  attendance: HODAttendance,
+  'manage-timetable': HODManageTimetable,
 };
 
 function getActiveTabId(pathname) {

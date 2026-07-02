@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase.js";
 import { ROUTES } from "../../config/constants.js";
 import { uploadNewResource, deleteResource } from "../../services/resourceService.js";
+import StudentAssignments from "./StudentAssignments.jsx";
 import "./StudentDashboard.css";
 
 const IconOverview = () => (
@@ -147,6 +148,38 @@ const IconAnnouncement = () => (
     <path d="M13.73 21a2 2 0 0 1-3.46 0" />
   </svg>
 );
+const IconCalendar = () => (
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+    <line x1="16" y1="2" x2="16" y2="6" />
+    <line x1="8" y1="2" x2="8" y2="6" />
+    <line x1="3" y1="10" x2="21" y2="10" />
+  </svg>
+);
+const IconAssignments = () => (
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+    <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+  </svg>
+);
 const IconPDF = () => (
   <svg
     width="20"
@@ -263,6 +296,11 @@ const navItems = [
    { id: "subjects", label: "📚 My Subjects", icon: <IconSubjects /> },
    { id: "library", label: "📂 Mega Library", icon: <IconLibrary /> },
    {
+     id: "assignments",
+     label: "📋 Assignments",
+     icon: <IconAssignments />,
+   },
+   {
      id: "bookmarks",
      label: "🔖 Bookmarks",
      icon: <IconBookmark filled={false} />,
@@ -272,7 +310,12 @@ const navItems = [
      label: "📢 Announcements",
      icon: <IconAnnouncement />,
    },
- ];
+   {
+     id: "attendance",
+     label: "📅 Attendance",
+     icon: <IconCalendar />,
+    },
+];
 
 const crNavItems = [
    { id: "my-uploads", label: "📁 My Uploads", icon: <FileText /> },
@@ -346,23 +389,51 @@ export default function StudentDashboard() {
    const [announcements, setAnnouncements] = useState([]);
    const [allMaterials, setAllMaterials] = useState([]);
    const [semester, setSemester] = useState(null);
-   const [gridSubjects, setGridSubjects] = useState([]);
-   const [activeTab, setActiveTab] = useState("overview");
-   const [selectedSubject, setSelectedSubject] = useState(null);
-   const [activeFilter, setActiveFilter] = useState("All");
-   const [bookmarkedIds, setBookmarkedIds] = useState([]);
-   const bookmarkedIdsRef = useRef([]);
-   const [bookmarkFilter, setBookmarkFilter] = useState("All");
-   const [isLoading, setIsLoading] = useState(true);
-   const [librarySearch, setLibrarySearch] = useState("");
-   const [libraryFilter, setLibraryFilter] = useState("All");
-   const [selectedSemester, setSelectedSemester] = useState(null);
-   const [liveSemester, setLiveSemester] = useState(null);
-   const [availableSemesters, setAvailableSemesters] = useState([]);
-   const [subjectMaterials, setSubjectMaterials] = useState([]);
-   const [dynamicCategories, setDynamicCategories] = useState(["All"]);
-   const [crDetails, setCrDetails] = useState(null);
-   const [crSubjects, setCrSubjects] = useState([]);
+const [gridSubjects, setGridSubjects] = useState([]);
+    const [activeTab, setActiveTab] = useState("overview");
+    const [selectedSubject, setSelectedSubject] = useState(null);
+    const [activeFilter, setActiveFilter] = useState("All");
+    const [bookmarkedIds, setBookmarkedIds] = useState([]);
+    const bookmarkedIdsRef = useRef([]);
+    const [bookmarkFilter, setBookmarkFilter] = useState("All");
+    const [isLoading, setIsLoading] = useState(true);
+    const [librarySearch, setLibrarySearch] = useState("");
+    const [libraryFilter, setLibraryFilter] = useState("All");
+    const [selectedSemester, setSelectedSemester] = useState(null);
+    const [liveSemester, setLiveSemester] = useState(null);
+    const [availableSemesters, setAvailableSemesters] = useState([]);
+    const [subjectMaterials, setSubjectMaterials] = useState([]);
+    const [dynamicCategories, setDynamicCategories] = useState(["All"]);
+    const [crDetails, setCrDetails] = useState(null);
+    const [crSubjects, setCrSubjects] = useState([]);
+    const [attendanceStats, setAttendanceStats] = useState({ total: 0, present: 0, percentage: 0 });
+    const [attendanceRecords, setAttendanceRecords] = useState([]);
+    const [todayClasses, setTodayClasses] = useState([]);
+
+    const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+
+    const subjectWiseStats = attendanceRecords.reduce((acc, record) => {
+      const subjectName = record.attendance_sessions?.subjects?.name || 'Unknown';
+      if (!acc[subjectName]) {
+        acc[subjectName] = { total: 0, present: 0 };
+      }
+      acc[subjectName].total += 1;
+      if (record.status === 'Present') {
+        acc[subjectName].present += 1;
+      }
+      return acc;
+    }, {});
+
+    const subjectWiseData = Object.entries(subjectWiseStats).map(([name, stats]) => ({
+      name,
+      total: stats.total,
+      present: stats.present,
+      percentage: stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0,
+    }));
+
+    const recentRecords = [...attendanceRecords]
+      .sort((a, b) => new Date(b.marked_at || 0) - new Date(a.marked_at || 0))
+      .slice(0, 5);
 
    useEffect(() => {
      bookmarkedIdsRef.current = bookmarkedIds;
@@ -442,6 +513,27 @@ useEffect(() => {
             .limit(5);
 
           if (!cancelled) setAnnouncements(announcementData || []);
+
+           const { data: attendanceData, error: attendanceError } = await supabase
+             .from('attendance_records')
+             .select(`
+               status,
+               marked_at,
+               attendance_sessions (
+                 date,
+                 subjects ( name )
+               )
+             `)
+             .eq('student_id', authUser.id)
+             .order('marked_at', { ascending: false });
+           if (attendanceError) console.error("Failed to fetch attendance:", attendanceError);
+           if (!cancelled && attendanceData) {
+             const total = attendanceData.length;
+             const present = attendanceData.filter((r) => r.status === 'Present').length;
+             const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
+             setAttendanceStats({ total, present, percentage });
+             setAttendanceRecords(attendanceData);
+           }
 
           const studentSemester = profileData?.batches?.semester;
           if (!cancelled) setSemester(studentSemester ?? null);
@@ -527,7 +619,52 @@ useEffect(() => {
     setLibrarySearch("");
     setLibraryFilter("All");
     setBookmarkFilter("All");
-}, [activeTab]);
+  }, [activeTab]);
+
+  useEffect(() => {
+    const fetchTodayClasses = async () => {
+      const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+
+      const branch =
+        studentProfile?.selected_branch ||
+        studentProfile?.branch ||
+        studentProfile?.branch_id ||
+        studentProfile?.department ||
+        studentProfile?.batches?.department ||
+        studentProfile?.batches?.branch ||
+        'IT';
+
+      const { data: slots, error } = await supabase
+        .from('timetable_slots')
+        .select('*, subjects(name), user_profiles(full_name)')
+        .eq('day_of_week', currentDay)
+        .eq('branch', branch);
+
+      if (error) {
+        console.error("Failed to fetch today's classes:", error);
+        setTodayClasses([]);
+        return;
+      }
+
+      let filteredSlots = slots || [];
+      if (filteredSlots.length > 0) {
+        const studentSem = parseInt(String(studentProfile?.selected_semester || 4).replace(/\D/g, ''), 10);
+        const studentSec = String(studentProfile?.selected_section || 'B').replace(/Section\s*/i, '').trim().toLowerCase();
+
+        filteredSlots = filteredSlots.filter(slot => {
+          const slotSem = parseInt(slot.semester, 10);
+          const slotSec = String(slot.section).replace(/Section\s*/i, '').trim().toLowerCase();
+          return slotSem === studentSem && slotSec.includes(studentSec);
+        });
+
+        filteredSlots.sort((a, b) => a.start_time.localeCompare(b.start_time));
+      }
+
+      setTodayClasses(filteredSlots);
+    };
+
+    fetchTodayClasses();
+  }, [studentProfile]);
 
   useEffect(() => {
     function handleTypeClickOutside(event) {
@@ -1114,6 +1251,46 @@ async function fetchAllMaterials() {
         <div className="student-content">
           {activeTab === "overview" && (
             <div className="student-grid">
+              <section className="student-section student-section--grow student-section--full">
+                <h3 className="student-section__title">📅 Today's Schedule</h3>
+                {todayClasses.length === 0 ? (
+                  <div className="student-empty-box">
+                    <p>No classes scheduled for today. Enjoy! 🎉</p>
+                  </div>
+                ) : (
+                  <div className="student-today-schedule">
+                    {todayClasses.map((slot) => {
+                      const now = new Date();
+                      const currentTime = now.toLocaleTimeString('en-US', { hour12: false, timeZone: 'Asia/Kolkata' });
+                      const isLive = currentTime >= slot.start_time && currentTime <= slot.end_time;
+
+                      return (
+                        <div
+                          key={slot.id}
+                          className={`student-schedule-card ${isLive ? 'student-schedule-card--live' : ''}`}
+                        >
+                          <div className="student-schedule-card__time">
+                            {slot.start_time} - {slot.end_time}
+                          </div>
+                          <div className="student-schedule-card__body">
+                            <div className="student-schedule-card__subject">
+                              {slot.subjects?.name}
+                            </div>
+                            <div className="student-schedule-card__faculty">
+                              {slot.user_profiles?.full_name}
+                            </div>
+                          </div>
+                          <div className="student-schedule-card__meta">
+                            <span className="student-schedule-card__room">{slot.room_no}</span>
+                            {isLive && <span className="student-schedule-card__live">🟢 LIVE</span>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+
               <section className="student-section">
                 <h3 className="student-section__title">Student Profile</h3>
                 <div className="student-profile-card">
@@ -1229,7 +1406,11 @@ async function fetchAllMaterials() {
           )}
 
 
-           {activeTab === "my-uploads" && crDetails && (
+            {activeTab === "assignments" && (
+              <StudentAssignments user={user} />
+            )}
+
+            {activeTab === "my-uploads" && crDetails && (
              <section className="student-section" style={{ animation: "fadeIn 0.25s ease" }}>
                <div style={{ maxWidth: "800px", margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
                  <h3 className="student-section__title" style={{ margin: 0, fontSize: "1.5rem" }}>My Uploads</h3>
@@ -1995,13 +2176,155 @@ async function fetchAllMaterials() {
     </div>
   )}
 </div>
-                  ))}
+                   ))}
+                 </div>
+               )}
+             </section>
+           )}
+
+{activeTab === "attendance" && (
+              <section className="student-section">
+                <h3 className="student-section__title">Attendance Overview</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '600px' }}>
+                  <div style={{
+                    background: 'rgba(20, 20, 40, 0.75)',
+                    backdropFilter: 'blur(16px)',
+                    border: '1px solid rgba(255, 255, 255, 0.07)',
+                    borderRadius: '20px',
+                    padding: '2.5rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    boxShadow: '0 6px 30px rgba(0, 0, 0, 0.35)',
+                  }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Overall Percentage
+                    </div>
+                    <div style={{ fontSize: '3.5rem', fontWeight: '800', color: '#f1f5f9', lineHeight: '1' }}>
+                      {attendanceStats.percentage}%
+                    </div>
+                    <div style={{
+                      fontSize: '0.95rem',
+                      fontWeight: '700',
+                      color: attendanceStats.percentage >= 75 ? '#22c55e' : '#ef4444',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.06em',
+                    }}>
+                      {attendanceStats.percentage >= 75 ? 'Safe Zone' : 'Danger Zone'}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '1rem' }}>
+                    <div style={{
+                      flex: 1,
+                      background: 'rgba(20, 20, 40, 0.72)',
+                      backdropFilter: 'blur(12px)',
+                      border: '1px solid rgba(255, 255, 255, 0.07)',
+                      borderRadius: '16px',
+                      padding: '1.5rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.5rem',
+                    }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase' }}>Total Classes</span>
+                      <span style={{ fontSize: '2rem', fontWeight: '700', color: '#e2e8f0' }}>{attendanceStats.total}</span>
+                    </div>
+                    <div style={{
+                      flex: 1,
+                      background: 'rgba(20, 20, 40, 0.72)',
+                      backdropFilter: 'blur(12px)',
+                      border: '1px solid rgba(255, 255, 255, 0.07)',
+                      borderRadius: '16px',
+                      padding: '1.5rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.5rem',
+                    }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase' }}>Classes Attended</span>
+                      <span style={{ fontSize: '2rem', fontWeight: '700', color: '#e2e8f0' }}>{attendanceStats.present}</span>
+                    </div>
+                  </div>
                 </div>
-              )}
-            </section>
-          )}
-        </div>
-      </main>
+
+                <h3 style={{ marginTop: '2rem', marginBottom: '1rem', fontSize: '1.05rem', fontWeight: '650', color: '#e2e8f0' }}>Subject-wise Attendance</h3>
+                {subjectWiseData.length === 0 ? (
+                  <div className="student-empty-box">
+                    <p>No subject data available.</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                    {subjectWiseData.map((subject) => (
+                      <div key={subject.name} style={{
+                        background: 'rgba(20, 20, 40, 0.72)',
+                        backdropFilter: 'blur(12px)',
+                        border: '1px solid rgba(255, 255, 255, 0.07)',
+                        borderRadius: '16px',
+                        padding: '1.25rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.5rem',
+                      }}>
+                        <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#d1d5db' }}>{subject.name}</span>
+                        <span style={{ fontSize: '1.75rem', fontWeight: '700', color: '#e2e8f0' }}>{subject.percentage}%</span>
+                        <div style={{
+                          width: '12px',
+                          height: '12px',
+                          borderRadius: '50%',
+                          background: subject.percentage >= 75 ? '#22c55e' : '#ef4444',
+                          boxShadow: subject.percentage >= 75 ? '0 0 8px rgba(34, 197, 94, 0.5)' : '0 0 8px rgba(239, 68, 68, 0.5)',
+                        }} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <h3 style={{ marginTop: '2rem', marginBottom: '1rem', fontSize: '1.05rem', fontWeight: '650', color: '#e2e8f0' }}>Recent Classes</h3>
+                {recentRecords.length === 0 ? (
+                  <div className="student-empty-box">
+                    <p>No recent attendance records.</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                     {recentRecords.map((record, index) => {
+                       const subjectName = record.attendance_sessions?.subjects?.name || 'Unknown';
+                       const status = record.status || 'Unknown';
+                       const rawDate = record.attendance_sessions?.date || record.marked_at;
+                       const displayDate = rawDate ? new Date(rawDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'N/A';
+                       return (
+                        <div key={index} style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '0.875rem 1rem',
+                          background: 'rgba(20, 20, 40, 0.55)',
+                          border: '1px solid rgba(255, 255, 255, 0.06)',
+                          borderRadius: '12px',
+                        }}>
+                          <span style={{ fontSize: '0.85rem', color: '#d1d5db', flex: 1 }}>
+                            {displayDate}
+                          </span>
+                          <span style={{ fontSize: '0.85rem', color: '#a5b4fc', flex: 2 }}>{subjectName}</span>
+                          <span style={{
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '999px',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            background: status === 'Present' ? '#22c55e' : status === 'Late' ? '#f59e0b' : '#ef4444',
+                            color: '#fff',
+                          }}>
+                            {status}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+            )}
+         </div>
+       </main>
 
       {toast && (
         <div

@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { BookOpen, LayoutDashboard, LogOut, User } from 'lucide-react';
+import { BookOpen, LayoutDashboard, LogOut, User, ClipboardList } from 'lucide-react';
 import { supabase } from '../../lib/supabase.js';
 import { ROUTES } from '../../config/constants.js';
+import FacultyAssignments from '../dashboard/FacultyAssignments.jsx';
 import './FacultyDashboard.css';
 
 const navItems = [
   { id: 'overview', label: '🏠 Overview', path: ROUTES.FACULTY_DASHBOARD, icon: <LayoutDashboard size={18} /> },
   { id: 'subjects', label: '📚 My Subjects', path: `${ROUTES.FACULTY_DASHBOARD}/subjects`, icon: <BookOpen size={18} /> },
+  { id: 'assignments', label: '📋 Assignments', path: `${ROUTES.FACULTY_DASHBOARD}/assignments`, icon: <ClipboardList size={18} /> },
 ];
 
 export default function FacultyDashboard() {
@@ -18,6 +20,7 @@ export default function FacultyDashboard() {
 
     if (pathname === ROUTES.FACULTY_DASHBOARD) return 'overview';
     if (pathname === `${ROUTES.FACULTY_DASHBOARD}/subjects` || pathname.startsWith(`${ROUTES.FACULTY_DASHBOARD}/subjects/`) || pathname === `${ROUTES.FACULTY_DASHBOARD}/workspace` || pathname.startsWith(`${ROUTES.FACULTY_DASHBOARD}/workspace/`)) return 'subjects';
+    if (pathname === `${ROUTES.FACULTY_DASHBOARD}/assignments`) return 'assignments';
 
     return 'overview';
   }, [location.pathname]);
@@ -141,6 +144,8 @@ export default function FacultyDashboard() {
           {activeTab === 'overview' && <Outlet />}
 
           {activeTab === 'subjects' && <Outlet />}
+
+          {activeTab === 'assignments' && <FacultyAssignments />}
         </div>
       </main>
     </div>
