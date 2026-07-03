@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase.js';
 import { USER_ROLES, ROUTES } from '../../config/constants.js';
-import './MySubjects.css';
+import './MySubjects.css'; // Isko rehne dete hain tabs/header ke liye
 
 function branchMatches(profileBranch, subjectDepartment) {
   const pb = String(profileBranch || '').toLowerCase();
@@ -68,15 +68,11 @@ export default function MySubjects({ onSubjectClick }) {
         const studentBranch = profileData.selected_branch || profileData.branch || profileData.branch_id || profileData.department || profileData.batches?.department || profileData.batches?.branch || 'Unknown';
         const studentYear = profileData.selected_year || profileData.year || profileData.batches?.year || profileData.batches?.academic_year || 'Unknown';
 
-        console.log('Student Profile:', profileData);
-
         const { data: subjectsData, error: subjectsError } = await supabase
           .from('subjects')
           .select('*, faculty:faculty_id(id, full_name, avatar_url, profile_image_url)')
           .order('semester', { ascending: true })
           .order('name', { ascending: true });
-
-        console.log('All Subjects:', subjectsData);
 
         if (subjectsError) throw subjectsError;
         if (cancelled) return;
@@ -251,9 +247,6 @@ export default function MySubjects({ onSubjectClick }) {
           </svg>
           <h2>No subjects assigned yet</h2>
           <p>There are no subjects mapped to your department and year.</p>
-          <p className="student-my-subjects__debug">
-            Debug Info: Profile Branch = {studentBranch}, Profile Year = {studentYear}, Total DB Subjects = {allSubjects.length}
-          </p>
         </div>
       ) : (
         <>
@@ -287,37 +280,45 @@ export default function MySubjects({ onSubjectClick }) {
             ))}
           </div>
 
-{finalFilteredSubjects.length === 0 ? (
-             <div className="student-my-subjects__empty-state">
-               <h2>No theory/practical subjects found for this semester.</h2>
-               <p>Try changing the type filter or selecting a different semester.</p>
-             </div>
-) : (
-            <div className="student-my-subjects__grid">
+          {finalFilteredSubjects.length === 0 ? (
+            <div className="student-my-subjects__empty-state">
+              <h2>No theory/practical subjects found for this semester.</h2>
+              <p>Try changing the type filter or selecting a different semester.</p>
+            </div>
+          ) : (
+            /* 🔥 YAHAN SE MAIN MAGIC START HOTA HAI 🔥 */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8">
               {finalFilteredSubjects.map((subject) => (
-                <div key={subject.id} className="student-my-subjects__card" onClick={() => onSubjectClick && onSubjectClick(subject)} style={{ cursor: 'pointer' }}>
-                  <h3 style={{ margin: 0, marginBottom: '8px', paddingLeft: '4px', fontSize: '1.25rem', fontWeight: '650', color: '#ffffff', letterSpacing: '-0.01em', lineHeight: '1.3' }}>
-                    {subject.name || subject.subject_name || 'Unnamed Subject'}
-                  </h3>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingLeft: '4px' }}>
-                    <span className="student-my-subjects__card__code">
-                      {subject.code || subject.subject_code || 'N/A'}
-                    </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', color: '#4ade80', fontWeight: '500' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 6 12 12 8 16" />
-                      </svg>
-                      {subject.credits || subject.credit_hours || 'N/A'} Credits
-                    </span>
+                <div 
+                  key={subject.id}
+                  className="group relative bg-[#1c1c27] border border-white/10 rounded-2xl p-5 cursor-pointer transition-all duration-300 hover:-translate-y-1.5 hover:border-emerald-500/60 hover:shadow-[0_8px_30px_rgba(16,185,129,0.15)] flex flex-col justify-between min-h-[160px]"
+                  onClick={() => onSubjectClick && onSubjectClick(subject)}
+                >
+                  <div>
+                    <h3 className="text-lg font-semibold text-white tracking-tight mb-3 line-clamp-2 leading-tight">
+                      {subject.name || subject.subject_name || 'Unnamed Subject'}
+                    </h3>
+                    <div className="flex justify-between items-center mt-3">
+                      <span className="text-xs font-mono text-gray-300 bg-white/5 border border-white/5 px-2.5 py-1.5 rounded-md">
+                        {subject.code || subject.subject_code || 'N/A'}
+                      </span>
+                      <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-400/10 px-3 py-1.5 rounded-full">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        {subject.credits || subject.credit_hours || 'N/A'} Cr
+                      </span>
+                    </div>
                   </div>
-                  <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(74, 222, 128, 0.2)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  
+                  <div className="mt-5 pt-4 border-t border-white/5 flex items-center gap-3">
                     <img 
                       src={subject.faculty?.avatar_url || subject.faculty?.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(subject.faculty?.full_name || subject.faculty_name || 'Teacher')}&background=2d2d3f&color=8b5cf6`} 
                       alt="Faculty" 
-                      style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(34, 197, 94, 0.4)' }} 
+                      className="w-8 h-8 rounded-full object-cover border border-white/10 group-hover:border-emerald-500/50 transition-colors"
                     />
-                    <span style={{ fontSize: '0.92rem', color: '#e2e8f0', fontWeight: '500', lineHeight: '1.4' }}>
+                    <span className="text-sm font-medium text-gray-400 group-hover:text-gray-200 transition-colors">
                       {subject.faculty?.full_name || subject.faculty_name || 'Faculty TBA'}
                     </span>
                   </div>

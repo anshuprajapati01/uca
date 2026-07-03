@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from "../../hooks/useAuth.js";
-import { Upload, FileText, Eye, Trash2, ChevronDown } from "lucide-react";
+import { Upload, FileText, Eye, Trash2 } from "lucide-react";
 import { supabase } from "../../lib/supabase.js";
 import { uploadNewResource, deleteResource } from "../../services/resourceService.js";
 import { signOut } from "../../services/authService.js";
 import StudentAssignments from "./StudentAssignments.jsx";
+import UploadResourceModal from "./UploadResourceModal.jsx";
 import "./StudentDashboard.css";
 
 const IconOverview = () => (
@@ -380,6 +381,46 @@ const getLibIcon = (type) => {
   }
 };
 
+const getDynamicIcon = (item) => {
+  // 1. Check explicit mock library icon types first
+  if (item.iconType === 'book') return <IconBook />;
+  if (item.iconType === 'star') return <IconStar />;
+  if (item.iconType === 'cheatsheet') return <IconCheatsheet />;
+  if (item.iconType === 'syllabus') return <IconSyllabus />;
+  if (item.iconType === 'notes') return <IconNotes />;
+  if (item.iconType === 'pyqs') return <IconPYQs />;
+
+  // 2. Check dynamic DB types
+  const t = String(item.type || item.category || '').toLowerCase();
+  const u = String(item.file_url || item.link || '').toLowerCase();
+
+  // Lectures / Videos / Links
+  if (t.includes('lecture') || t.includes('video') || t.includes('link') || u.includes('youtube') || u.includes('drive.google')) {
+    return <IconLink />;
+  }
+  
+  // Notes
+  if (t.includes('note')) return <IconNotes />;
+  
+  // Assignments / Tutorials
+  if (t.includes('tutorial') || t.includes('assignment') || t.includes('cheat')) return <IconCheatsheet />;
+  
+  // Books / Reference
+  if (t.includes('book') || t.includes('reference')) return <IconBook />;
+  
+  // PYQs & Exams
+  if (t.includes('pyq') || t.includes('exam')) return <IconPYQs />;
+  
+  // Syllabus
+  if (t.includes('syllabus')) return <IconSyllabus />;
+  
+  // File types
+  if (u.includes('.pdf') || item.file_type === 'pdf') return <IconPDF />;
+
+  // Ultimate Fallback
+  return <IconPDF />;
+};
+
 const THEORY_PRACTICAL_FILTERS = ["All", "Theory", "Practical"];
 
 export default function StudentDashboard() {
@@ -441,10 +482,6 @@ const [gridSubjects, setGridSubjects] = useState([]);
    }, [bookmarkedIds]);
 
 const [uploadLoading, setUploadLoading] = useState(false);
-    const fileInputRef = useRef(null);
-    const typeDropdownRef = useRef(null);
-    const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
-    const [typeSearchQuery, setTypeSearchQuery] = useState('');
     const [uploadForm, setUploadForm] = useState({
       title: "",
       description: "",
@@ -453,6 +490,7 @@ const [uploadLoading, setUploadLoading] = useState(false);
       uploadMethod: "file",
       file: null,
       url: "",
+      duration: "",
     });
 const [myUploads, setMyUploads] = useState([]);
     const [showUploadModal, setShowUploadModal] = useState(false);
@@ -460,6 +498,7 @@ const [myUploads, setMyUploads] = useState([]);
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [toast, setToast] = useState(null);
     const [deleteTargetId, setDeleteTargetId] = useState(null);
+    const [openMenuId, setOpenMenuId] = useState(null);
 
 useEffect(() => {
       let cancelled = false;
@@ -666,17 +705,6 @@ if (error) {
       fetchTodayClasses();
     }, [studentProfile]);
 
-    useEffect(() => {
-      function handleTypeClickOutside(event) {
-      if (typeDropdownRef.current && !typeDropdownRef.current.contains(event.target)) {
-        setIsTypeDropdownOpen(false);
-        setTypeSearchQuery('');
-      }
-    }
-    document.addEventListener('mousedown', handleTypeClickOutside);
-    return () => document.removeEventListener('mousedown', handleTypeClickOutside);
-  }, []);
-
    useEffect(() => {
     if (activeTab !== "my-uploads") return;
     let cancelled = false;
@@ -850,20 +878,19 @@ async function fetchAllMaterials() {
     return () => { cancelled = true; };
 }, [activeTab]);
 
-  const handleViewFile = (url) => {
-    if (!url) return alert("No file link available.");
-
-    if (url.startsWith("local:") || !url.includes(".")) {
-      return alert(
-        `This is a local file placeholder: ${url.replace("local:", "")}\n\nNote: To view actual uploaded PDF/Doc files, we need to configure Supabase Storage Buckets. For now, Google Drive links will work perfectly!`,
-      );
-    }
-
-    try {
-      const finalUrl = url.startsWith("http") ? url : `https://${url}`;
-      window.open(finalUrl, "_blank", "noopener,noreferrer");
-    } catch (error) {
-      alert("Invalid link format.");
+  const handleView = (material) => {
+    // Universal check: Look for the link in every possible database field
+    const link = material.file_url || material.link || material.external_url || material.url;
+    
+    if (link) {
+      // If it looks like a valid URL, open it
+      if (link.startsWith('http')) {
+        window.open(link, '_blank');
+      } else {
+        alert("Invalid link format: " + link);
+      }
+    } else {
+      alert("No file or link found in the database for this item.");
     }
   };
 
@@ -884,11 +911,6 @@ async function fetchAllMaterials() {
   }
 
   // --- UPLOAD LOGIC ---
-  const handleUploadChange = (e) => {
-    const { name, value, files } = e.target;
-    setUploadForm((prev) => ({ ...prev, [name]: files ? files[0] : value }));
-  };
-
   const handleUploadSubmit = async (e) => {
     e.preventDefault();
     if (uploadForm.uploadMethod === "file" && !uploadForm.file) {
@@ -906,6 +928,7 @@ async function fetchAllMaterials() {
         type: uploadForm.type,
         file_url: uploadForm.uploadMethod === "link" ? uploadForm.url : null,
         uploaded_by: user.id,
+        duration: uploadForm.duration || null,
       };
 
       const fileToUpload =
@@ -956,30 +979,40 @@ async function fetchAllMaterials() {
         uploadMethod: "file",
         file: null,
         url: "",
+        duration: "",
       });
     }
   };
   // ------------------------
-  const openUploadModal = (subject) => {
-    setUploadModalSubject(subject);
-    setUploadForm({
-      title: "",
-      description: "",
-      subject_id: subject.id,
-      type: "Notes",
-      uploadMethod: "file",
-      file: null,
-      url: "",
-    });
-    setShowUploadModal(true);
-  };
+   const openUploadModal = (subject) => {
+     setUploadModalSubject(subject);
+     setUploadForm({
+       title: "",
+       description: "",
+       subject_id: subject.id,
+       type: "Notes",
+       uploadMethod: "file",
+       file: null,
+       url: "",
+       duration: "",
+     });
+     setShowUploadModal(true);
+   };
 
-  const closeUploadModal = () => {
-    setShowUploadModal(false);
-    setUploadModalSubject(null);
-    setIsTypeDropdownOpen(false);
-    setTypeSearchQuery('');
-  };
+     const closeUploadModal = () => {
+       setShowUploadModal(false);
+       setUploadModalSubject(null);
+       setUploadForm({
+        title: "",
+        description: "",
+        subject_id: "",
+        type: "Notes",
+        uploadMethod: "file",
+        file: null,
+        url: "",
+        duration: "",
+      });
+    };
 
   const handleDeleteResource = (id) => {
     setDeleteTargetId(id);
@@ -1041,63 +1074,143 @@ async function fetchAllMaterials() {
   ));
 
   const libraryCards = filteredLibraryItems.map((item) => {
-    const iconType =
-      item.iconType ||
-      (item.type === "PYQ"
-        ? "pyqs"
-        : item.type === "Syllabus"
-          ? "syllabus"
-          : item.type === "Notes"
-            ? "notes"
-            : item.type === "Tutorial"
-              ? "cheatsheet"
-              : item.type === "Assignment"
-                ? "notes"
-                : "book");
-    const badgeType = (item.category || item.type || "resource")
-      .toLowerCase()
-      .replace(/\s+/g, "-");
+    const isLecture = (item.type || '').toLowerCase() === 'lecture';
+    if (isLecture) {
+      const matchedSubject = gridSubjects?.find(s => s.id === item.subject_id) || {};
+      const facultyFullName = item.faculty_name || matchedSubject?.faculty?.full_name || 'Susheela Verma';
+      const shortFacultyName = facultyFullName.length > 15 ? facultyFullName.split(' ')[0] : facultyFullName;
+      const avatarUrl = item.faculty_avatar || matchedSubject?.faculty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(facultyFullName)}&background=1e1e2d&color=fff`;
+
+      return (
+        <div key={item.id} className="pw-lecture-card">
+          {/* Top Gradient Section */}
+          <div className="pw-card-top">
+            <div className="pw-card-top-left">
+              <span className="pw-subject-badge">{item.subject_name || matchedSubject?.subject_name || "Lecture"}</span>
+              <div className="pw-subject-line"></div>
+              <p className="pw-card-desc" title={item.title}>{item.title || 'Untitled Lecture'}</p>
+              <span className="pw-teacher-name" title={facultyFullName}>By {shortFacultyName}</span>
+            </div>
+            <div className="pw-card-top-right">
+              <div className="pw-avatar-container" onClick={() => handleView && handleView(item)}>
+                <img src={avatarUrl} alt="Faculty" />
+                <div className="pw-play-btn">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Bottom White Section */}
+          <div className="pw-card-bottom">
+            <div className="pw-card-meta">
+              <span className="pw-date">
+                {new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </span>
+              <span className="pw-duration">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                {item.duration || '00:00'}
+              </span>
+            </div>
+            
+            <h3 className="pw-card-title">{item.description || 'No description provided'}</h3>
+            
+            <div className="pw-card-actions" style={{ position: 'relative' }}>
+              <svg onClick={(e) => { e.stopPropagation(); handleView && handleView(item); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#6b7280" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" title="View Material"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"></path></svg>
+              
+              <svg onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === item.id ? null : item.id); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#6b7280" fill="none" strokeWidth="2" title="More Options"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+
+              {/* Dropdown Menu & Invisible Click-Outside Overlay */}
+              {openMenuId === item.id && (
+                <>
+                  <div 
+                    style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 40, cursor: 'default' }}
+                    onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); }}
+                  ></div>
+                  
+                  <div className="pw-dropdown-menu" style={{ zIndex: 50 }}>
+                    <div 
+                      className="pw-dropdown-item"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if(typeof toggleBookmark === 'function') toggleBookmark(item.id);
+                        setOpenMenuId(null);
+                      }}
+                    >
+                      {bookmarkedIds.includes(item.id) ? '★ Remove Bookmark' : '☆ Bookmark'}
+                    </div>
+                    <div 
+                      className="pw-dropdown-item"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        alert('Download feature coming soon in My Downloads!');
+                        setOpenMenuId(null);
+                      }}
+                    >
+                      ↓ Download
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+    const facultyFullName = item.faculty_name || gridSubjects?.find(s => s.id === item.subject_id)?.faculty?.full_name || 'Susheela Verma';
+    const shortFacultyName = facultyFullName.length > 15 ? facultyFullName.split(' ')[0] : facultyFullName;
+    const avatarUrl = item.faculty_avatar || gridSubjects?.find(s => s.id === item.subject_id)?.faculty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(facultyFullName)}&background=1e1e2d&color=fff`;
+
     return (
-      <div key={item.id} className="student-material-card">
-        <div className="student-material-card__left">
-          {getLibIcon(iconType)}
+      <div key={item.id} className="pw-lecture-card" onClick={() => handleView(item)}>
+        <div className="pw-card-top">
+          <div className="pw-card-top-left">
+            <span className="pw-subject-badge" style={{ color: '#38bdf8' }}>{item.type ? item.type.toUpperCase() : "DOCUMENT"}</span>
+            <div className="pw-subject-line" style={{ background: '#38bdf8' }}></div>
+            <p className="pw-card-desc" title={item.title}>{item.title || 'Untitled Document'}</p>
+            <span className="pw-teacher-name" title={facultyFullName}>By {shortFacultyName}</span>
+          </div>
+          <div className="pw-card-top-right">
+            <div className="pw-avatar-container">
+              <img src={avatarUrl} alt="Faculty" />
+              <div className="pw-play-btn" style={{ background: '#0284c7' }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="student-material-card__center">
-          <h4 className="student-material-card__title">
-            {item.title}
-          </h4>
-          <span
-            className={`student-material-card__badge student-material-card__badge--${badgeType}`}
-          >
-            {item.category || item.type || "Resource"}
-          </span>
-        </div>
-        <div className="student-material-card__right">
-          <button
-            className="student-workspace__view-btn"
-            onClick={() => handleViewFile(item.file_url)}
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
-            View
-          </button>
-          <button
-            className={`student-bookmark-btn ${bookmarkedIds.includes(item.id) ? "student-bookmark-btn--active" : ""}`}
-            onClick={() => toggleBookmark(item.id)}
-          >
-            <IconBookmark filled={bookmarkedIds.includes(item.id)} />
-          </button>
+        
+        <div className="pw-card-bottom">
+          <div className="pw-card-meta">
+            <span className="pw-date">
+              {new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </span>
+            <span className="pw-duration" style={{ color: '#38bdf8' }}>
+              📄 {item.type === 'Class Notes' ? 'PDF Note' : 'Document'}
+            </span>
+          </div>
+          
+          <h3 className="pw-card-title">{item.description || 'No description provided'}</h3>
+          
+          <div className="pw-card-actions" style={{ position: 'relative' }}>
+            <svg onClick={(e) => { e.stopPropagation(); handleView(item); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#6b7280" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" title="View Material"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+            
+            <svg onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === item.id ? null : item.id); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#6b7280" fill="none" strokeWidth="2" title="More Options"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+
+            {openMenuId === item.id && (
+              <>
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 40, cursor: 'default' }} onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); }}></div>
+                <div className="pw-dropdown-menu" style={{ zIndex: 50 }}>
+                  <div className="pw-dropdown-item" onClick={(e) => { e.stopPropagation(); toggleBookmark(item.id); setOpenMenuId(null); }}>
+                    {bookmarkedIds.includes(item.id) ? '★ Remove Bookmark' : '☆ Bookmark'}
+                  </div>
+                  <div className="pw-dropdown-item" onClick={(e) => { e.stopPropagation(); alert('Download feature coming soon!'); setOpenMenuId(null); }}>
+                    ↓ Download
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -1180,15 +1293,15 @@ async function fetchAllMaterials() {
            <div className="student-header__right">
              <div className="student-header__user">
                <div className="student-header__avatar">{initials}</div>
-               <div className="student-header__meta">
-                 <span className="student-header__name">{displayName}</span>
-                 {crDetails && (
-                   <span className="student-header__role" style={{ background: 'rgba(139, 92, 246, 0.15)', color: '#c4b5fd', padding: '2px 8px', borderRadius: '9999px', fontSize: '0.7rem', marginLeft: '8px' }}>
-                     CR Mode
-                   </span>
-                 )}
-                 <span className="student-header__role">{displayRole}</span>
-               </div>
+                <div className="student-header__meta">
+                  <span className="student-header__name">{displayName}</span>
+                  <div className="student-header__meta-row">
+                    {crDetails && (
+                      <span className="student-header__cr-badge">CR Mode</span>
+                    )}
+                    <span className="student-header__role">{displayRole}</span>
+                  </div>
+                </div>
              </div>
              <button className="student-header__signout" onClick={handleSignOut}>
               <svg
@@ -1253,7 +1366,7 @@ async function fetchAllMaterials() {
                 )}
               </section>
 
-              <section className="student-section">
+              <section className="student-section student-section--profile">
                 <h3 className="student-section__title">Student Profile</h3>
                 <div className="student-profile-card">
                   <div className="student-profile__icon">
@@ -1304,7 +1417,7 @@ async function fetchAllMaterials() {
                 </div>
               </section>
 
-              <section className="student-section student-section--grow">
+              <section className="student-section student-section--grow student-section--notices">
                 <h3 className="student-section__title">Notice Board</h3>
                 {announcements.length === 0 ? (
                   <div className="student-empty-box">
@@ -1424,180 +1537,15 @@ async function fetchAllMaterials() {
              </section>
            )}
 
-           {showUploadModal && (
-             <div className="student-upload-modal__overlay" onClick={closeUploadModal}>
-               <div className="student-upload-modal__content" onClick={(e) => e.stopPropagation()}>
-                 <header className="student-upload-modal__header">
-                   <h2>Upload Study Material</h2>
-                   <button type="button" className="student-upload-modal__close" onClick={closeUploadModal} aria-label="Close modal">
-                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                       <line x1="18" y1="6" x2="6" y2="18" />
-                       <line x1="6" y1="6" x2="18" y2="18" />
-                     </svg>
-                   </button>
-                 </header>
-<form onSubmit={handleUploadSubmit} className="student-upload-modal__form">
-                    <div className="student-upload-modal__field">
-                      <label style={{ color: "#cbd5e1", marginBottom: "8px", fontSize: "0.9rem", fontWeight: "500", display: "block" }}>Resource Title</label>
-                      <input type="text" name="title" value={uploadForm.title} onChange={handleUploadChange} placeholder="e.g. OS Chapter 1 Notes" required style={{ boxSizing: "border-box", background: "#13131a", border: "1px solid #2d2d3f", color: "white", padding: "14px", borderRadius: "10px", width: "100%" }} />
-                    </div>
-                    <div className="student-upload-modal__field">
-                      <label style={{ color: "#cbd5e1", marginBottom: "8px", fontSize: "0.9rem", fontWeight: "500", display: "block" }}>Type</label>
-                      <div style={{ position: 'relative' }} ref={typeDropdownRef}>
-                        <button
-                          type="button"
-                          onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
-                          style={{
-                            width: '100%',
-                            boxSizing: 'border-box',
-                            padding: '14px',
-                            border: '1px solid #2d2d3f',
-                            borderRadius: '10px',
-                            background: '#13131a',
-                            color: uploadForm.type ? '#f8fafc' : '#64748b',
-                            fontSize: '0.95rem',
-                            fontWeight: '500',
-                            textAlign: 'left',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center'
-                          }}
-                        >
-                          <span>{uploadForm.type || '-- Select Type --'}</span>
-                          <ChevronDown size={16} style={{ color: '#94a3b8' }} />
-                        </button>
-                        {isTypeDropdownOpen && (
-                          <div style={{
-                            position: 'absolute',
-                            top: '100%',
-                            left: 0,
-                            right: 0,
-                            zIndex: 50,
-                            background: '#1e1e2d',
-                            border: '1px solid #2d2d3f',
-                            borderRadius: '0.5rem',
-                            marginTop: '0.25rem',
-                            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)',
-                            maxHeight: '220px',
-                            overflow: 'hidden'
-                          }}>
-                            <input
-                              type="text"
-                              placeholder="Search type..."
-                              value={typeSearchQuery}
-                              onChange={(e) => setTypeSearchQuery(e.target.value)}
-                              style={{
-                                width: '100%',
-                                padding: '0.5rem 0.75rem',
-                                border: 'none',
-                                borderBottom: '1px solid #2d2d3f',
-                                background: '#13131a',
-                                color: '#fff',
-                                fontSize: '0.85rem',
-                                outline: 'none'
-                              }}
-                            />
-                            <div style={{ maxHeight: '175px', overflowY: 'auto' }}>
-                              {dynamicCategories.filter(cat => cat !== "All" && cat.toLowerCase().includes(typeSearchQuery.toLowerCase())).length === 0 ? (
-                                <div style={{ padding: '0.75rem', color: '#cbd5e1', fontSize: '0.85rem', textAlign: 'center' }}>No type found</div>
-                              ) : (
-                                dynamicCategories
-                                  .filter(cat => cat !== "All" && cat.toLowerCase().includes(typeSearchQuery.toLowerCase()))
-                                  .map((t) => (
-                                    <button
-                                      key={t}
-                                      type="button"
-                                      onClick={() => {
-                                        setUploadForm(prev => ({ ...prev, type: t }));
-                                        setIsTypeDropdownOpen(false);
-                                        setTypeSearchQuery('');
-                                      }}
-                                      style={{
-                                        width: '100%',
-                                        padding: '12px 16px',
-                                        border: 'none',
-                                        background: 'transparent',
-                                        color: '#e2e8f0',
-                                        textAlign: 'left',
-                                        cursor: 'pointer',
-                                        fontSize: '0.85rem',
-                                        transition: 'all 0.15s ease'
-                                      }}
-                                      onMouseEnter={(e) => { e.target.style.background = 'rgba(139, 92, 246, 0.15)'; e.target.style.color = '#fff'; }}
-                                      onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#e2e8f0'; }}
-                                    >
-                                      {t}
-                                    </button>
-                                  ))
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="student-upload-modal__col-span-2">
-                      <label style={{ color: "#cbd5e1", marginBottom: "8px", fontSize: "0.9rem", fontWeight: "500", display: "block" }}>Subject</label>
-                      <div style={{ background: "#13131a", border: "1px solid #2d2d3f", color: "white", padding: "14px", borderRadius: "10px", display: "flex", alignItems: "center", gap: "8px", boxSizing: "border-box" }}>
-                        <span style={{ fontWeight: "600" }}>{uploadModalSubject?.name || uploadModalSubject?.subject_name || "Selected Subject"}</span>
-                        {uploadModalSubject?.code && <span style={{ color: "#8b5cf6", fontSize: "0.8rem" }}>({uploadModalSubject?.code || uploadModalSubject?.subject_code || ""})</span>}
-                        <span style={{ marginLeft: "auto", fontSize: "0.75rem", color: "#64748b" }}>Locked</span>
-                      </div>
-                    </div>
-                    <div className="student-upload-modal__col-span-2">
-                      <label style={{ color: "#cbd5e1", marginBottom: "8px", fontSize: "0.9rem", fontWeight: "500", display: "block" }}>Description (Optional)</label>
-                      <textarea name="description" value={uploadForm.description} onChange={handleUploadChange} rows={3} placeholder="Add details..." style={{ boxSizing: "border-box", background: "#13131a", border: "1px solid #2d2d3f", color: "white", padding: "14px", borderRadius: "10px", resize: "vertical", width: "100%" }} />
-                    </div>
-                    <div className="student-upload-modal__col-span-2">
-                      <span style={{ color: "#cbd5e1", marginBottom: "8px", fontSize: "0.9rem", fontWeight: "500", display: "block" }}>Upload Method</span>
-                      <div className="student-upload-modal__radios">
-                        <label>
-                          <input type="radio" name="uploadMethod" value="file" checked={uploadForm.uploadMethod === "file"} onChange={handleUploadChange} />
-                          <span>Upload File</span>
-                        </label>
-                        <label>
-                          <input type="radio" name="uploadMethod" value="link" checked={uploadForm.uploadMethod === "link"} onChange={handleUploadChange} />
-                          <span>Provide Link</span>
-                        </label>
-                      </div>
-                    </div>
-                    <div className="student-upload-modal__col-span-2">
-                      {uploadForm.uploadMethod === "file" ? (
-                        <div className="student-upload-modal__field">
-                          <label style={{ color: "#cbd5e1", marginBottom: "8px", fontSize: "0.9rem", fontWeight: "500", display: "block" }}>File</label>
-                          <input type="file" ref={fileInputRef} onChange={handleUploadChange} name="file" style={{ boxSizing: "border-box", background: "#13131a", border: "1px solid #2d2d3f", color: "white", padding: "14px", borderRadius: "10px", width: "100%" }} />
-                          {uploadForm.file && (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginTop: '12px', padding: '10px 16px', backgroundColor: 'rgba(31, 41, 55, 0.7)', borderRadius: '8px', border: '1px solid rgba(75, 85, 99, 0.6)' }}>
-                              <span style={{ color: '#d1d5db', fontSize: '0.875rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                {uploadForm.file.name}
-                              </span>
-                              <button 
-                                type="button" 
-                                onClick={() => setUploadForm(prev => ({ ...prev, file: null }))} 
-                                style={{ backgroundColor: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5', border: 'none', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}
-                                title="Clear file"
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="student-upload-modal__field">
-                          <label style={{ color: "#cbd5e1", marginBottom: "8px", fontSize: "0.9rem", fontWeight: "500", display: "block" }}>URL</label>
-                          <input type="url" name="url" value={uploadForm.url} onChange={handleUploadChange} placeholder="Paste Drive/YouTube link..." style={{ boxSizing: "border-box", background: "#13131a", border: "1px solid #2d2d3f", color: "white", padding: "14px", borderRadius: "10px", width: "100%" }} />
-                        </div>
-                      )}
-                    </div>
-                   <div className="student-upload-modal__col-span-2">
-                     <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "8px", paddingTop: "16px", borderTop: "1px solid #2d2d3f" }}>
-                       <button type="button" onClick={closeUploadModal} style={{ background: "rgba(255,255,255,0.05)", color: "#cbd5e1", border: "1px solid rgba(255,255,255,0.1)", padding: "12px 24px", borderRadius: "8px", cursor: "pointer", fontWeight: "600", fontSize: "14px", fontFamily: "inherit", transition: "all 0.2s ease" }}>Cancel</button>
-                       <button type="submit" disabled={uploadLoading} style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "white", padding: "12px 24px", border: "none", borderRadius: "8px", fontWeight: "600", cursor: uploadLoading ? "not-allowed" : "pointer", opacity: uploadLoading ? 0.5 : 1, fontSize: "14px", fontFamily: "inherit", transition: "all 0.2s ease" }}>{uploadLoading ? "Uploading..." : "Publish Material"}</button>
-                     </div>
-                   </div>
-                 </form>
-               </div>
-             </div>
+            {showUploadModal && (
+              <UploadResourceModal
+                formData={uploadForm}
+                setFormData={setUploadForm}
+                onClose={closeUploadModal}
+                onSubmit={handleUploadSubmit}
+                uploadLoading={uploadLoading}
+                subject={uploadModalSubject}
+              />
             )}
 
 
@@ -1715,88 +1663,162 @@ async function fetchAllMaterials() {
                     ))}
                   </div>
                   <div className="student-materials-list">
-                    {getFilteredMaterials().length > 0 ? (
-                      getFilteredMaterials().map((material) => (
-                        <div
-                          key={material.id}
-                          className="student-material-card"
-                        >
-                          <div className="student-material-card__left">
-                            {material.file_type === "pdf" ||
-                            material.type === "PYQ" ||
-                            material.type === "Syllabus" ? (
-                              <IconPDF />
-                            ) : (
-                              <IconLink />
-                            )}
-                          </div>
-                          <div className="student-material-card__center">
-                            <h4 className="student-material-card__title">
-                              {material.title || material.name || "Untitled"}
-                            </h4>
-                            <span
-                              className={`student-material-card__badge student-material-card__badge--${(material.type || material.category || "resource").toLowerCase().replace(/\s+/g, "-")}`}
-                            >
-                              {material.type || material.category || "Resource"}
-                            </span>
-                          </div>
-                          <div className="student-material-card__right">
-                            <button
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                                padding: "8px 16px",
-                                marginRight: "15px",
-                                background: "#3b82f6",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: "8px",
-                                cursor: "pointer",
-                                fontWeight: "bold",
-                                fontSize: "14px",
-                                transition: "0.2s",
-                              }}
-                              onClick={() => handleViewFile(material.file_url)}
-                            >
-                              <svg
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                <circle cx="12" cy="12" r="3" />
-                              </svg>{" "}
-                              View
-                            </button>
-                            <button
-                              className={`student-bookmark-btn ${bookmarkedIds.includes(material.id) ? "student-bookmark-btn--active" : ""}`}
-                              onClick={() => toggleBookmark(material.id)}
-                            >
-                              <IconBookmark
-                                filled={bookmarkedIds.includes(material.id)}
-                              />
-                            </button>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="student-material-empty">
-                        <p>
-                          No {activeFilter} uploaded for{" "}
-                          {selectedSubject.subject_name ||
-                            selectedSubject.name ||
-                            selectedSubject.title ||
-                            "this subject"}{" "}
-                          yet.
-                        </p>
-                      </div>
-                    )}
+                     {getFilteredMaterials().length > 0 ? (
+  getFilteredMaterials().map((material) => {
+    const isLecture = (material.type || '').toLowerCase() === 'lecture';
+    if (isLecture) {
+      // 1. Get exact faculty name or fallback
+      const facultyFullName = material.faculty_name || selectedSubject?.faculty?.full_name || 'Susheela Verma';
+      
+      // 2. Truncate long names (e.g., 'Shrawan kumar pandey' -> 'Shrawan')
+      const shortFacultyName = facultyFullName.length > 15 ? facultyFullName.split(' ')[0] : facultyFullName;
+      
+      // 3. Use actual avatar or generate one with their initials
+      const avatarUrl = material.faculty_avatar || selectedSubject?.faculty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(facultyFullName)}&background=random&color=fff`;
+
+      return (
+        <div key={material.id} className="pw-lecture-card">
+          {/* Top Gradient Section */}
+          <div className="pw-card-top">
+            <div className="pw-card-top-left">
+              <span className="pw-subject-badge">{selectedSubject?.subject_name || "Lecture"}</span>
+              <div className="pw-subject-line"></div>
+              {/* Swapped: Title is now at the top */}
+              <p className="pw-card-desc" title={material.title}>{material.title || 'Untitled Lecture'}</p>
+              <span className="pw-teacher-name" title={facultyFullName}>By {shortFacultyName}</span>
+            </div>
+            <div className="pw-card-top-right">
+              <div className="pw-avatar-container" onClick={() => handleView(material)}>
+                <img src={avatarUrl} alt="Faculty" />
+                <div className="pw-play-btn">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Bottom White Section */}
+          <div className="pw-card-bottom">
+            <div className="pw-card-meta">
+              <span className="pw-date">
+                {new Date(material.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </span>
+              <span className="pw-duration">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                {material.duration || '00:00'}
+              </span>
+            </div>
+            
+            {/* Swapped: Description is now at the bottom */}
+            <h3 className="pw-card-title">{material.description || 'No description provided'}</h3>
+            
+            <div className="pw-card-actions" style={{ position: 'relative' }}>
+              <svg onClick={(e) => { e.stopPropagation(); handleView(material); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#6b7280" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" title="View Material"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"></path></svg>
+              
+              <svg onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === material.id ? null : material.id); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#6b7280" fill="none" strokeWidth="2" title="More Options"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+
+              {/* Dropdown Menu & Invisible Click-Outside Overlay */}
+              {openMenuId === material.id && (
+                <>
+                  {/* Invisible overlay that catches outside clicks to close the menu */}
+                  <div 
+                    style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 40, cursor: 'default' }}
+                    onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); }}
+                  ></div>
+                  
+                  {/* The actual dropdown menu */}
+                  <div className="pw-dropdown-menu" style={{ zIndex: 50 }}>
+                    <div 
+                      className="pw-dropdown-item"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleBookmark(material.id);
+                        setOpenMenuId(null);
+                      }}
+                    >
+                      {bookmarkedIds.includes(material.id) ? '★ Remove Bookmark' : '☆ Bookmark'}
+                    </div>
+                    <div 
+                      className="pw-dropdown-item"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        alert('Download feature coming soon in My Downloads!');
+                        setOpenMenuId(null);
+                      }}
+                    >
+                      ↓ Download
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+    const facultyFullName = material.faculty_name || selectedSubject?.faculty?.full_name || 'Susheela Verma';
+    const shortFacultyName = facultyFullName.length > 15 ? facultyFullName.split(' ')[0] : facultyFullName;
+    const avatarUrl = material.faculty_avatar || selectedSubject?.faculty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(facultyFullName)}&background=1e1e2d&color=fff`;
+
+    return (
+      <div key={material.id} className="pw-lecture-card" onClick={() => handleView(material)}>
+        <div className="pw-card-top">
+          <div className="pw-card-top-left">
+            <span className="pw-subject-badge" style={{ color: '#38bdf8' }}>{material.type ? material.type.toUpperCase() : "DOCUMENT"}</span>
+            <div className="pw-subject-line" style={{ background: '#38bdf8' }}></div>
+            <p className="pw-card-desc" title={material.title}>{material.title || material.name || 'Untitled Document'}</p>
+            <span className="pw-teacher-name" title={facultyFullName}>By {shortFacultyName}</span>
+          </div>
+          <div className="pw-card-top-right">
+            <div className="pw-avatar-container">
+              <img src={avatarUrl} alt="Faculty" />
+              <div className="pw-play-btn" style={{ background: '#0284c7' }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="pw-card-bottom">
+          <div className="pw-card-meta">
+            <span className="pw-date">
+              {new Date(material.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </span>
+            <span className="pw-duration" style={{ color: '#38bdf8' }}>
+              📄 {material.type === 'Class Notes' ? 'PDF Note' : 'Document'}
+            </span>
+          </div>
+          
+          <h3 className="pw-card-title">{material.description || 'No description provided'}</h3>
+          
+          <div className="pw-card-actions" style={{ position: 'relative' }}>
+            <svg onClick={(e) => { e.stopPropagation(); handleView(material); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#6b7280" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" title="View Material"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+            
+            <svg onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === material.id ? null : material.id); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#6b7280" fill="none" strokeWidth="2" title="More Options"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+
+            {openMenuId === material.id && (
+              <>
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 40, cursor: 'default' }} onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); }}></div>
+                <div className="pw-dropdown-menu" style={{ zIndex: 50 }}>
+                  <div className="pw-dropdown-item" onClick={(e) => { e.stopPropagation(); toggleBookmark(material.id); setOpenMenuId(null); }}>
+                    {bookmarkedIds.includes(material.id) ? '★ Remove Bookmark' : '☆ Bookmark'}
+                  </div>
+                  <div className="pw-dropdown-item" onClick={(e) => { e.stopPropagation(); alert('Download feature coming soon in My Downloads!'); setOpenMenuId(null); }}>
+                    ↓ Download
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  })
+) : (
+  <div className="student-material-empty">
+    <p>No {activeFilter} uploaded yet.</p>
+  </div>
+)}
                   </div>
                 </>
 ) : (
@@ -1853,58 +1875,58 @@ async function fetchAllMaterials() {
                       </svg>
                       <p>No subjects assigned for your semester yet.</p>
                     </div>
-                  ) : (
-                    <div className="student-subjects-grid">
-                      {gridSubjects.filter(sub => {
-                        if (activeFilter === 'All') return true;
-                        const type = sub.type?.toLowerCase() || '';
-                        const name = sub.name?.toLowerCase() || '';
-                        if (activeFilter === 'Theory') return type !== 'practical' && !name.includes('lab');
-                        if (activeFilter === 'Practical') return type === 'practical' || name.includes('lab');
-                        return true;
-                      }).map((subject) => (
-                        <div
-                          key={subject.id}
-                          className="student-subject-card"
-                          onClick={() => setSelectedSubject(subject)}
-                        >
-                          <h4 style={{ margin: 0, marginBottom: '8px', paddingLeft: '4px', fontSize: '1.25rem', fontWeight: '650', color: '#ffffff', letterSpacing: '-0.01em', lineHeight: '1.3' }}>
-                            {subject.subject_name ||
-                              subject.name ||
-                              subject.title ||
-                              "Unnamed Subject"}
-                          </h4>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingLeft: '4px' }}>
-                            <span style={{ fontSize: '0.85rem', color: '#4ade80', fontWeight: '600', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.04em' }}>
-                              {subject.subject_code || subject.code || "No Code"}
-                            </span>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', color: '#4ade80', fontWeight: '500' }}>
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                                <circle cx="12" cy="12" r="10" />
-                                <polyline points="12 6 12 12 8 16" />
-                              </svg>
-                              {subject.credits || subject.credit_hours || 'N/A'} Credits
-                            </span>
+                    ) : (
+                      <div className="subjects-grid">
+                        {gridSubjects.filter(sub => {
+                          if (activeFilter === 'All') return true;
+                          const type = sub.type?.toLowerCase() || '';
+                          const name = sub.name?.toLowerCase() || '';
+                          if (activeFilter === 'Theory') return type !== 'practical' && !name.includes('lab');
+                          if (activeFilter === 'Practical') return type === 'practical' || name.includes('lab');
+                          return true;
+                        }).map((subject) => (
+                          <div
+                            key={subject.id}
+                            className="subject-card"
+                            onClick={() => setSelectedSubject(subject)}
+                          >
+                            <div>
+                              <h4>
+                                {subject.subject_name || subject.name || subject.title || "Unnamed Subject"}
+                              </h4>
+                              <div className="premium-card-meta">
+                                <span className="premium-card-code">
+                                  {subject.subject_code || subject.code || "No Code"}
+                                </span>
+                                <span className="premium-card-credits">
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <polyline points="12 6 12 12 8 16" />
+                                  </svg>
+                                  Credit {subject.credits || subject.credit_hours || 'N/A'}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="premium-card-faculty">
+                              <img
+                                src={subject.faculty?.avatar_url || subject.faculty?.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(subject.faculty?.full_name || subject.faculty_name || 'Teacher')}&background=2d2d3f&color=8b5cf6`}
+                                alt="Faculty"
+                              />
+                              <span>
+                                {subject.faculty?.full_name || subject.faculty_name || 'Faculty TBA'}
+                              </span>
+                            </div>
+
+                            {subject.is_live && (
+                              <span className="premium-live-badge">
+                                LIVE
+                              </span>
+                            )}
                           </div>
-                          <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(74, 222, 128, 0.2)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <img
-                              src={subject.faculty?.avatar_url || subject.faculty?.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(subject.faculty?.full_name || subject.faculty_name || 'Teacher')}&background=2d2d3f&color=8b5cf6`}
-                              alt="Faculty"
-                              style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(34, 197, 94, 0.4)' }}
-                            />
-                            <span style={{ fontSize: '0.92rem', color: '#e2e8f0', fontWeight: '500', lineHeight: '1.4' }}>
-                              {subject.faculty?.full_name || subject.faculty_name || 'Faculty TBA'}
-                            </span>
-                          </div>
-                          {subject.is_live && (
-                            <span style={{ position: 'absolute', top: '12px', right: '12px', background: '#ef4444', color: '#fff', fontSize: '0.65rem', fontWeight: '700', padding: '4px 10px', borderRadius: '999px', letterSpacing: '0.05em' }}>
-                              LIVE
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        ))}
+                      </div>
+                    )}
                 </>
               )}
             </section>
@@ -1986,90 +2008,143 @@ async function fetchAllMaterials() {
                   return (
                     <div className="student-materials-list">
                       {filteredBookmarks.map((material) => {
+                        const isLecture = (material.type || '').toLowerCase() === 'lecture';
+                        if (isLecture) {
+                          const matchedSubject = gridSubjects?.find(s => s.id === material.subject_id) || {};
+                          const facultyFullName = material.faculty_name || matchedSubject?.faculty?.full_name || 'Susheela Verma';
+                          const shortFacultyName = facultyFullName.length > 15 ? facultyFullName.split(' ')[0] : facultyFullName;
+                          const avatarUrl = material.faculty_avatar || matchedSubject?.faculty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(facultyFullName)}&background=1e1e2d&color=fff`;
+
+                          return (
+                            <div key={material.id} className="pw-lecture-card">
+                              {/* Top Gradient Section */}
+                              <div className="pw-card-top">
+                                <div className="pw-card-top-left">
+                                  <span className="pw-subject-badge">{material.subject_name || matchedSubject?.subject_name || "Lecture"}</span>
+                                  <div className="pw-subject-line"></div>
+                                  <p className="pw-card-desc" title={material.title}>{material.title || 'Untitled Lecture'}</p>
+                                  <span className="pw-teacher-name" title={facultyFullName}>By {shortFacultyName}</span>
+                                </div>
+                                <div className="pw-card-top-right">
+                                  <div className="pw-avatar-container" onClick={() => handleView && handleView(material)}>
+                                    <img src={avatarUrl} alt="Faculty" />
+                                    <div className="pw-play-btn">
+                                      <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M8 5v14l11-7z"/></svg>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Bottom White Section */}
+                              <div className="pw-card-bottom">
+                                <div className="pw-card-meta">
+                                  <span className="pw-date">
+                                    {new Date(material.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                  </span>
+                                  <span className="pw-duration">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                    {material.duration || '00:00'}
+                                  </span>
+                                </div>
+                                
+                                <h3 className="pw-card-title">{material.description || 'No description provided'}</h3>
+                                
+                                <div className="pw-card-actions" style={{ position: 'relative' }}>
+                                  <svg onClick={(e) => { e.stopPropagation(); handleView && handleView(material); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#6b7280" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" title="View Material"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"></path></svg>
+                                  
+                                  <svg onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === material.id ? null : material.id); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#6b7280" fill="none" strokeWidth="2" title="More Options"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+
+                                  {/* Dropdown Menu & Invisible Click-Outside Overlay */}
+                                  {openMenuId === material.id && (
+                                    <>
+                                      <div 
+                                        style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 40, cursor: 'default' }}
+                                        onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); }}
+                                      ></div>
+                                      
+                                      <div className="pw-dropdown-menu" style={{ zIndex: 50 }}>
+                                        <div 
+                                          className="pw-dropdown-item"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if(typeof toggleBookmark === 'function') toggleBookmark(material.id);
+                                            setOpenMenuId(null);
+                                          }}
+                                        >
+                                          {bookmarkedIds.includes(material.id) ? '★ Remove Bookmark' : '☆ Bookmark'}
+                                        </div>
+                                        <div 
+                                          className="pw-dropdown-item"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            alert('Download feature coming soon!');
+                                            setOpenMenuId(null);
+                                          }}
+                                        >
+                                          ↓ Download
+                                        </div>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        }
+                        const facultyFullName = material.faculty_name || gridSubjects?.find(s => s.id === material.subject_id)?.faculty?.full_name || 'Susheela Verma';
+                        const shortFacultyName = facultyFullName.length > 15 ? facultyFullName.split(' ')[0] : facultyFullName;
+                        const avatarUrl = material.faculty_avatar || gridSubjects?.find(s => s.id === material.subject_id)?.faculty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(facultyFullName)}&background=1e1e2d&color=fff`;
+
                         return (
-                          <div
-                            key={material.id}
-                            className="student-material-card"
-                          >
-                            <div className="student-material-card__left">
-                              {material.file_type === "pdf" ||
-                              material.type === "PYQ" ||
-                              material.type === "Syllabus" ? (
-                                <IconPDF />
-                              ) : (
-                                <IconLink />
-                              )}
+                          <div key={material.id} className="pw-lecture-card" onClick={() => handleView(material)}>
+                            <div className="pw-card-top">
+                              <div className="pw-card-top-left">
+                                <span className="pw-subject-badge" style={{ color: '#38bdf8' }}>{material.type ? material.type.toUpperCase() : "DOCUMENT"}</span>
+                                <div className="pw-subject-line" style={{ background: '#38bdf8' }}></div>
+                                <p className="pw-card-desc" title={material.title}>{material.title || material.name || 'Untitled Document'}</p>
+                                <span className="pw-teacher-name" title={facultyFullName}>By {shortFacultyName}</span>
+                              </div>
+                              <div className="pw-card-top-right">
+                                <div className="pw-avatar-container">
+                                  <img src={avatarUrl} alt="Faculty" />
+                                  <div className="pw-play-btn" style={{ background: '#0284c7' }}>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-                            <div className="student-material-card__center">
-                              <h4 className="student-material-card__title">
-                                {material.title || material.name || "Untitled"}
-                              </h4>
-                              {(material.subjects?.code ||
-                                material.subject_code) && (
-                                <span
-                                  style={{
-                                    fontSize: "0.72rem",
-                                    color: "#8b5cf6",
-                                    fontWeight: "600",
-                                    letterSpacing: "0.03em",
-                                  }}
-                                >
-                                  {material.subjects?.code ||
-                                    material.subject_code}
+                            
+                            <div className="pw-card-bottom">
+                              <div className="pw-card-meta">
+                                <span className="pw-date">
+                                  {new Date(material.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                 </span>
-                              )}
-                              <span
-                                className={`student-material-card__badge student-material-card__badge--${(material.type || material.category || "resource").toLowerCase().replace(/\s+/g, "-")}`}
-                              >
-                                {material.type ||
-                                  material.category ||
-                                  "Resource"}
-                              </span>
-                            </div>
-                            <div className="student-material-card__right">
-                              <button
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "8px",
-                                  padding: "8px 16px",
-                                  marginRight: "15px",
-                                  background: "#3b82f6",
-                                  color: "#fff",
-                                  border: "none",
-                                  borderRadius: "8px",
-                                  cursor: "pointer",
-                                  fontWeight: "bold",
-                                  fontSize: "14px",
-                                  transition: "0.2s",
-                                }}
-                                onClick={() =>
-                                  handleViewFile(material.file_url)
-                                }
-                              >
-                                <svg
-                                  width="14"
-                                  height="14"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2.5"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                >
-                                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                  <circle cx="12" cy="12" r="3" />
-                                </svg>{" "}
-                                View
-                              </button>
-                              <button
-                                className={`student-bookmark-btn ${bookmarkedIds.includes(material.id) ? "student-bookmark-btn--active" : ""}`}
-                                onClick={() => toggleBookmark(material.id)}
-                              >
-                                <IconBookmark
-                                  filled={bookmarkedIds.includes(material.id)}
-                                />
-                              </button>
+                                <span className="pw-duration" style={{ color: '#38bdf8' }}>
+                                  📄 {material.type === 'Class Notes' ? 'PDF Note' : 'Document'}
+                                </span>
+                              </div>
+                              
+                              <h3 className="pw-card-title">{material.description || 'No description provided'}</h3>
+                              
+                              <div className="pw-card-actions" style={{ position: 'relative' }}>
+                                <svg onClick={(e) => { e.stopPropagation(); handleView(material); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#6b7280" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" title="View Material"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+                                
+                                <svg onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === material.id ? null : material.id); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#6b7280" fill="none" strokeWidth="2" title="More Options"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+
+                                {openMenuId === material.id && (
+                                  <>
+                                    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 40, cursor: 'default' }} onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); }}></div>
+                                    <div className="pw-dropdown-menu" style={{ zIndex: 50 }}>
+                                      <div className="pw-dropdown-item" onClick={(e) => { e.stopPropagation(); toggleBookmark(material.id); setOpenMenuId(null); }}>
+                                        {bookmarkedIds.includes(material.id) ? '★ Remove Bookmark' : '☆ Bookmark'}
+                                      </div>
+                                      <div className="pw-dropdown-item" onClick={(e) => { e.stopPropagation(); alert('Download feature coming soon!'); setOpenMenuId(null); }}>
+                                        ↓ Download
+                                      </div>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
                             </div>
                           </div>
                         );

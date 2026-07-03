@@ -12,6 +12,17 @@ const ALLOWED_FILE_EXTENSIONS = new Set([
   'jpg',
   'jpeg',
   'png',
+  'mp4',
+  'webm',
+  'ogg',
+  'mov',
+]);
+
+const ALLOWED_VIDEO_MIME_TYPES = new Set([
+  'video/mp4',
+  'video/webm',
+  'video/ogg',
+  'video/quicktime',
 ]);
 
 const getFileExtension = (fileName) => {
@@ -24,7 +35,7 @@ const getFileExtension = (fileName) => {
 
   const extension = name.slice(lastDotIndex + 1).toLowerCase();
   if (!/^[a-z0-9]+$/.test(extension)) {
-    throw new Error('Unsupported file type. Please upload PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, TXT, JPG, JPEG, or PNG files.');
+    throw new Error('Unsupported file type. Please upload PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, TXT, JPG, JPEG, PNG, MP4, WEBM, OGG, or MOV files.');
   }
 
   return extension;
@@ -37,7 +48,11 @@ export const validateAcademicFile = (file) => {
 
   const extension = getFileExtension(file.name);
   if (!ALLOWED_FILE_EXTENSIONS.has(extension)) {
-    throw new Error('Unsupported file type. Please upload PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, TXT, JPG, JPEG, or PNG files.');
+    throw new Error('Unsupported file type. Please upload PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, TXT, JPG, JPEG, PNG, MP4, WEBM, OGG, or MOV files.');
+  }
+
+  if (file.type && ALLOWED_VIDEO_MIME_TYPES.has(file.type)) {
+    return extension;
   }
 
   return extension;

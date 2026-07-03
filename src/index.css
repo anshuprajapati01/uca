@@ -237,6 +237,234 @@ code {
   background: rgba(255, 255, 255, 0.05);
 }
 
+/* PW Lecture Card Global Styles */
+.student-materials-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  justify-content: flex-start;
+}
+
+.pw-lecture-card {
+  background: #151725;
+  border: 1px solid #2d314d;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%; /* Important: This makes cards in a row equal height */
+  min-height: auto; /* Remove the 320px restriction */
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  transition: all 0.25s ease-in-out;
+}
+
+.pw-lecture-card:hover {
+  border-color: #6d28d9;
+  box-shadow: 0 8px 25px rgba(109, 40, 217, 0.15);
+}
+
+.pw-card-top {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(17, 19, 31, 0) 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  min-height: 125px;
+}
+
+.pw-card-top-left {
+  display: flex;
+  flex-direction: column;
+  max-width: 60%;
+}
+
+.pw-subject-badge {
+  color: #a78bfa;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 2px;
+}
+
+.pw-subject-line {
+  height: 2px;
+  background: #7c3aed;
+  width: 100%;
+  max-width: 80px;
+  margin-bottom: 8px;
+}
+
+.pw-card-desc {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pw-teacher-name {
+  margin-top: auto;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 600;
+  padding-top: 10px;
+}
+
+.pw-card-top-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 5px;
+}
+
+.pw-avatar-container {
+  position: relative;
+  width: 75px;
+  height: 75px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.pw-avatar-container:hover {
+  transform: scale(1.05);
+}
+
+.pw-avatar-container img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center top;
+  border: 2px solid #2d314d;
+  background-color: #1e1e2d;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  filter: contrast(1.15) saturate(1.1) brightness(1.05);
+}
+
+.pw-play-btn {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background: #5b21b6;
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+}
+
+.pw-card-bottom {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  padding: 12px 15px; /* Slightly reduced top/bottom padding to make it compact */
+}
+
+.pw-card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.pw-duration {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pw-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  margin: 0 0 16px 0;
+  line-height: 1.4;
+}
+
+.pw-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.view-btn {
+  background: #4f46e5;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pw-action-icon {
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  stroke: #94a3b8;
+}
+
+.pw-action-icon:hover {
+  background: rgba(255, 255, 255, 0.05);
+  stroke: #a78bfa;
+}
+
+.pw-dropdown-menu {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  background: #1a1c29;
+  border: 1px solid #2d314d;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  z-index: 50;
+  min-width: 170px;
+  overflow: hidden;
+  margin-bottom: 8px;
+  animation: slideUp 0.2s ease-out;
+}
+
+.pw-dropdown-item {
+  padding: 12px 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #cbd5e1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.pw-dropdown-item:hover {
+  background: rgba(124, 58, 237, 0.1);
+  color: #a78bfa;
+}
+
+.pw-dropdown-item:not(:last-child) {
+  border-bottom: 1px solid #2d314d;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 
 
 

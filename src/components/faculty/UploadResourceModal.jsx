@@ -67,6 +67,9 @@ export default function UploadResourceModal({ onClose, onSubmit, onSuccess, subj
     e.preventDefault();
     setIsLoading(true);
     
+    // Debug: Check what you are sending
+    console.log("Form Data before submit:", formData);
+
     if (!formData.title.trim() || !formData.subject_id) {
       alert('Please fill required fields.');
       setIsLoading(false);
@@ -76,8 +79,10 @@ export default function UploadResourceModal({ onClose, onSubmit, onSuccess, subj
     try {
       const payload = {
         title: formData.title,
-        subject_id: formData.subject_id,
+        description: formData.description || '', // Yeh add kiya
         type: formData.type,
+        duration: formData.duration || '00:00', // Yeh add kiya
+        subject_id: formData.subject_id,
         file_url: null,
         external_url: formData.uploadMethod === 'link' ? formData.url : null,
       };
@@ -219,6 +224,12 @@ export default function UploadResourceModal({ onClose, onSubmit, onSuccess, subj
               )}
             </div>
           </FormField>
+
+{formData.type === 'Lecture' && (
+  <FormField id="duration" label="Duration (e.g. 45:00)">
+    <input type="text" name="duration" value={formData.duration || ''} onChange={handleChange} placeholder="HH:MM:SS" />
+  </FormField>
+)}
 
           <div className="col-span-2">
             <FormField id="description" label="Description">
