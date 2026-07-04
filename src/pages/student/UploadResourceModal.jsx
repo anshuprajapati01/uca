@@ -1,6 +1,7 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import FormField from "../../components/common/FormField.jsx";
 import { uploadNewResource } from "../../services/resourceService.js";
+import { supabase } from "../../lib/supabase.js";
 
 export default function UploadResourceModal({
   formData,
@@ -11,13 +12,50 @@ export default function UploadResourceModal({
 }) {
   const fileInputRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const [categorySearch, setCategorySearch] = useState("");
+  const dropdownRef = useRef(null);
+
+  const fetchCategories = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("material_categories")
+      .select("id, name")
+      .eq("is_active", true)
+      .order("priority", { ascending: true });
+
+    if (!error && data) {
+      setCategories(data);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+
+  useEffect(() => {
+    if (categories.length > 0 && !formData.type) {
+      setFormData((prev) => ({ ...prev, type: categories[0].name }));
+    }
+  }, [categories, formData.type, setFormData]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsCategoryOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     const val = files ? files[0] : value;
     setFormData((prev) => {
       const next = { ...prev, [name]: val };
-      if (name === "type" && val !== "Lecture") {
+      const lectureCategory = categories[0]?.name || "Lecture";
+      if (name === "type" && val !== lectureCategory) {
         next.duration = "";
       }
       return next;
@@ -72,15 +110,54 @@ export default function UploadResourceModal({
 
           <div className="student-upload-modal__field">
             <label style={{ color: "#cbd5e1", marginBottom: "8px", fontSize: "0.9rem", fontWeight: "500", display: "block" }}>Type</label>
-            <select name="type" value={formData.type || ""} onChange={handleChange} className="student-upload-modal__select">
-              <option value="">Select Category</option>
-              <option value="Lecture">Lecture</option>
-              <option value="Notes">Notes</option>
-              <option value="PYQ">PYQ</option>
-            </select>
+            <div className="input-group" ref={dropdownRef}>
+              <div className="custom-searchable-dropdown">
+                <div 
+                  className="dropdown-selected" 
+                  onClick={() => setIsCategoryOpen(!isCategoryOpen)}
+                >
+                  {formData.type || "-- Select Category --"}
+                  <svg className={`dropdown-arrow ${isCategoryOpen ? 'open' : ''}`} viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+                
+                {isCategoryOpen && (
+                  <div className="dropdown-menu">
+                    <div className="dropdown-search-box">
+                      <input 
+                        type="text" 
+                        placeholder="Search category..." 
+                        value={categorySearch}
+                        onChange={(e) => setCategorySearch(e.target.value)}
+                        autoFocus
+                      />
+                    </div>
+                    <ul className="dropdown-list">
+                      {categories
+                        .filter(cat => cat.name.toLowerCase().includes(categorySearch.toLowerCase()))
+                        .map((cat) => (
+                          <li 
+                            key={cat.id || cat.name} 
+                            onClick={() => {
+                              setFormData({ ...formData, type: cat.name });
+                              setIsCategoryOpen(false);
+                              setCategorySearch("");
+                            }}
+                          >
+                            {cat.name}
+                          </li>
+                        ))
+                      }
+                      {categories.filter(cat => cat.name.toLowerCase().includes(categorySearch.toLowerCase())).length === 0 && (
+                        <li className="dropdown-no-results">No categories found</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
-          {formData.type === 'Lecture' && (
+          {formData.type && categories[0] && formData.type === categories[0] && (
             <FormField id="duration" label="Duration (HH:MM)">
               <input type="text" name="duration" value={formData.duration || ''} onChange={handleChange} placeholder="00:00" />
             </FormField>

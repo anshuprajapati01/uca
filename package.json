@@ -13,6 +13,7 @@
     "@hookform/resolvers": "^5.4.0",
     "@supabase/supabase-js": "^2.107.0",
     "lucide-react": "^1.17.0",
+    "papaparse": "^5.5.4",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-hook-form": "^7.77.0",

@@ -155,6 +155,12 @@ export const HOD_NAV_ITEMS = [
     path: `${ROUTES.HOD_DASHBOARD}/manage-timetable`,
     icon: Grid,
   },
+  {
+    id: 'manage-results',
+    label: 'Publish Results',
+    path: `${ROUTES.HOD_DASHBOARD}/manage-results`,
+    icon: FileText,
+  },
 ];
 
 /** @type {NavItem[]} */

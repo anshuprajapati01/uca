@@ -1,0 +1,431 @@
+/* Student Results UI - Premium Isolated Styles */
+
+.results-container {
+  padding-bottom: 60px;
+}
+
+.results-header h2 {
+  font-size: 1.8rem;
+  color: #f1f5f9;
+  margin-bottom: 5px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.results-header p {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-bottom: 25px;
+}
+
+.results-overview-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 24px;
+  margin-bottom: 45px;
+  padding-bottom: 10px;
+  align-items: stretch;
+}
+
+.cgpa-card {
+  background: linear-gradient(180deg, #1e293b 0%, #1e293b 100%);
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  transition: all 0.3s ease;
+  width: 280px;
+  min-height: 320px;
+}
+
+.cgpa-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.3);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+.cgpa-card h3 {
+  color: #cbd5e1;
+  font-size: 1.05rem;
+  margin-bottom: 24px;
+  font-weight: 600;
+}
+
+.cgpa-circle-wrapper {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.cgpa-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.cgpa-bg-circle {
+  fill: transparent;
+  stroke: #1e293b;
+  stroke-width: 8;
+}
+
+.cgpa-progress-circle {
+  fill: transparent;
+  stroke: url(#purpleGradient);
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s ease-out;
+}
+
+.cgpa-text {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.cgpa-value {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+}
+
+.cgpa-label {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.cgpa-badge {
+  margin-top: 20px;
+  padding: 6px 16px;
+  border-radius: 20px;
+  background: rgba(16, 185, 129, 0.1);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.internal-stats-wrapper {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  height: 100%;
+  align-content: stretch;
+}
+
+.internal-card {
+  background: linear-gradient(180deg, #1e293b 0%, #1e293b 100%);
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  transition: all 0.3s ease;
+}
+
+.internal-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.3);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+.internal-card .stat-label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.internal-card .stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.internal-card .stat-desc {
+  color: #64748b;
+  font-size: 0.8rem;
+  margin-top: 6px;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  color: #e2e8f0;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  position: relative;
+  z-index: 1;
+}
+
+.semester-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.semester-card {
+  background: linear-gradient(180deg, #1e293b 0%, #1e293b 100%);
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 20px 24px;
+  transition: all 0.25s ease;
+}
+
+.semester-card:hover {
+  border-color: #6d28d9;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.sem-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.sem-card-top h4 {
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.sem-card-top p {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+
+.sem-score {
+  text-align: right;
+}
+
+.sgpa-val {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #38bdf8;
+  line-height: 1;
+}
+
+.sem-status {
+  font-size: 0.75rem;
+  padding: 3px 10px;
+  border-radius: 15px;
+  margin-top: 6px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.sem-status.pass {
+  background: rgba(16, 185, 129, 0.1);
+  color: #34d399;
+}
+
+.sem-status.ongoing {
+  background: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+}
+
+.sem-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #334155;
+}
+
+.sem-card-bottom p {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.sem-card-bottom p span {
+  color: #cbd5e1;
+  font-weight: 500;
+}
+
+.view-scorecard-btn {
+  background: none;
+  border: none;
+  color: #a78bfa;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.view-scorecard-btn:hover {
+  color: #c4b5fd;
+  text-decoration: underline;
+}
+
+.aktu-scorecard-wrapper {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px dashed #334155;
+  overflow-x: auto;
+}
+
+.aktu-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.aktu-table th {
+  color: #94a3b8;
+  font-weight: 600;
+  padding: 12px 16px;
+  border-bottom: 1px solid #334155;
+  background: rgba(30, 41, 59, 0.6);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.aktu-table td {
+  padding: 12px 16px;
+  color: #e2e8f0;
+  border-bottom: 1px solid #1e293b;
+}
+
+.aktu-table tr:last-child td {
+  border-bottom: none;
+}
+
+.aktu-table tr:hover {
+  background: rgba(124, 58, 237, 0.05);
+}
+
+.sub-code {
+  color: #a78bfa !important;
+  font-weight: 600;
+}
+
+.sub-type {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #2d314d;
+  color: #cbd5e1;
+  font-weight: 500;
+}
+
+.sub-marks {
+  font-family: monospace;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.max-marks {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 400;
+}
+
+.sub-grade {
+  font-weight: 700;
+}
+
+.grade-aplus,
+.grade-a {
+  color: #34d399;
+}
+
+.grade-bplus,
+.grade-b {
+  color: #38bdf8;
+}
+
+.grade-c {
+  color: #fbbf24;
+}
+
+.grade-f {
+  color: #f87171;
+}
+
+.loading-results {
+  text-align: center;
+  color: #94a3b8;
+  padding: 60px 20px;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 900px) {
+  .results-overview-grid {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .internal-stats-wrapper {
+    grid-template-columns: repeat(2, 1fr);
+    width: 100%;
+    max-width: 600px;
+  }
+
+  .cgpa-card {
+    width: 100%;
+    max-width: 500px;
+  }
+}
+
+@media (max-width: 600px) {
+  .internal-stats-wrapper {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .results-container, .results-container * {
+    visibility: visible;
+  }
+  .results-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    color: #000 !important;
+    background: #fff !important;
+  }
+  .view-scorecard-btn, .print-scorecard-btn {
+    display: none !important;
+  }
+  .aktu-scorecard-wrapper {
+    display: block !important;
+    page-break-inside: avoid;
+  }
+  .aktu-table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  .aktu-table th, .aktu-table td {
+    border: 1px solid #ccc !important;
+    color: #000 !important;
+  }
+}
