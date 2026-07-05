@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from "../../hooks/useAuth.js";
-import { Upload, FileText, Eye, Trash2 } from "lucide-react";
+import { Upload, FileText, Eye, Trash2, Pencil } from "lucide-react";
 import { supabase } from "../../lib/supabase.js";
 import { uploadNewResource, deleteResource } from "../../services/resourceService.js";
 import { signOut } from "../../services/authService.js";
@@ -525,6 +525,47 @@ const [myUploads, setMyUploads] = useState([]);
     const [deleteTargetId, setDeleteTargetId] = useState(null);
     const [openMenuId, setOpenMenuId] = useState(null);
 
+    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+    const [activeProfileTab, setActiveProfileTab] = useState("general");
+    const [editPhone, setEditPhone] = useState("");
+    const [editAvatarFile, setEditAvatarFile] = useState(null);
+    const [editAvatarPreview, setEditAvatarPreview] = useState("");
+    const [editNewPassword, setEditNewPassword] = useState("");
+    const [editConfirmPassword, setEditConfirmPassword] = useState("");
+    const [profileSaving, setProfileSaving] = useState(false);
+    const [passwordSaving, setPasswordSaving] = useState(false);
+    const editAvatarPreviewRef = useRef("");
+
+    const showToast = (message, type = "success") => {
+      setToast({ message, type });
+      setTimeout(() => setToast(null), 3500);
+    };
+
+    const openProfileModal = () => {
+      setEditPhone(studentProfile?.phone || profile?.phone || "");
+      setEditAvatarFile(null);
+      if (editAvatarPreviewRef.current) {
+        URL.revokeObjectURL(editAvatarPreviewRef.current);
+        editAvatarPreviewRef.current = "";
+      }
+      setEditAvatarPreview("");
+      setEditNewPassword("");
+      setEditConfirmPassword("");
+      setActiveProfileTab("general");
+      setIsProfileModalOpen(true);
+    };
+
+    const closeProfileModal = () => {
+      if (editAvatarPreviewRef.current) {
+        URL.revokeObjectURL(editAvatarPreviewRef.current);
+        editAvatarPreviewRef.current = "";
+      }
+      setEditAvatarPreview("");
+      setEditNewPassword("");
+      setEditConfirmPassword("");
+      setIsProfileModalOpen(false);
+    };
+
 useEffect(() => {
       let cancelled = false;
 
@@ -672,9 +713,52 @@ if (!cancelled && defaultSemester !== null) {
         return () => {
           cancelled = true;
         };
-      }, [user?.id]);
+    }, [user?.id]);
+
+  async function fetchSubjectsForGrid() {
+    const branch = studentProfile?.selected_branch;
+    if (!branch || selectedSemester === null) {
+      setGridSubjects([]);
+      return;
+    }
+    const { data, error } = await supabase
+      .from('subjects')
+      .select('*, faculty:faculty_id(id, full_name, avatar_url, profile_image_url)')
+      .eq('department', branch)
+      .eq('semester', `Semester ${selectedSemester}`);
+
+    console.log("Debug Fetch:", { branch, semester: selectedSemester, data, error });
+
+    if (error) {
+      console.error("Error fetching subjects:", error);
+      return;
+    }
+
+    setGridSubjects(data || []);
+  }
 
     useEffect(() => {
+      if (!user?.id) return;
+      let cancelled = false;
+      async function loadUserProfile() {
+        const { data } = await supabase.auth.getUser();
+        const authUser = data?.user;
+        if (!cancelled && authUser) {
+          const { data: prof } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', authUser.id)
+            .single();
+          if (!cancelled && prof) {
+            setStudentProfile((prev) => ({ ...prev, ...prof }));
+          }
+        }
+      }
+      loadUserProfile();
+      return () => { cancelled = true; };
+    }, [user?.id]);
+
+  useEffect(() => {
       if (activeTab !== "my-uploads") {
         setSelectedSubject(null);
       }
@@ -758,10 +842,9 @@ if (error) {
   }, [activeTab, user?.id]);
 
 useEffect(() => {
-      if (profile && profile.selected_branch) {
-        fetchSubjectsForGrid(profile);
-      }
-    }, [profile, selectedSemester]);
+      if (!studentProfile?.selected_branch) return;
+       fetchSubjectsForGrid();
+    }, [studentProfile?.selected_branch, selectedSemester]);
 
     useEffect(() => {
       if (crDetails && crDetails.branch && crDetails.semester) {
@@ -840,27 +923,6 @@ async function fetchAllMaterials() {
     }));
 
     return mergedMaterials;
-  }
-
-  async function fetchSubjectsForGrid(profileData) {
-    const branch =
-      profileData?.selected_branch ||
-      profileData?.branch ||
-      profileData?.branch_id ||
-      profileData?.department ||
-      profileData?.batches?.department ||
-      profileData?.batches?.branch;
-    if (!branch || selectedSemester === null) {
-      setGridSubjects([]);
-      return;
-    }
-    const { data: subjects, error: subjectsError } = await supabase
-      .from('subjects')
-      .select('*, faculty:faculty_id(id, full_name, avatar_url, profile_image_url)')
-      .eq('department', branch)
-      .eq('semester', `Semester ${selectedSemester}`);
-    if (subjectsError) console.error("Error fetching subjects:", subjectsError);
-    setGridSubjects(subjects || []);
   }
 
   useEffect(() => {
@@ -1394,21 +1456,36 @@ async function fetchAllMaterials() {
               <section className="student-section student-section--profile">
                 <h3 className="student-section__title">Student Profile</h3>
                 <div className="student-profile-card">
-                  <div className="student-profile__icon">
-                    <svg
-                      width="32"
-                      height="32"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
-                  </div>
+                  {studentProfile?.avatar_url ? (
+                    <img
+                      src={studentProfile.avatar_url}
+                      alt="Avatar"
+                      className="student-profile-avatar-img"
+                    />
+                  ) : (
+                    <div className="student-profile__icon">
+                      <svg
+                        width="32"
+                        height="32"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                      </svg>
+                    </div>
+                  )}
+                  <button
+                    className="student-profile-card__edit-btn"
+                    onClick={() => openProfileModal()}
+                  >
+                    <Pencil size={14} />
+                    <span>Edit Profile</span>
+                  </button>
                   <div className="student-profile__body">
                     <div className="student-profile__row">
                       <span className="student-profile__label">Name</span>
@@ -2414,6 +2491,393 @@ async function fetchAllMaterials() {
           }}
         >
           {toast.message}
+        </div>
+      )}
+
+      {isProfileModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 999997,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "rgba(0, 0, 0, 0.6)",
+            backdropFilter: "blur(6px)",
+            animation: "upload-modal-fade-in 0.2s ease",
+          }}
+          onClick={() => closeProfileModal()}
+        >
+          <div
+            style={{
+              background: "rgba(15, 23, 42, 0.95)",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+              borderRadius: "20px",
+              padding: "2rem",
+              maxWidth: "460px",
+              width: "92%",
+              maxHeight: "90vh",
+              overflowY: "auto",
+              boxShadow: "0 20px 50px rgba(0,0,0,0.5)",
+              color: "#e2e8f0",
+              fontFamily: "inherit",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
+              <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "700", color: "#f1f5f9" }}>
+                Edit Profile
+              </h3>
+              <button
+                onClick={() => closeProfileModal()}
+                style={{
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: "8px",
+                  color: "#cbd5e1",
+                  cursor: "pointer",
+                  padding: "0.35rem 0.6rem",
+                  fontSize: "0.8rem",
+                  fontFamily: "inherit",
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.25rem", background: "rgba(255,255,255,0.04)", padding: "0.35rem", borderRadius: "12px" }}>
+              <button
+                onClick={() => setActiveProfileTab("general")}
+                style={{
+                  flex: 1,
+                  padding: "0.55rem",
+                  borderRadius: "10px",
+                  border: "none",
+                  fontSize: "0.85rem",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  background: activeProfileTab === "general" ? "linear-gradient(135deg, #6366f1, #8b5cf6)" : "transparent",
+                  color: activeProfileTab === "general" ? "#fff" : "#94a3b8",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                General Details
+              </button>
+              <button
+                onClick={() => setActiveProfileTab("security")}
+                style={{
+                  flex: 1,
+                  padding: "0.55rem",
+                  borderRadius: "10px",
+                  border: "none",
+                  fontSize: "0.85rem",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  background: activeProfileTab === "security" ? "linear-gradient(135deg, #6366f1, #8b5cf6)" : "transparent",
+                  color: activeProfileTab === "security" ? "#fff" : "#94a3b8",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                Security
+              </button>
+            </div>
+
+            {activeProfileTab === "general" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                {/* Avatar Upload */}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem" }}>
+                  <div style={{ position: "relative", width: "96px", height: "96px", borderRadius: "50%", overflow: "hidden", border: "2px solid rgba(99,102,241,0.3)", background: "rgba(20,20,40,0.6)" }}>
+                    {editAvatarPreview || studentProfile?.avatar_url ? (
+                      <img
+                        src={editAvatarPreview || studentProfile?.avatar_url}
+                        alt="Avatar preview"
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    ) : (
+                      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#6366f1" }}>
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                          <circle cx="12" cy="7" r="4" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  <label
+                    htmlFor="avatar-upload"
+                    style={{
+                      padding: "0.5rem 1rem",
+                      borderRadius: "10px",
+                      background: "rgba(99,102,241,0.15)",
+                      border: "1px dashed rgba(99,102,241,0.4)",
+                      color: "#a5b4fc",
+                      fontSize: "0.8rem",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                  >
+                    {editAvatarFile ? editAvatarFile.name : "Choose Avatar Image"}
+                  </label>
+                  <input
+                    id="avatar-upload"
+                    type="file"
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        setEditAvatarFile(file);
+                        if (editAvatarPreviewRef.current) URL.revokeObjectURL(editAvatarPreviewRef.current);
+                        const url = URL.createObjectURL(file);
+                        editAvatarPreviewRef.current = url;
+                        setEditAvatarPreview(url);
+                      }
+                    }}
+                  />
+                </div>
+
+                {/* Phone */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                  <label style={{ fontSize: "0.72rem", fontWeight: "600", color: "#6366f1", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    value={editPhone}
+                    onChange={(e) => setEditPhone(e.target.value)}
+                    placeholder="Enter phone number"
+                    style={{
+                      width: "100%",
+                      padding: "0.65rem 0.85rem",
+                      borderRadius: "10px",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      background: "rgba(20,20,40,0.5)",
+                      color: "#f1f5f9",
+                      fontSize: "0.9rem",
+                      fontFamily: "inherit",
+                      outline: "none",
+                    }}
+                  />
+                </div>
+
+                {/* Read-only fields */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.6rem 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                    <span style={{ fontSize: "0.75rem", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>Roll Number</span>
+                    <input
+                      type="text"
+                      value={studentProfile?.roll_number || profile?.roll_number || "—"}
+                      disabled
+                      style={{
+                        width: "60%",
+                        padding: "0.4rem 0.6rem",
+                        borderRadius: "8px",
+                        border: "1px solid rgba(255,255,255,0.06)",
+                        background: "rgba(255,255,255,0.03)",
+                        color: "#64748b",
+                        fontSize: "0.85rem",
+                        fontFamily: "'JetBrains Mono', monospace",
+                        opacity: 0.7,
+                      }}
+                    />
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.6rem 0" }}>
+                    <span style={{ fontSize: "0.75rem", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>College ID</span>
+                    <input
+                      type="text"
+                      value={studentProfile?.college_id || profile?.college_id || "—"}
+                      disabled
+                      style={{
+                        width: "60%",
+                        padding: "0.4rem 0.6rem",
+                        borderRadius: "8px",
+                        border: "1px solid rgba(255,255,255,0.06)",
+                        background: "rgba(255,255,255,0.03)",
+                        color: "#64748b",
+                        fontSize: "0.85rem",
+                        fontFamily: "'JetBrains Mono', monospace",
+                        opacity: 0.7,
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={async () => {
+                    setProfileSaving(true);
+                    try {
+                      if (!user) throw new Error("No user found");
+                      let avatarUrl = studentProfile?.avatar_url || profile?.avatar_url;
+
+                      if (editAvatarFile) {
+                         const filePath = `${user.id}/${Date.now()}-${editAvatarFile.name}`;
+                        const { error: uploadError } = await supabase.storage
+                          .from("avatars")
+                          .upload(filePath, editAvatarFile, { upsert: true });
+
+                        if (uploadError) throw uploadError;
+
+                        const { data: publicUrlData } = supabase.storage
+                          .from("avatars")
+                          .getPublicUrl(filePath);
+
+                        avatarUrl = publicUrlData.publicUrl;
+                      }
+
+                      const updates = {
+                        phone: editPhone,
+                        ...(avatarUrl && avatarUrl !== (studentProfile?.avatar_url || profile?.avatar_url) ? { avatar_url: avatarUrl } : {}),
+                      };
+
+                      const { error: updateError } = await supabase
+                        .from("user_profiles")
+                        .update(updates)
+                        .eq("id", user.id);
+
+                      if (updateError) throw updateError;
+
+                      setStudentProfile((prev) => ({ ...prev, ...updates }));
+                      setProfile((prev) => ({ ...prev, ...updates }));
+                      showToast("Profile updated successfully!");
+                      closeProfileModal();
+                      setEditAvatarFile(null);
+                      setEditAvatarPreview("");
+                    } catch (err) {
+                      console.error("Profile update error:", err);
+                      showToast(err.message || "Failed to update profile", "error");
+                    } finally {
+                      setProfileSaving(false);
+                    }
+                  }}
+                  disabled={profileSaving}
+                  style={{
+                    width: "100%",
+                    padding: "0.7rem",
+                    borderRadius: "12px",
+                    border: "none",
+                    fontSize: "0.9rem",
+                    fontWeight: "600",
+                    cursor: profileSaving ? "not-allowed" : "pointer",
+                    background: profileSaving
+                      ? "rgba(99,102,241,0.4)"
+                      : "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                    color: "#fff",
+                    fontFamily: "inherit",
+                    opacity: profileSaving ? 0.7 : 1,
+                    transition: "all 0.2s ease",
+                    boxShadow: "0 4px 14px rgba(99, 102, 241, 0.3)",
+                  }}
+                >
+                  {profileSaving ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            )}
+
+            {activeProfileTab === "security" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                  <label style={{ fontSize: "0.72rem", fontWeight: "600", color: "#6366f1", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    value={editNewPassword}
+                    onChange={(e) => setEditNewPassword(e.target.value)}
+                    placeholder="Enter new password"
+                    style={{
+                      width: "100%",
+                      padding: "0.65rem 0.85rem",
+                      borderRadius: "10px",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      background: "rgba(20,20,40,0.5)",
+                      color: "#f1f5f9",
+                      fontSize: "0.9rem",
+                      fontFamily: "inherit",
+                      outline: "none",
+                    }}
+                  />
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                  <label style={{ fontSize: "0.72rem", fontWeight: "600", color: "#6366f1", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Confirm New Password
+                  </label>
+                  <input
+                    type="password"
+                    value={editConfirmPassword}
+                    onChange={(e) => setEditConfirmPassword(e.target.value)}
+                    placeholder="Re-enter new password"
+                    style={{
+                      width: "100%",
+                      padding: "0.65rem 0.85rem",
+                      borderRadius: "10px",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      background: "rgba(20,20,40,0.5)",
+                      color: "#f1f5f9",
+                      fontSize: "0.9rem",
+                      fontFamily: "inherit",
+                      outline: "none",
+                    }}
+                  />
+                </div>
+
+                <button
+                  onClick={async () => {
+                    if (!editNewPassword || !editConfirmPassword) {
+                      showToast("Please fill in both password fields", "error");
+                      return;
+                    }
+                    if (editNewPassword !== editConfirmPassword) {
+                      showToast("Passwords do not match", "error");
+                      return;
+                    }
+                    if (editNewPassword.length < 6) {
+                      showToast("Password must be at least 6 characters", "error");
+                      return;
+                    }
+                    setPasswordSaving(true);
+                    try {
+                      const { error } = await supabase.auth.updateUser({
+                        password: editNewPassword,
+                      });
+                      if (error) throw error;
+                      showToast("Password updated successfully!");
+                      setEditNewPassword("");
+                      setEditConfirmPassword("");
+                    } catch (err) {
+                      console.error("Password update error:", err);
+                      showToast(err.message || "Failed to update password", "error");
+                    } finally {
+                      setPasswordSaving(false);
+                    }
+                  }}
+                  disabled={passwordSaving}
+                  style={{
+                    width: "100%",
+                    padding: "0.7rem",
+                    borderRadius: "12px",
+                    border: "none",
+                    fontSize: "0.9rem",
+                    fontWeight: "600",
+                    cursor: passwordSaving ? "not-allowed" : "pointer",
+                    background: passwordSaving
+                      ? "rgba(99,102,241,0.4)"
+                      : "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                    color: "#fff",
+                    fontFamily: "inherit",
+                    opacity: passwordSaving ? 0.7 : 1,
+                    transition: "all 0.2s ease",
+                    boxShadow: "0 4px 14px rgba(99, 102, 241, 0.3)",
+                  }}
+                >
+                  {passwordSaving ? "Updating..." : "Change Password"}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
