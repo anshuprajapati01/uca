@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase.js';
 import toast from 'react-hot-toast';
 import { Plus, X, Calendar, FileText, Award, Users } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 export default function FacultyAssignments() {
   const [categories, setCategories] = useState([]);
@@ -34,6 +35,18 @@ export default function FacultyAssignments() {
   const [labGrades, setLabGrades] = useState({});
   const [isLabLoading, setIsLabLoading] = useState(false);
   const [isSavingLab, setIsSavingLab] = useState(false);
+  const [theoryExamStudents, setTheoryExamStudents] = useState([
+    { id: 'dummy1', full_name: 'Anshu Prajapati', roll_number: '2301CS1001' },
+    { id: 'dummy2', full_name: 'Anushka Singh', roll_number: '2301CS1002' },
+    { id: 'dummy3', full_name: 'Rahul Sharma', roll_number: '2301CS1003' },
+    { id: 'dummy4', full_name: 'Priya Patel', roll_number: '2301CS1004' },
+    { id: 'dummy5', full_name: 'Akash Gupta', roll_number: '2301CS1005' },
+    { id: 'dummy6', full_name: 'Neha Verma', roll_number: '2301CS1006' },
+  ]);
+  const [theoryExamGrades, setTheoryExamGrades] = useState({});
+  const [theoryExamSubject, setTheoryExamSubject] = useState('');
+  const [isTheoryExamLoading, setIsTheoryExamLoading] = useState(false);
+  const [isSavingTheoryExam, _setIsSavingTheoryExam] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -248,7 +261,7 @@ const openBulkGrading = async (assignment) => {
     try {
       const { data: students } = await supabase
         .from('user_profiles')
-        .select('id, full_name')
+        .select('id, full_name, roll_number')
         .ilike('role', '%tudent%');
 
       const validStudents = (students || []).filter(s => {
@@ -418,6 +431,247 @@ const openBulkGrading = async (assignment) => {
     }
   };
 
+  const exportOfficialGradebook = () => {
+    try {
+      const wb = XLSX.utils.book_new();
+
+      const tesHeaderRows = [
+        ['BUDDHA INSTITUTE OF TECHNOLOGY, GORAKHPUR'],
+        ['EVEN SEMESTER (Jan to June 2025-26)'],
+        ['THEORY EVALUATION SHEET (TES)'],
+        ['DEPARTMENT NAME : INFORMATION TECHNOLOGY'],
+        ['FACULTY NAME - Susheela Verma'],
+        ['CLASS - 2nd Year (4th Sem. - B1)'],
+        [],
+        ['SR. NO.', 'Roll No.', 'Students Name', 'T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'Total T/A/Q Marks'],
+      ];
+
+      const tesStudentData = theoryExamStudents.map((student, index) => {
+        const grades = theoryExamGrades[student.id] || {};
+        const ct1 = grades.ct1 ?? '0';
+        const ct2 = grades.ct2 ?? '0';
+        const put = grades.put ?? '0';
+        const total = calculateInternalTotal(ct1, ct2, put);
+
+        return [
+          index + 1,
+          student.roll_number || '',
+          student.full_name,
+          ct1, ct2, put, '0', '0', '0', '0', '0', '0', '0',
+          total,
+        ];
+      });
+
+      const finalTesSheet = [...tesHeaderRows, ...tesStudentData];
+      const tesWs = XLSX.utils.aoa_to_sheet(finalTesSheet);
+      tesWs['!cols'] = [
+        { wch: 8 }, { wch: 15 }, { wch: 25 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 },
+        { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 18 },
+      ];
+
+      XLSX.utils.book_append_sheet(wb, tesWs, 'TES B1');
+
+      const lesHeaderRows = [
+        ['BUDDHA INSTITUTE OF TECHNOLOGY, GORAKHPUR'],
+        ['EVEN SEMESTER (Jan to June 2025-26)'],
+        ['LAB EVALUATION SHEET (LES)'],
+        ['DEPARTMENT NAME : INFORMATION TECHNOLOGY'],
+        ['FACULTY NAME - Susheela Verma'],
+        ['CLASS - 2nd Year (4th Sem. - B1)'],
+        [],
+        ['SR. NO.', 'Roll No.', 'Students Name', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7', 'L8', 'L9', 'L10', 'Total Lab Marks'],
+      ];
+
+      const lesStudentData =
+        labStudents.length > 0
+          ? labStudents.map((student, index) => {
+              const g = labGrades[student.id] || {};
+              const labs = ['l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9', 'l10'];
+              const totalLabMarks = labs.reduce((sum, key) => {
+                const val = g[key];
+                return sum + (val !== '' && val !== undefined && val !== null ? Number(val) : 0);
+              }, 0);
+
+              return [
+                index + 1,
+                student.roll_number || '',
+                student.full_name,
+                g.l1 ?? '0', g.l2 ?? '0', g.l3 ?? '0', g.l4 ?? '0', g.l5 ?? '0',
+                g.l6 ?? '0', g.l7 ?? '0', g.l8 ?? '0', g.l9 ?? '0', g.l10 ?? '0',
+                totalLabMarks,
+              ];
+            })
+          : [];
+
+      const finalLesSheet = [...lesHeaderRows, ...lesStudentData];
+      const lesWs = XLSX.utils.aoa_to_sheet(finalLesSheet);
+      lesWs['!cols'] = [
+        { wch: 8 }, { wch: 15 }, { wch: 25 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 },
+        { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 18 },
+      ];
+
+      XLSX.utils.book_append_sheet(wb, lesWs, 'LES B1');
+
+      XLSX.writeFile(wb, 'BIT_Gorakhpur_Official_Gradebook.xlsx');
+      toast.success('Official gradebook exported successfully!');
+    } catch (err) {
+      console.error('Failed to export official gradebook:', err);
+      toast.error('Failed to export official gradebook. Please try again.');
+    }
+  };
+
+  const calculateInternalTotal = (ct1, ct2, put) => {
+    const n1 = parseFloat(ct1) || 0;
+    const n2 = parseFloat(ct2) || 0;
+    const n3 = parseFloat(put) || 0;
+    const ctPortion = Math.min(Math.max(n1, n2), 30);
+    const putPortion = Math.min(Math.round((n3 / 70) * 20), 20);
+    return Math.min(ctPortion + putPortion, 50);
+  };
+
+  const loadTheoryExamData = async (subjectId) => {
+    setIsTheoryExamLoading(true);
+    setTheoryExamGrades({});
+    try {
+      const { data: students } = await supabase
+        .from('user_profiles')
+        .select('id, full_name, roll_number')
+        .ilike('role', '%tudent%');
+
+      const validStudents = (students || []).filter(s => {
+        if (!s.full_name) return false;
+        const name = s.full_name.toLowerCase();
+        return !(name.includes('dummy') || name.includes('test') || name.includes('demo') || name.includes('user'));
+      });
+
+      setTheoryExamStudents(validStudents);
+
+      const { data: existing } = await supabase
+        .from('theory_evaluations')
+        .select('*')
+        .eq('subject_id', subjectId);
+
+      const gradesMap = {};
+      (existing || []).forEach((row) => {
+        gradesMap[row.student_id] = {
+          ct1: row.ct1 ?? '',
+          ct2: row.ct2 ?? '',
+          put: row.put ?? '',
+        };
+      });
+
+      setTheoryExamGrades(gradesMap);
+    } catch (err) {
+      console.error('Failed to load theory exam data:', err);
+      toast.error('Failed to load theory exam data.');
+    } finally {
+      setIsTheoryExamLoading(false);
+    }
+  };
+
+  const handleTheoryExamSubjectChange = async (e) => {
+    const value = e.target.value;
+    setTheoryExamSubject(value);
+    if (value) {
+      await loadTheoryExamData(value);
+    } else {
+      setTheoryExamStudents([
+        { id: 'dummy1', full_name: 'Anshu Prajapati', roll_number: '2301CS1001' },
+        { id: 'dummy2', full_name: 'Anushka Singh', roll_number: '2301CS1002' },
+        { id: 'dummy3', full_name: 'Rahul Sharma', roll_number: '2301CS1003' },
+        { id: 'dummy4', full_name: 'Priya Patel', roll_number: '2301CS1004' },
+        { id: 'dummy5', full_name: 'Akash Gupta', roll_number: '2301CS1005' },
+        { id: 'dummy6', full_name: 'Neha Verma', roll_number: '2301CS1006' },
+      ]);
+      setTheoryExamGrades({});
+    }
+  };
+
+  const handleTheoryExamGradeChange = (studentId, field, value) => {
+    setTheoryExamGrades((prev) => ({
+      ...prev,
+      [studentId]: { ...prev[studentId], [field]: value },
+    }));
+  };
+
+  const saveTheoryExamRegister = async () => {
+    if (!theoryExamSubject) return toast.error('Please select a subject first.');
+
+    try {
+      const payload = theoryExamStudents.map((student) => {
+        const grades = theoryExamGrades[student.id] || {};
+        const cleanNum = (val) => (val === '' || val === undefined || val === null) ? 0 : parseFloat(val);
+
+        return {
+          subject_id: theoryExamSubject,
+          student_id: student.id,
+          ct1: cleanNum(grades.ct1),
+          ct2: cleanNum(grades.ct2),
+          put: cleanNum(grades.put),
+        };
+      });
+
+      const { error } = await supabase
+        .from('theory_evaluations')
+        .upsert(payload, { onConflict: 'subject_id, student_id' });
+
+      if (error) throw error;
+      toast.success('Theory exam register saved successfully!');
+    } catch (err) {
+      console.error('Failed to save theory exam register:', err);
+      toast.error('Failed to save theory exam register. Please try again.');
+    }
+  };
+
+  const exportTheoryExamRegister = () => {
+    if (!theoryExamSubject || theoryExamStudents.length === 0) {
+      toast.error('No data to export.');
+      return;
+    }
+    try {
+      const headers = [
+        'SR. NO',
+        'Students Name',
+        'Roll Number',
+        'CT1',
+        'CT2',
+        'PUT',
+        'Internal Total',
+      ];
+
+      const rows = theoryExamStudents.map((student, index) => {
+        const g = theoryExamGrades[student.id] || {};
+        const ct1Val = g.ct1 !== '' && g.ct1 !== undefined && g.ct1 !== null ? Number(g.ct1) : 0;
+        const ct2Val = g.ct2 !== '' && g.ct2 !== undefined && g.ct2 !== null ? Number(g.ct2) : 0;
+        const putVal = g.put !== '' && g.put !== undefined && g.put !== null ? Number(g.put) : 0;
+        const internalTotal = calculateInternalTotal(ct1Val, ct2Val, putVal);
+
+        return [
+          index + 1,
+          student.full_name,
+          student.roll_number || '',
+          ct1Val,
+          ct2Val,
+          putVal,
+          internalTotal,
+        ];
+      });
+
+      const csvContent = [headers, ...rows].map((row) => row.map((cell) => `"${cell}"`).join(',')).join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute('download', 'TheoryExam_Register.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('Theory exam register exported successfully!');
+    } catch (err) {
+      console.error('Failed to export theory exam register:', err);
+      toast.error('Failed to export theory exam register. Please try again.');
+    }
+  };
+
   const handleSaveGrade = async (submissionId) => {
     const entry = gradingForm[submissionId] || {};
     const marks = entry.marks;
@@ -577,6 +831,23 @@ const openBulkGrading = async (assignment) => {
         >
           Lab Register (LES)
         </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('ctput')}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '8px',
+            fontWeight: '600',
+            fontSize: '0.875rem',
+            border: 'none',
+            cursor: 'pointer',
+            backgroundColor: activeTab === 'ctput' ? '#6366f1' : 'transparent',
+            color: activeTab === 'ctput' ? 'white' : '#9ca3af',
+            boxShadow: activeTab === 'ctput' ? '0 4px 6px -1px rgba(99, 102, 241, 0.3)' : 'none',
+          }}
+        >
+          Theory Exams (CT/PUT)
+        </button>
       </div>
 
       {activeTab === 'tes' && (
@@ -588,23 +859,23 @@ const openBulkGrading = async (assignment) => {
           <div style={{ display: 'flex', gap: '12px' }}>
             <button
               type="button"
-              onClick={() => setIsGradebookOpen(true)}
+              onClick={exportOfficialGradebook}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
                 padding: '10px 20px',
                 borderRadius: '8px',
-                backgroundColor: '#059669',
+                backgroundColor: '#f59e0b',
                 color: 'white',
                 border: 'none',
                 cursor: 'pointer',
                 fontWeight: 'bold',
                 fontSize: '0.875rem',
-                boxShadow: '0 10px 15px -3px rgba(5, 150, 105, 0.3)',
+                boxShadow: '0 10px 15px -3px rgba(245, 158, 11, 0.3)',
               }}
             >
-              📊 Export Gradebook
+              📊 Export Official Gradebook
             </button>
             <button
               type="button"
@@ -1180,6 +1451,172 @@ const openBulkGrading = async (assignment) => {
           )}
         </div>
       )}
-    </>
-  );
-}
+
+       {activeTab === 'ctput' && (
+         <div style={{ backgroundColor: '#1c1d2e', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)' }}>
+           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: '1 1 300px' }}>
+               <label style={{ fontSize: '0.875rem', fontWeight: '600', color: '#d1d5db', whiteSpace: 'nowrap' }}>Select Subject:</label>
+               <select
+                 value={theoryExamSubject}
+                 onChange={handleTheoryExamSubjectChange}
+                 style={{
+                   flex: 1,
+                   backgroundColor: '#11131f',
+                   border: '1px solid #2d314d',
+                   color: 'white',
+                   padding: '10px 12px',
+                   borderRadius: '8px',
+                   fontSize: '0.875rem',
+                   outline: 'none',
+                   fontFamily: 'inherit',
+                 }}
+               >
+                 <option value="">-- Choose a subject --</option>
+                 {mySubjects.map((subject) => (
+                   <option key={subject.id} value={subject.id}>
+                     {subject.name}
+                   </option>
+                 ))}
+               </select>
+             </div>
+             <div style={{ display: 'flex', gap: '10px' }}>
+               <button
+                 type="button"
+                 onClick={saveTheoryExamRegister}
+                 disabled={!theoryExamSubject || isSavingTheoryExam}
+                 style={{
+                   display: 'inline-flex',
+                   alignItems: 'center',
+                   gap: '8px',
+                   padding: '10px 20px',
+                   borderRadius: '8px',
+                   fontWeight: '600',
+                   fontSize: '0.875rem',
+                   border: 'none',
+                   cursor: theoryExamSubject && !isSavingTheoryExam ? 'pointer' : 'not-allowed',
+                   backgroundColor: theoryExamSubject && !isSavingTheoryExam ? '#059669' : '#4b5563',
+                   color: 'white',
+                   boxShadow: theoryExamSubject && !isSavingTheoryExam ? '0 10px 15px -3px rgba(5, 150, 105, 0.3)' : 'none',
+                 }}
+               >
+                 💾 Save Register
+               </button>
+               <button
+                 type="button"
+                 onClick={exportTheoryExamRegister}
+                 disabled={!theoryExamSubject || theoryExamStudents.length === 0}
+                 style={{
+                   display: 'inline-flex',
+                   alignItems: 'center',
+                   gap: '8px',
+                   padding: '10px 20px',
+                   borderRadius: '8px',
+                   fontWeight: '600',
+                   fontSize: '0.875rem',
+                   border: 'none',
+                   cursor: theoryExamSubject && theoryExamStudents.length > 0 ? 'pointer' : 'not-allowed',
+                   backgroundColor: theoryExamSubject && theoryExamStudents.length > 0 ? '#6366f1' : '#4b5563',
+                   color: 'white',
+                   boxShadow: theoryExamSubject && theoryExamStudents.length > 0 ? '0 10px 15px -3px rgba(99, 102, 241, 0.3)' : 'none',
+                 }}
+               >
+                 📊 Export to CSV
+               </button>
+             </div>
+           </div>
+
+           {!theoryExamSubject ? (
+             <div style={{ textAlign: 'center', padding: '48px', color: '#9ca3af' }}>
+               <p>Please select a subject to view the Theory Exam Register.</p>
+             </div>
+           ) : isTheoryExamLoading ? (
+             <div style={{ textAlign: 'center', padding: '48px', color: '#9ca3af' }}>
+               Loading theory exam data…
+             </div>
+           ) : theoryExamStudents.length === 0 ? (
+             <div style={{ textAlign: 'center', padding: '48px', color: '#9ca3af' }}>
+               <p>No students found for this subject.</p>
+             </div>
+           ) : (
+             <div style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: '70vh', borderRadius: '12px', border: '1px solid #2d314d' }}>
+               <table style={{ width: '100%', borderCollapse: 'collapse', color: 'white', minWidth: '900px' }}>
+                 <thead>
+                   <tr style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#1c1d2e' }}>
+                     <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', borderRight: '1px solid #2d314d', minWidth: '160px' }}>Student Name</th>
+                     <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '80px' }}>Roll Number</th>
+                     <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '60px' }}>CT1 (Max 30)</th>
+                     <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '60px' }}>CT2 (Max 30)</th>
+                     <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '70px' }}>PUT (Max 70)</th>
+                     <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#34d399', borderBottom: '1px solid #2d314d', minWidth: '90px' }}>Internal Total (Max 50)</th>
+                   </tr>
+                 </thead>
+                 <tbody>
+                   {theoryExamStudents.length === 0 ? (
+                     <tr>
+                       <td colSpan="6" style={{ textAlign: 'center', padding: '32px', color: '#9ca3af' }}>
+                         No students found.
+                       </td>
+                     </tr>
+                   ) : (
+                     theoryExamStudents.map((student) => {
+                       const g = theoryExamGrades[student.id] || {};
+                       const ct1 = parseFloat(g.ct1) || 0;
+                       const ct2 = parseFloat(g.ct2) || 0;
+                       const put = parseFloat(g.put) || 0;
+                       const internalTotal = calculateInternalTotal(ct1, ct2, put);
+
+                       return (
+                         <tr key={student.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                           <td style={{ padding: '12px 24px', fontSize: '0.875rem', color: 'white', position: 'sticky', left: 0, backgroundColor: '#1c1d2e', zIndex: 10, fontWeight: '600' }}>
+                             {student.full_name}
+                           </td>
+                           <td style={{ padding: '12px 12px', textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8' }}>
+                             {student.roll_number || '—'}
+                           </td>
+                           <td style={{ padding: '12px 12px' }}>
+                             <input
+                               type="number"
+                               min="0"
+                               max="30"
+                               value={g.ct1 ?? ''}
+                               onChange={(e) => handleTheoryExamGradeChange(student.id, 'ct1', e.target.value)}
+                               style={{ width: '70px', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '6px', borderRadius: '4px', textAlign: 'center' }}
+                             />
+                           </td>
+                           <td style={{ padding: '12px 12px' }}>
+                             <input
+                               type="number"
+                               min="0"
+                               max="30"
+                               value={g.ct2 ?? ''}
+                               onChange={(e) => handleTheoryExamGradeChange(student.id, 'ct2', e.target.value)}
+                               style={{ width: '70px', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '6px', borderRadius: '4px', textAlign: 'center' }}
+                             />
+                           </td>
+                           <td style={{ padding: '12px 12px' }}>
+                             <input
+                               type="number"
+                               min="0"
+                               max="70"
+                               value={g.put ?? ''}
+                               onChange={(e) => handleTheoryExamGradeChange(student.id, 'put', e.target.value)}
+                               style={{ width: '70px', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '6px', borderRadius: '4px', textAlign: 'center' }}
+                             />
+                           </td>
+                           <td style={{ padding: '12px 24px', fontWeight: 'bold', color: '#34d399', textAlign: 'center' }}>
+                             {internalTotal.toFixed(1)}
+                           </td>
+                         </tr>
+                       );
+                     })
+                   )}
+                 </tbody>
+               </table>
+             </div>
+           )}
+         </div>
+       )}
+     </>
+   );
+ }
