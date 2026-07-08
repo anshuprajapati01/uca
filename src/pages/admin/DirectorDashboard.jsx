@@ -225,8 +225,7 @@ export default function DirectorDashboard() {
   const [targetYears, setTargetYears] = useState([]);
 
   const [showAddFacultyModal, setShowAddFacultyModal] = useState(false);
-  const [facultyToDelete, setFacultyToDelete] = useState(null);
-  const [facultyForm, setFacultyForm] = useState({ fullName: '', email: '', phone: '', avatarUrl: '' });
+  const [facultyForm, setFacultyForm] = useState({ title: 'Mr.', fullName: '', email: '', phone: '', avatarUrl: '' });
   const [expertiseTags, setExpertiseTags] = useState([]);
   const [expertiseInput, setExpertiseInput] = useState('');
   const [facultyToast, setFacultyToast] = useState(null);
@@ -251,6 +250,8 @@ export default function DirectorDashboard() {
   const [directorSubjectMaterials, setDirectorSubjectMaterials] = useState([]);
   const [directorActiveFilter, setDirectorActiveFilter] = useState('All');
   const [directorMaterialCategories, setDirectorMaterialCategories] = useState(['All']);
+
+  const [handoverModal, setHandoverModal] = useState({ isOpen: false, faculty: null, replacementFacultyId: '' });
 
   const toggleYear = (year) => {
     setTargetYears(prev =>
@@ -605,6 +606,13 @@ const handleAddFaculty = async (e) => {
     setIsAddingFaculty(true);
 
     try {
+        // 0. Strict BIT email domain validation BEFORE creating the user
+        if (!facultyForm.email.toLowerCase().endsWith('@bit.ac.in')) {
+            toast.error("Official email must end with @bit.ac.in");
+            setIsAddingFaculty(false);
+            return;
+        }
+
         // 1. Ensure tempClient doesn't read the existing browser session
         const tempClient = createTempClient();
 
@@ -631,7 +639,7 @@ const handleAddFaculty = async (e) => {
         // 4. Insert into user_profiles using the NEW ID
         const { error: profileError } = await supabase.from('user_profiles').insert([{
             id: newFacultyId,
-            full_name: facultyForm.fullName,
+            full_name: `${facultyForm.title} ${facultyForm.fullName}`,
             email: facultyForm.email,
             phone: facultyForm.phone,
             avatar_url: facultyForm.avatarUrl,
@@ -651,7 +659,7 @@ const handleAddFaculty = async (e) => {
         toast.success('Faculty added successfully. Default password is Test@123');
         
         setShowAddFacultyModal(false);
-        setFacultyForm({ fullName: '', email: '', phone: '', avatarUrl: '' });
+        setFacultyForm({ title: 'Mr.', fullName: '', email: '', phone: '', avatarUrl: '' });
         setExpertiseTags([]);
         setExpertiseInput('');
         loadFacultyList();
@@ -964,69 +972,88 @@ const handleAddFaculty = async (e) => {
     }
   };
 
-  const confirmDeleteFaculty = async () => {
-    if (!facultyToDelete) return;
+  const handleHandoverAndDelete = async () => {
+    if (!handoverModal.replacementFacultyId) {
+      toast.error("Please select a replacement faculty.");
+      return;
+    }
+
+    const oldId = handoverModal.faculty.id;
+    const newId = handoverModal.replacementFacultyId;
 
     try {
-        // 1. Unassign subjects (Prevent orphaned subjects)
-        const { error: subjectError } = await supabase
-            .from('subjects')
-            .update({ faculty_id: null })
-            .eq('faculty_id', facultyToDelete);
-        if (subjectError) console.warn("Subject unassign warning:", subjectError);
+      // STEP 1: Transfer Subjects
+      const { data: subData, error: subErr } = await supabase
+        .from('subjects')
+        .update({ faculty_id: newId })
+        .eq('faculty_id', oldId)
+        .select(); // Force return of updated rows
+      if (subErr) throw new Error("Subjects Update Error: " + subErr.message);
+      console.log("Subjects transferred:", subData);
 
-        // 2. Delete dependent resources
-        const { error: resourceError } = await supabase
-            .from('study_materials')
-            .delete()
-            .eq('uploaded_by', facultyToDelete);
-        if (resourceError) console.warn("Resources deletion warning:", resourceError);
+      // STEP 2: Transfer HOD Roles
+      const { data: deptData, error: deptErr } = await supabase
+        .from('departments')
+        .update({ hod_id: newId })
+        .eq('hod_id', oldId)
+        .select(); // Force return of updated rows
+      if (deptErr) throw new Error("Departments Update Error: " + deptErr.message);
+      console.log("Departments transferred:", deptData);
 
-        // 3. Delete dependent study materials
-        const { error: studyMaterialError } = await supabase
-            .from('study_materials')
-            .delete()
-            .eq('uploaded_by', facultyToDelete);
-        if (studyMaterialError) console.warn("Study Materials deletion warning:", studyMaterialError);
+      // STEP 3: Transfer Timetable Slots
+      const { data: timeData, error: timeErr } = await supabase
+        .from('timetable_slots')
+        .update({ faculty_id: newId })
+        .eq('faculty_id', oldId)
+        .select(); // Force return of updated rows
+      if (timeErr) throw new Error("Timetable Slots Update Error: " + timeErr.message);
+      console.log("Timetable slots transferred:", timeData);
 
-        // 4. Delete Profile from user_profiles
-        const { error: profileError } = await supabase
-            .from('user_profiles')
-            .delete()
-            .eq('id', facultyToDelete);
+      // STEP 4: Safely Delete the old profile
+      const { error: delErr } = await supabase
+        .from('user_profiles')
+        .delete()
+        .eq('id', oldId);
+      if (delErr) throw delErr;
 
-        if (profileError) {
-            console.error("Profile Delete Error:", profileError);
-            alert("Failed to delete profile data: " + profileError.message);
-            setFacultyToDelete(null);
-            return;
-        }
-
-        // 5. PERMANENTLY Delete Auth Account via RPC
-        const { error: authError } = await supabase.rpc('delete_user_permanently', { 
-            user_id: facultyToDelete 
-        });
-
-        if (authError) {
-            console.error("Auth Delete Error:", authError);
-            alert("Profile deleted, but failed to remove auth account completely.");
-        } else {
-            console.log("Auth account deleted permanently.");
-            toast.success('Faculty deleted successfully!'); // 👈 YAHAN LAGA DO
-        }
-
-        // 6. Update UI and Close Modal
-        setDbFaculty(prev => prev.filter(f => f.id !== facultyToDelete));
-        setFacultyToDelete(null);
-
-        // Trigger Success Toast
-        // showToast("Faculty permanently deleted!", "success"); 
+      toast.success("Handover and deletion successful!");
+      setHandoverModal({ isOpen: false, faculty: null, replacementFacultyId: "" });
+      setDbFaculty(prev => prev.filter(f => f.id !== oldId)); // Refresh the list
 
     } catch (err) {
-        console.error("Unexpected Delete Error:", err);
-        alert("An unexpected error occurred during deletion.");
+      console.error("Handover error:", err);
+      toast.error(err.message || "Failed to complete handover and deletion.");
     }
   };
+
+  const handleForceDelete = async () => {
+    if (!handoverModal.faculty) return;
+    const oldId = handoverModal.faculty.id;
+
+    try {
+      const { error: subErr } = await supabase.from('subjects').update({ faculty_id: null }).eq('faculty_id', oldId);
+      if (subErr) throw new Error("Failed to unassign subjects: " + subErr.message);
+
+      const { error: deptErr } = await supabase.from('departments').update({ hod_id: null }).eq('hod_id', oldId);
+      if (deptErr) throw new Error("Failed to unassign HOD roles: " + deptErr.message);
+
+      const { error: timeErr } = await supabase.from('timetable_slots').update({ faculty_id: null }).eq('faculty_id', oldId);
+      if (timeErr) throw new Error("Failed to unassign timetable: " + timeErr.message);
+
+      const { error: delErr } = await supabase.from('user_profiles').delete().eq('id', oldId);
+      if (delErr) throw delErr;
+
+      toast.success("Faculty deleted and roles left unassigned!");
+      setHandoverModal({ isOpen: false, faculty: null, replacementFacultyId: "" });
+      setDbFaculty(prev => prev.filter(f => f.id !== oldId));
+      loadFacultyList();
+    } catch (err) {
+      console.error("Force Delete Error:", err);
+      toast.error(err.message || "Failed to force delete.");
+    }
+  };
+
+  const otherFaculties = dbFaculty.filter(f => f.id !== handoverModal.faculty?.id);
 
   const filteredDepartments = departments.filter(dept => dept.description === selectedYear);
 
@@ -1699,21 +1726,36 @@ flexShrink: 0,
                   <form onSubmit={handleAddFaculty} className="add-faculty-form">
                     <div className="add-faculty-form__row">
                       <label className="add-faculty-label">Full Name</label>
-                      <input
-                        className="add-faculty-input"
-                        type="text"
-                        placeholder="Enter full name"
-                        required
-                        value={facultyForm.fullName}
-                        onChange={(e) => setFacultyForm({ ...facultyForm, fullName: e.target.value })}
-                      />
+                      <div style={{ display: 'flex', flexDirection: 'row', gap: '10px' }}>
+                        <select
+                          className="add-faculty-input"
+                          style={{ maxWidth: '110px' }}
+                          value={facultyForm.title}
+                          onChange={(e) => setFacultyForm({ ...facultyForm, title: e.target.value })}
+                        >
+                          <option value="Mr.">Mr.</option>
+                          <option value="Mrs.">Mrs.</option>
+                          <option value="Ms.">Ms.</option>
+                          <option value="Dr.">Dr.</option>
+                          <option value="Prof.">Prof.</option>
+                        </select>
+                        <input
+                          className="add-faculty-input"
+                          type="text"
+                          placeholder="Enter full name"
+                          required
+                          style={{ flex: 1 }}
+                          value={facultyForm.fullName}
+                          onChange={(e) => setFacultyForm({ ...facultyForm, fullName: e.target.value })}
+                        />
+                      </div>
                     </div>
                     <div className="add-faculty-form__row">
                       <label className="add-faculty-label">Email</label>
                       <input
                         className="add-faculty-input"
                         type="email"
-                        placeholder="Enter email address"
+                        placeholder="e.g., Faculty123@bit.ac.in"
                         required
                         value={facultyForm.email}
                         onChange={(e) => setFacultyForm({ ...facultyForm, email: e.target.value })}
@@ -1756,7 +1798,7 @@ flexShrink: 0,
                       )}
                     </div>
                     <div className="add-faculty-form__row">
-                      <label className="add-faculty-label">Expertise / Subjects</label>
+                      <label className="add-faculty-label">Expertise</label>
                       <input
                         className="add-faculty-input"
                         type="text"
@@ -1807,7 +1849,7 @@ flexShrink: 0,
                       <div className="premium-faculty-card__glow" />
                       <button
                         className="premium-faculty-card__delete-btn"
-                        onClick={() => setFacultyToDelete(faculty.id)}
+                        onClick={() => setHandoverModal({ isOpen: true, faculty: faculty, replacementFacultyId: '' })}
                         aria-label="Delete faculty"
                         type="button"
                       >
@@ -1846,31 +1888,6 @@ flexShrink: 0,
                 )}
               </div>
             </div>
-
-            {facultyToDelete !== null && (
-              <div className="delete-faculty-modal-overlay" onClick={() => setFacultyToDelete(null)}>
-                <div className="delete-faculty-modal" onClick={(e) => e.stopPropagation()}>
-                  <div className="delete-faculty-modal__icon">
-                    <Trash2 size={48} />
-                  </div>
-                  <p className="delete-faculty-modal__text">Are you sure you want to delete this faculty profile?</p>
-                  <div className="delete-faculty-modal__actions">
-                    <button
-                      className="delete-faculty-modal__btn delete-faculty-modal__btn--cancel"
-                      onClick={() => setFacultyToDelete(null)}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      className="delete-faculty-modal__btn delete-faculty-modal__btn--delete"
-                      onClick={confirmDeleteFaculty}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </section>
         )}
         {/* --- 5. MANAGE DEPARTMENTS TAB --- */}
@@ -2054,6 +2071,122 @@ flexShrink: 0,
                   onClick={confirmDeleteMaterial}
                 >
                   Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Handover Modal */}
+        {handoverModal.isOpen && (
+          <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999 }}>
+            <div style={{
+              backgroundColor: '#1c1d2e',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '16px',
+              padding: '28px',
+              width: '100%',
+              maxWidth: '480px',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+              textAlign: 'center'
+            }}>
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '48px',
+                height: '48px',
+                borderRadius: '12px',
+                background: 'rgba(245, 158, 11, 0.15)',
+                marginBottom: '16px'
+              }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white', margin: '0 0 8px 0' }}>Handover Responsibilities</h3>
+              <p style={{ color: '#9ca3af', fontSize: '0.875rem', margin: '0 0 20px 0', lineHeight: '1.5' }}>
+                Please choose how to handle the deletion of <strong style={{ color: '#fbbf24' }}>{handoverModal.faculty?.full_name}</strong>. You can assign a replacement for their active subjects, or delete them and leave their subjects unassigned.
+              </p>
+
+              <div style={{ textAlign: 'left', marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#9ca3af', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Replacement Faculty
+                </label>
+                <select
+                  value={handoverModal.replacementFacultyId || ''}
+                  onChange={(e) => setHandoverModal(prev => ({ ...prev, replacementFacultyId: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    borderRadius: '10px',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    background: 'rgba(45, 45, 61, 0.5)',
+                    color: handoverModal.replacementFacultyId ? '#fff' : '#a0a0b0',
+                    fontSize: '0.95rem',
+                    outline: 'none',
+                    cursor: 'pointer',
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                    MozAppearance: 'none'
+                  }}
+                >
+                  <option value="" disabled>-- Select Replacement Faculty --</option>
+                  {otherFaculties.map(f => (
+                    <option key={f.id} value={f.id} style={{ backgroundColor: '#1e1e2d', color: '#ffffff' }}>
+                      {f.full_name} {f.email ? `(${f.email})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => { setHandoverModal({ isOpen: false, faculty: null, replacementFacultyId: '' }); }}
+                  style={{ padding: '10px 20px', borderRadius: '8px', fontWeight: '600', color: '#d1d5db', backgroundColor: '#2d314d', border: 'none', cursor: 'pointer', transition: 'background-color 0.2s' }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#3b4063'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2d314d'}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleForceDelete}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '8px',
+                    fontWeight: '600',
+                    color: '#ef4444',
+                    backgroundColor: 'transparent',
+                    border: '1px solid #ef4444',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseOver={(e) => { e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                >
+                  Delete & Unassign
+                </button>
+                <button
+                  onClick={handleHandoverAndDelete}
+                  disabled={!handoverModal.replacementFacultyId}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '8px',
+                    fontWeight: '600',
+                    color: 'white',
+                    backgroundColor: '#ef4444',
+                    border: 'none',
+                    cursor: !handoverModal.replacementFacultyId ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 10px 15px -3px rgba(239, 68, 68, 0.3)',
+                    transition: 'background-color 0.2s',
+                    opacity: !handoverModal.replacementFacultyId ? 0.7 : 1
+                  }}
+                  onMouseOver={(e) => handoverModal.replacementFacultyId && (e.currentTarget.style.backgroundColor = '#dc2626')}
+                  onMouseOut={(e) => handoverModal.replacementFacultyId && (e.currentTarget.style.backgroundColor = '#ef4444')}
+                >
+                  Handover & Delete
                 </button>
               </div>
             </div>

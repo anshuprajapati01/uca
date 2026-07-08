@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Trash2, PenTool } from 'lucide-react';
 import { supabase } from '../../lib/supabase.js';
+import toast from 'react-hot-toast';
 import { useHodContext } from '../../context/HodContext.jsx';
 import { useAuth } from '../../hooks/useAuth.js';
 import { AGGREGATE_DEPARTMENTS } from '../../config/constants.js';
@@ -38,7 +39,6 @@ function getSemestersForYear(year, isLive = true) {
 const getFacultyInfo = (subject) => {
   const faculty = subject.faculty || subject.assigned_faculty || null;
   if (!faculty) {
-    console.warn('Missing faculty on subject:', subject.id, subject.name, 'keys:', Object.keys(subject));
     return { name: 'Unknown Faculty', avatarUrl: FACULTY_AVATAR_FALLBACK };
   }
   return {
@@ -68,8 +68,12 @@ export default function CurriculumManager() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingSubjects, setIsLoadingSubjects] = useState(false);
   const [deleteSubjectId, setDeleteSubjectId] = useState(null);
+  const [reassignModal, setReassignModal] = useState({ isOpen: false, subject: null, newFacultyId: '' });
+  const [reassignSearchTerm, setReassignSearchTerm] = useState('');
+  const [isReassignDropdownOpen, setIsReassignDropdownOpen] = useState(false);
   const toastTimerRef = useRef(null);
   const facultyDropdownRef = useRef(null);
+  const reassignDropdownRef = useRef(null);
 
   // ── Context Hooks ──
   const {
@@ -250,7 +254,18 @@ const fetchSubjects = useCallback(async () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // ── Handler Functions ──
+  useEffect(() => {
+    function handleReassignClickOutside(event) {
+      if (reassignDropdownRef.current && !reassignDropdownRef.current.contains(event.target)) {
+        setIsReassignDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleReassignClickOutside);
+    return () => document.removeEventListener('mousedown', handleReassignClickOutside);
+  }, []);
+
+  const selectedReassignFaculty = dbFacultyList.find((f) => f.id === reassignModal.newFacultyId);
+
   const handleSubmitSubject = async (e) => {
     e.preventDefault();
     if (!selectedFacultyData || !selectedSemesterDetails || !effectiveBranchCode || !activeSemesterLive) return;
@@ -313,6 +328,26 @@ const fetchSubjects = useCallback(async () => {
     }, 3000);
 
     setDeleteSubjectId(null);
+  };
+
+  const handleReassignFaculty = async () => {
+    if (!reassignModal.newFacultyId) return toast.error('Select a faculty');
+    try {
+      const { error } = await supabase
+        .from('subjects')
+        .update({ faculty_id: reassignModal.newFacultyId })
+        .eq('id', reassignModal.subject.id);
+
+      if (error) throw error;
+
+      toast.success('Faculty assigned successfully!');
+      setReassignModal({ isOpen: false, subject: null, newFacultyId: '' });
+      setReassignSearchTerm('');
+      fetchSubjects();
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to assign faculty.');
+    }
   };
 
   const toggleSemesterLive = async (e, semesterId) => {
@@ -589,19 +624,85 @@ const fetchSubjects = useCallback(async () => {
                   key={subject.id}
                   className="subject-card"
                 >
-                  <button
-                    type="button"
-                    className="subject-card__delete-button"
-                    aria-label={`Delete ${subject.name}`}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setDeleteSubjectId(subject.id);
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'flex-end',
+                      gap: '10px',
+                      background: 'transparent',
+                      padding: '0',
+                      position: 'absolute',
+                      top: '10px',
+                      right: '10px',
                     }}
-                    title="Delete subject"
-                    disabled={!activeSemesterLive}
                   >
-                    <Trash2 size={16} />
-                  </button>
+                    <button
+                      type="button"
+                      className="subject-card__assign-button"
+                      aria-label={`Assign faculty to ${subject.name}`}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setReassignModal({ isOpen: true, subject, newFacultyId: '' });
+                      }}
+                      title="Assign faculty"
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '5px',
+                        color: '#94a3b8',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '999px',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = '#e2e8f0';
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = '#94a3b8';
+                        e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      <PenTool size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      className="subject-card__delete-button"
+                      aria-label={`Delete ${subject.name}`}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setDeleteSubjectId(subject.id);
+                      }}
+                      title="Delete subject"
+                      disabled={!activeSemesterLive}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '5px',
+                        color: '#fca5a5',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '999px',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!activeSemesterLive) return;
+                        e.currentTarget.style.color = '#fff';
+                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = '#fca5a5';
+                        e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                   <h3 className="subject-card__title">{subject.name}</h3>
                   <p className="subject-card__code">{subject.code}</p>
                   <div className="subject-card__faculty-section">
@@ -757,6 +858,207 @@ const fetchSubjects = useCallback(async () => {
         </div>
       )}
 
+      {reassignModal.isOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(0,0,0,0.7)',
+            backdropFilter: 'blur(5px)',
+          }}
+          onClick={() => {
+            setReassignModal({ isOpen: false, subject: null, newFacultyId: '' });
+            setReassignSearchTerm('');
+          }}
+        >
+          <div
+            style={{
+              background: '#1a1c2e',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '16px',
+              padding: '28px',
+              width: '100%',
+              maxWidth: '480px',
+              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ color: 'white', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>
+              Reassign Faculty
+            </h3>
+            <p style={{ color: '#9ca3af', fontSize: '0.875rem', margin: '0 0 20px 0' }}>
+              Subject: <strong style={{ color: '#fbbf24' }}>{reassignModal.subject?.name}</strong>
+            </p>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.75rem',
+                  fontWeight: '600',
+                  color: '#9ca3af',
+                  marginBottom: '8px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                }}
+              >
+                New Faculty
+              </label>
+              <div
+                style={{
+                  position: 'relative',
+                }}
+                ref={reassignDropdownRef}
+              >
+                <input
+                  type="text"
+                  placeholder="Search faculty by name..."
+                  value={
+                    reassignModal.newFacultyId
+                      ? selectedReassignFaculty?.full_name || ''
+                      : reassignSearchTerm
+                  }
+                  onChange={(e) => {
+                    setReassignSearchTerm(e.target.value);
+                    setReassignModal((prev) => ({ ...prev, newFacultyId: '' }));
+                    setIsReassignDropdownOpen(true);
+                  }}
+                  onFocus={() => {
+                    setIsReassignDropdownOpen(true);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    borderRadius: '10px',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    background: 'rgba(45,45,61,0.5)',
+                    color: '#fff',
+                    fontSize: '0.95rem',
+                    outline: 'none',
+                    cursor: 'text',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                {isReassignDropdownOpen && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      marginTop: '6px',
+                      maxHeight: '220px',
+                      overflowY: 'auto',
+                      background: '#1e1e2d',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '10px',
+                      zIndex: 10000,
+                      boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+                    }}
+                  >
+                    {dbFacultyList
+                      .filter((f) =>
+                        f.full_name.toLowerCase().includes(reassignSearchTerm.toLowerCase())
+                      )
+                      .map((fac) => (
+                        <div
+                          key={fac.id}
+                          onClick={() => {
+                            setReassignModal((prev) => ({ ...prev, newFacultyId: fac.id }));
+                            setReassignSearchTerm('');
+                            setIsReassignDropdownOpen(false);
+                          }}
+                          style={{
+                            padding: '10px 16px',
+                            cursor: 'pointer',
+                            color: '#e2e8f0',
+                            fontSize: '0.9rem',
+                            transition: 'background 0.15s',
+                            borderBottom: '1px solid rgba(255,255,255,0.04)',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(139, 92, 246, 0.15)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'transparent';
+                          }}
+                        >
+                          {fac.full_name}
+                          {fac.email ? (
+                            <span style={{ color: '#9ca3af', fontSize: '0.8rem', marginLeft: '8px' }}>
+                              ({fac.email})
+                            </span>
+                          ) : null}
+                        </div>
+                      ))}
+                    {dbFacultyList.filter((f) =>
+                      f.full_name.toLowerCase().includes(reassignSearchTerm.toLowerCase())
+                    ).length === 0 && (
+                      <div
+                        style={{
+                          padding: '12px 16px',
+                          color: '#6b7280',
+                          fontSize: '0.85rem',
+                          fontStyle: 'italic',
+                        }}
+                      >
+                        No faculty found
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+              <button
+                onClick={() => {
+                  setReassignModal({ isOpen: false, subject: null, newFacultyId: '' });
+                  setReassignSearchTerm('');
+                }}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  color: '#d1d5db',
+                  backgroundColor: '#2d314d',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s',
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#3b4063')}
+                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#2d314d')}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReassignFaculty}
+                disabled={!reassignModal.newFacultyId}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  color: 'white',
+                  backgroundColor: reassignModal.newFacultyId ? '#8b5cf6' : '#4b5563',
+                  border: 'none',
+                  cursor: reassignModal.newFacultyId ? 'pointer' : 'not-allowed',
+                  boxShadow: reassignModal.newFacultyId ? '0 10px 15px -3px rgba(139,92,246,0.3)' : 'none',
+                  transition: 'background-color 0.2s',
+                  opacity: reassignModal.newFacultyId ? 1 : 0.7,
+                }}
+                onMouseOver={(e) => reassignModal.newFacultyId && (e.currentTarget.style.backgroundColor = '#7c3aed')}
+                onMouseOut={(e) => reassignModal.newFacultyId && (e.currentTarget.style.backgroundColor = '#8b5cf6')}
+              >
+                Assign Faculty
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {deleteSubjectId && (
          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(5px)' }}>
             <div style={{ background: '#1a1c2e', padding: '24px', borderRadius: '16px', border: '1px solid #ef4444', maxWidth: '400px', width: '90%' }}>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { UserCheck, Trash2, GraduationCap, Users, CalendarDays, AlertCircle, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase.js';
+import { AGGREGATE_DEPARTMENTS } from '../../config/constants.js';
 import './HodManagement.css';
 
 const YEARS = [
@@ -202,60 +203,51 @@ if (error) {
     setLoading(true);
 
     try {
+      const branches = AGGREGATE_DEPARTMENTS[selectedDepartment] || [selectedDepartment];
+      const skippedWarnings = [];
+      const insertPayloads = [];
+
       for (const year of selectedYears) {
-        const { data: existing, error: selectError } = await supabase
-          .from('departments')
-          .select('id')
-          .eq('code', selectedDepartment)
-          .eq('description', year)
-          .limit(1);
+        for (const branch of branches) {
+          const alreadyAssigned = assignments.some(
+            (assignment) => assignment.year === year && assignment.department === branch
+          );
 
-        if (selectError) {
-          console.error('DB Error:', selectError);
-          throw selectError;
-        }
-
-        const existingRow = existing?.[0];
-
-        if (existingRow?.id) {
-          const { error: updateError } = await supabase
-            .from('departments')
-            .update({ hod_id: selectedFaculty.id })
-            .eq('id', existingRow.id);
-
-          if (updateError) {
-            console.error('DB Error:', updateError);
-            throw updateError;
+          if (alreadyAssigned) {
+            skippedWarnings.push(`Already assigned for ${branch} in ${year}`);
+            continue;
           }
-        } else {
-          const { error: insertError } = await supabase
-            .from('departments')
-            .insert({
-              name: selectedDepartment,
-              code: selectedDepartment,
-              description: year,
-              hod_id: selectedFaculty.id,
-              college_id: '11111111-0000-0000-0000-000000000001',
-            });
 
-          if (insertError) {
-            console.error('DB Error:', insertError);
-            throw insertError;
-          }
+          insertPayloads.push({
+            name: branch,
+            code: branch,
+            description: year,
+            hod_id: selectedFaculty.id,
+            college_id: DEFAULT_COLLEGE_ID,
+          });
         }
       }
 
-      const { error: clearError } = await supabase
+      if (skippedWarnings.length > 0) {
+        showToast(skippedWarnings.join(' | '), 'warning');
+      }
+
+      if (insertPayloads.length === 0) {
+        showToast('Already assigned HOD for selected Year and Department!', 'error');
+        return; // Do NOT update user profile
+      }
+
+      // STEP 1: Persist the department assignment(s) FIRST
+      const { error: insertError } = await supabase
         .from('departments')
-        .update({ hod_id: null })
-        .eq('code', selectedDepartment)
-        .not('description', 'in', `(${selectedYears.map((y) => `"${y}"`).join(',')})`);
+        .insert(insertPayloads);
 
-      if (clearError) {
-        console.error('DB Error:', clearError);
-        throw clearError;
+      if (insertError) {
+        console.error('DB Error:', insertError);
+        throw insertError; // Abort before touching user profile
       }
 
+      // STEP 2: Only now (assignment succeeded) update the user profile role + permissions
       let canViewFaculty = false;
       let canViewHod = false;
 
@@ -268,9 +260,11 @@ if (error) {
         canViewHod = true;
       }
 
+      const assignedRole = (selectedRole === 'hod' || selectedRole === 'both') ? 'hod' : 'faculty';
+
       const { error: profileError } = await supabase
         .from('user_profiles')
-        .update({ can_view_faculty: canViewFaculty, can_view_hod: canViewHod })
+        .update({ role: assignedRole, can_view_faculty: canViewFaculty, can_view_hod: canViewHod })
         .eq('id', selectedFaculty.id);
 
       if (profileError) {
@@ -306,7 +300,34 @@ if (error) {
         throw error;
       }
 
-      showToast('HOD assignment removed successfully');
+      const facultyId = pendingDelete.faculty_id;
+
+      const { data: remainingAssignments, error: checkError } = await supabase
+        .from('departments')
+        .select('id')
+        .eq('hod_id', facultyId);
+
+      if (checkError) {
+        console.error('HOD check error:', checkError);
+        throw checkError;
+      }
+
+      if (!remainingAssignments || remainingAssignments.length === 0) {
+        const { error: roleError } = await supabase
+          .from('user_profiles')
+          .update({ role: 'faculty' })
+          .eq('id', facultyId);
+
+        if (roleError) {
+          console.error('Role update error:', roleError);
+          throw roleError;
+        }
+
+        showToast('Assignment removed. Faculty role updated.');
+      } else {
+        showToast('HOD assignment removed successfully');
+      }
+
       setPendingDelete(null);
       await refreshAssignments();
     } catch (error) {

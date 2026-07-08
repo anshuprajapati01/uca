@@ -26,5 +26,9 @@ export const USER_ROLES = {
 
 export const AGGREGATE_DEPARTMENTS = {
   'ASH 1': ['CSE A', 'CSE B', 'CSE C', 'CS', 'ECE'],
-  'ASH 2': ['AI ML', 'DS', 'IT', 'ME', 'CE', 'VLSI']
+  'ASH 2': ['AI ML', 'DS', 'IT', 'ME', 'CE', 'VLSI'],
+  'CS & IT': ['CS', 'IT'],
+  'CSE & ECE': ['CSE', 'ECE'],
+  'AI ML & DS': ['AI ML', 'DS'],
+  'ME & CE': ['ME', 'CE'],
 };

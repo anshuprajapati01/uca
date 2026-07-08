@@ -34,13 +34,26 @@ export const supabase = new Proxy(
   },
 );
 
+/** @type {import('@supabase/supabase-js').SupabaseClient | null} */
+let tempClient = null;
+
 /**
  * Creates a temporary Supabase client for auth operations without session persistence.
+ * Lazy singleton to prevent multiple GoTrueClient instances.
  * Use this when signing up users to avoid interfering with the main session.
  */
 export function createTempClient() {
-  const { url, publishableKey } = getSupabaseEnv();
-  return createClient(url, publishableKey, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-  });
+  if (!tempClient) {
+    const { url, publishableKey } = getSupabaseEnv();
+    tempClient = createClient(url, publishableKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+        storageKey: 'sb-temp-auth-token',
+      },
+    });
+  }
+
+  return tempClient;
 }

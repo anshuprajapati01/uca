@@ -1,8 +1,19 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { APP_SHORT_NAME } from '../../config/constants.js';
 import './DashboardLayout.css';
 
 export default function Sidebar({ navItems, isOpen, onClose }) {
+  const location = useLocation();
+  const currentSearch = new URLSearchParams(location.search);
+  const currentTab = currentSearch.get('tab') || 'overview';
+
+  const isItemActive = (item) => {
+    if (item.disabled) return false;
+    const itemSearch = new URLSearchParams(item.path.split('?')[1] || '');
+    const itemTab = itemSearch.get('tab') || 'overview';
+    return itemTab === currentTab;
+  };
+
   return (
     <>
       {isOpen ? (
@@ -39,14 +50,13 @@ export default function Sidebar({ navItems, isOpen, onClose }) {
               );
             }
 
+            const active = isItemActive(item);
+
             return (
               <NavLink
                 key={item.path}
                 to={item.path}
-                end={item.path === navItems[0]?.path}
-                className={({ isActive }) =>
-                  `dashboard-sidebar__link${isActive ? ' dashboard-sidebar__link--active' : ''}`
-                }
+                className={`dashboard-sidebar__link${active ? ' dashboard-sidebar__link--active' : ''}`}
                 onClick={onClose}
               >
                 <Icon className="dashboard-sidebar__icon" aria-hidden="true" />

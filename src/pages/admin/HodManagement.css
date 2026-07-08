@@ -650,6 +650,13 @@
   box-shadow: 0 4px 18px rgba(244, 63, 94, 0.15);
 }
 
+.hod-toast--warning {
+  background: rgba(245, 158, 11, 0.18);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.55);
+  box-shadow: 0 4px 18px rgba(245, 158, 11, 0.15);
+}
+
 @keyframes hodSlideIn {
   from { opacity: 0; transform: translateX(20px); }
   to { opacity: 1; transform: translateX(0); }
