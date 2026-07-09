@@ -15,3 +15,20 @@ create table if not exists class_representatives (
 -- Indexes for efficient queries
 create index if not exists idx_class_representatives_branch_year_semester on class_representatives(branch, year, semester);
 create index if not exists idx_class_representatives_student_id on class_representatives(student_id);
+
+-- Timetable Configs Table
+-- Stores per branch/semester/year metadata (W.E.F. date and default room) so it persists across refreshes
+
+create table if not exists timetable_configs (
+    id uuid primary key default gen_random_uuid(),
+    branch text not null,
+    semester integer not null,
+    year text not null,
+    wef_date date,
+    room_no text,
+    created_at timestamp with time zone default now(),
+    updated_at timestamp with time zone default now(),
+    unique(branch, semester, year)
+);
+
+create index if not exists idx_timetable_configs_branch_semester_year on timetable_configs(branch, semester, year);

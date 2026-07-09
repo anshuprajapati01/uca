@@ -197,13 +197,13 @@ export default function HODManageTimetable() {
   const [selectedYear, setSelectedYear] = useState('');
   const [selectedBranch, setSelectedBranch] = useState('');
   const [selectedSemester, setSelectedSemester] = useState('');
-  const [wefDate, setWefDate] = useState('');
-  const [roomNo, setRoomNo] = useState('');
+  const [timetableMeta, setTimetableMeta] = useState({ wefDate: '', roomNo: '' });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeCell, setActiveCell] = useState(null);
   const [subjects, setSubjects] = useState([]);
   const [faculties, setFaculties] = useState([]);
   const [slots, setSlots] = useState([]);
+  const [showRefTable, setShowRefTable] = useState(false);
   const [slotData, setSlotData] = useState({
     subject_id: '',
     faculty_id: '',
@@ -272,9 +272,29 @@ export default function HODManageTimetable() {
     if (error) {
       console.error('Error fetching timetable:', error);
       toast.error('Failed to load timetable');
+      return null;
     } else {
       console.log('[fetchSlots] Returned rows:', (data || []).length, data);
       setSlots(data || []);
+
+      const { data: metaData, error: metaError } = await supabase
+        .from('timetable_configs')
+        .select('wef_date, room_no')
+        .eq('branch', effectiveBranch)
+        .eq('semester', numericSemester)
+        .eq('year', effectiveYear)
+        .maybeSingle();
+
+      if (metaError) {
+        console.error('Error fetching timetable config:', metaError);
+      } else {
+        setTimetableMeta({
+          wefDate: metaData?.wef_date || '',
+          roomNo: metaData?.room_no || '',
+        });
+      }
+
+      return data || [];
     }
   }, [effectiveYear, effectiveBranch, selectedSemester]);
 
@@ -320,9 +340,62 @@ export default function HODManageTimetable() {
   const isSingleYearHod = isHodMode && hodAssignedYears.length <= 1;
   const isSingleBranchHod = isHodMode && hodAuthorizedBranches.length <= 1;
 
+  const referenceIndex = useMemo(() => {
+    const map = new Map();
+    (slots || []).forEach((slot) => {
+      const subjectCode = slot.subjects?.code || '';
+      const subjectName = slot.subjects?.name || 'Unassigned';
+      const subjectShortName = getSubjectShortName(slot.subjects?.name);
+      const facultyName = getFacultyName(slot);
+      const facultyCode = getInitials(facultyName);
+      const key = `${subjectCode}|${facultyName}`;
+      if (!map.has(key)) {
+        map.set(key, {
+          subjectCode,
+          subjectFullName: subjectName,
+          subjectShortName,
+          facultyCode,
+          facultyName,
+        });
+      }
+    });
+    return Array.from(map.values()).sort((a, b) =>
+      (a.subjectCode || a.subjectFullName).localeCompare(b.subjectCode || b.subjectFullName)
+    );
+  }, [slots]);
+
   const handleLoadGrid = async () => {
-    await fetchTimetable();
+    const data = await fetchTimetable();
+    if (data === null) return;
+    if (data.length > 0) {
+      toast.success('Timetable & Settings loaded successfully! 📅');
+    } else {
+      toast.info('No timetable found for this selection.');
+    }
   };
+
+  const saveTimetableMeta = useCallback(async () => {
+    if (!effectiveYear || !effectiveBranch || !selectedSemester) return;
+    const numericSemester = parseInt(String(selectedSemester).replace(/\D/g, ''), 10);
+    const { error } = await supabase
+      .from('timetable_configs')
+      .upsert(
+        {
+          branch: effectiveBranch,
+          semester: numericSemester,
+          year: effectiveYear,
+          wef_date: timetableMeta.wefDate || null,
+          room_no: timetableMeta.roomNo || null,
+        },
+        { onConflict: 'branch,semester,year' }
+      );
+    if (error) {
+      console.error('Error saving timetable config:', error);
+      toast.error('Failed to save settings');
+    } else {
+      toast.success('Settings saved');
+    }
+  }, [effectiveYear, effectiveBranch, selectedSemester, timetableMeta]);
 
   const handleDownloadPDF = async () => {
     const input = document.getElementById('timetable-capture');
@@ -331,38 +404,41 @@ export default function HODManageTimetable() {
       return;
     }
 
+    const wasOpen = showRefTable;
+    if (!wasOpen) {
+      setShowRefTable(true);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    }
+
     toast.loading('Generating PDF…', { id: 'pdf-toast' });
     try {
       const canvas = await html2canvas(input, {
         backgroundColor: CAPTURE_BG,
-        scale: 2,
-        useCORS: true,
+        scale: 4, // Boost resolution by 4x for ultra-crisp text
+        useCORS: true, // Fixes any font loading issues
         logging: false,
       });
 
-      const pdf = new jsPDF({
-        orientation: 'landscape',
-        unit: 'pt',
-        format: 'a4',
-      });
+      const pdf = new jsPDF('l', 'mm', 'a4');
 
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
 
-      const margin = 24;
-      const imgWidth = pageWidth - margin * 2;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const imgData = canvas.toDataURL('image/png', 1.0);
 
-      const y = margin + (pageHeight - margin * 2 - imgHeight) / 2;
+      const canvasRatio = canvas.height / canvas.width;
+      let finalWidth = pdfWidth;
+      let finalHeight = finalWidth * canvasRatio;
 
-      pdf.addImage(
-        canvas.toDataURL('image/png'),
-        'PNG',
-        margin,
-        Math.max(margin, y),
-        imgWidth,
-        Math.min(imgHeight, pageHeight - margin * 2)
-      );
+      if (finalHeight > pdfHeight) {
+        finalHeight = pdfHeight;
+        finalWidth = finalHeight / canvasRatio;
+      }
+
+      const x = (pdfWidth - finalWidth) / 2;
+      const y = (pdfHeight - finalHeight) / 2;
+
+      pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight, undefined, 'FAST');
 
       const safeBranch = (effectiveBranch || 'Timetable').replace(/[^\w-]+/g, '_');
       const fileName = `${safeBranch}-Semester-${selectedSemester || ''}-Timetable.pdf`;
@@ -372,6 +448,10 @@ export default function HODManageTimetable() {
     } catch (err) {
       console.error('PDF export failed:', err);
       toast.error('Failed to export PDF', { id: 'pdf-toast' });
+    }
+
+    if (!wasOpen) {
+      setShowRefTable(false);
     }
   };
 
@@ -389,7 +469,7 @@ export default function HODManageTimetable() {
     setSlotData({
       subject_id: '',
       faculty_id: '',
-      room: roomNo || '',
+      room: timetableMeta.roomNo || '',
       startTime: col.start,
       endTime: col.end,
       slotType: 'theory',
@@ -402,7 +482,7 @@ export default function HODManageTimetable() {
     const isSpan = isSpanType(slot.slot_type);
     const subj = getSubjectShortName(slot.subjects?.name);
     const fac = getInitials(getFacultyName(slot));
-    const room = getSlotRoom(slot, roomNo);
+    const room = getSlotRoom(slot, timetableMeta.roomNo);
     const batchLabel = (slot.batch || 'all').toUpperCase();
 
     if (isNonAcademicSlot(slot.slot_type)) {
@@ -446,7 +526,7 @@ export default function HODManageTimetable() {
 
     const subj = getSubjectShortName(slot.subjects?.name);
     const fac = getInitials(getFacultyName(slot));
-    const room = getSlotRoom(slot, roomNo);
+    const room = getSlotRoom(slot, timetableMeta.roomNo);
     const typeLabel = slot.slot_type === 'skill' ? 'Skill' : 'Lab';
     const batchLabel = (slot.batch && slot.batch !== 'all' ? slot.batch : batch).toUpperCase();
 
@@ -482,26 +562,30 @@ export default function HODManageTimetable() {
     const numericSemester = parseInt(String(selectedSemester).replace(/\D/g, ''), 10);
     const numericYear = getYearNumber(effectiveYear);
 
-    const payload = {
+    const newSlot = {
       branch: effectiveBranch,
       year: numericYear,
       semester: numericSemester,
       section: 'A',
       day_of_week: activeCell.day,
-      start_time: slotData.startTime,
-      end_time: slotData.endTime,
+      start_time: `${slotData.startTime}:00`,
+      end_time: `${slotData.endTime}:00`,
       subject_id: slotData.subject_id,
       faculty_id: isNonAcademicSlot(slotData.slotType) ? (slotData.faculty_id || null) : slotData.faculty_id,
-      room_no: slotData.room || roomNo || null,
+      room_no: slotData.room || timetableMeta.roomNo || null,
       slot_type: slotData.slotType,
       batch: slotData.batch,
     };
 
     let error;
     if (activeCell.slotId) {
-      ({ error } = await supabase.from('timetable_slots').update(payload).eq('id', activeCell.slotId));
+      ({ error } = await supabase.from('timetable_slots').update(newSlot).eq('id', activeCell.slotId));
     } else {
-      ({ error } = await supabase.from('timetable_slots').insert([payload]));
+      ({ error } = await supabase
+        .from('timetable_slots')
+        .upsert([newSlot], {
+          onConflict: 'branch, semester, section, day_of_week, start_time, batch',
+        }));
     }
 
     if (error) {
@@ -620,7 +704,7 @@ export default function HODManageTimetable() {
           onClick={handleLoadGrid}
           disabled={!effectiveBranch || !effectiveYear || !selectedSemester}
         >
-          Load Grid
+          Load Timetable
         </button>
 
         {(effectiveBranch || effectiveYear || selectedSemester) && (
@@ -654,8 +738,9 @@ export default function HODManageTimetable() {
                   <input
                     type="date"
                     className="timetable-meta-input"
-                    value={wefDate}
-                    onChange={(e) => setWefDate(e.target.value)}
+                    value={timetableMeta.wefDate}
+                    onChange={(e) => setTimetableMeta({ ...timetableMeta, wefDate: e.target.value })}
+                    onBlur={saveTimetableMeta}
                   />
                 </label>
                 <label className="timetable-meta-field">
@@ -664,8 +749,9 @@ export default function HODManageTimetable() {
                     type="text"
                     className="timetable-meta-input"
                     placeholder="e.g., 125"
-                    value={roomNo}
-                    onChange={(e) => setRoomNo(e.target.value)}
+                    value={timetableMeta.roomNo}
+                    onChange={(e) => setTimetableMeta({ ...timetableMeta, roomNo: e.target.value })}
+                    onBlur={saveTimetableMeta}
                   />
                 </label>
               </div>
@@ -740,7 +826,7 @@ export default function HODManageTimetable() {
                                       const allBatchText = [
                                         getSubjectShortName(slot.subjects?.name),
                                         getInitials(getFacultyName(slot)),
-                                        getSlotRoom(slot, roomNo),
+                                        getSlotRoom(slot, timetableMeta.roomNo),
                                       ]
                                         .filter(Boolean)
                                         .join(' - ');
@@ -813,6 +899,42 @@ export default function HODManageTimetable() {
                 </tbody>
               </table>
             </div>
+
+            <div className="tt-ref-toggle-container" data-html2canvas-ignore="true">
+              <button onClick={() => setShowRefTable(!showRefTable)} className="tt-ref-toggle-btn">
+                {showRefTable ? 'Hide' : 'Show'} Subject &amp; Faculty Reference Key
+              </button>
+            </div>
+
+            {showRefTable && (
+              <div className="tt-reference-section">
+                <h3 className="tt-reference-title">Subject &amp; Faculty Reference Key</h3>
+                <table className="tt-reference-table">
+                  <thead>
+                    <tr>
+                      <th>Subject Code</th>
+                      <th>Subject Name</th>
+                      <th>Faculty Code</th>
+                      <th>Faculty Full Name</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {referenceIndex.map((item, idx) => (
+                      <tr key={idx}>
+                        <td>{item.subjectCode || '—'}</td>
+                        <td>
+                          {item.subjectFullName
+                            ? `${item.subjectFullName} (${item.subjectShortName})`
+                            : item.subjectShortName}
+                        </td>
+                        <td>{item.facultyCode || '—'}</td>
+                        <td>{item.facultyName}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </section>
       )}
@@ -892,7 +1014,7 @@ export default function HODManageTimetable() {
                   <input
                     type="text"
                     className="timetable-field-input"
-                    placeholder={roomNo ? `${roomNo} (default)` : 'e.g., 125 or L-304'}
+                    placeholder={timetableMeta.roomNo ? `${timetableMeta.roomNo} (default)` : 'e.g., 125 or L-304'}
                     value={slotData.room}
                     onChange={(e) => handleSlotInputChange('room', e.target.value)}
                   />

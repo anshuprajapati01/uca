@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, FileText, Megaphone } from 'lucide-react';
 import { supabase } from '../../lib/supabase.js';
+import '../student/StudentDashboard.css';
 import './FacultyOverview.css';
 
 function StatCard({ icon: Icon, label, value, isLoading }) {
@@ -22,6 +23,23 @@ function StatCard({ icon: Icon, label, value, isLoading }) {
   );
 }
 
+// Isko yahan replace kar do
+const formatTime = (timeString) => {
+    if (!timeString) return "N/A";
+    const [hours, minutes] = timeString.split(':');
+    const h = parseInt(hours);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${h12}:${minutes} ${ampm}`;
+};
+
+const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+const getInitialDay = () => {
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+  return days.includes(today) ? today : 'Monday';
+};
+
 export default function FacultyOverview() {
   const navigate = useNavigate();
   const [stats, setStats] = useState({
@@ -32,7 +50,7 @@ export default function FacultyOverview() {
   const [isLoading, setIsLoading] = useState(true);
   const [myClasses, setMyClasses] = useState([]);
   const [scheduleLoading, setScheduleLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [selectedDay, setSelectedDay] = useState(getInitialDay);
 
   useEffect(() => {
     let cancelled = false;
@@ -67,21 +85,25 @@ export default function FacultyOverview() {
     async function loadSchedule() {
       setScheduleLoading(true);
       try {
-        const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
+        const currentUser = user;
 
         const { data: slots, error } = await supabase
           .from('timetable_slots')
-          .select('*, subjects(name)')
-          .eq('day_of_week', currentDay)
-          .eq('faculty_id', user.id)
+          .select('*, subjects(name, code), user_profiles(full_name)')
+          .eq('faculty_id', currentUser.id)
+          .eq('day_of_week', selectedDay) // Ensure 'selectedDay' matches exactly what is in DB (e.g., 'Tuesday')
           .order('start_time', { ascending: true });
+
+        if (!error && slots) {
+          console.log(`DEBUG: Raw Data for ${selectedDay}:`, JSON.stringify(slots, null, 2));
+        }
 
         if (error) throw error;
         if (!cancelled) setMyClasses(slots || []);
       } catch (err) {
-        console.error('Failed to load today schedule:', err);
+        console.error('Failed to load schedule:', err);
         if (!cancelled) setMyClasses([]);
       } finally {
         if (!cancelled) setScheduleLoading(false);
@@ -89,7 +111,7 @@ export default function FacultyOverview() {
     }
     loadSchedule();
     return () => { cancelled = true; };
-  }, []);
+  }, [selectedDay]);
 
   return (
     <>
@@ -104,53 +126,80 @@ export default function FacultyOverview() {
         <StatCard icon={Megaphone} label="Announcements" value={stats.announcements} isLoading={isLoading} />
       </section>
 
-    <div style={{ marginTop: '2rem', backgroundColor: '#1a1d2d', borderRadius: '1rem', padding: '1.5rem', border: '1px solid #1f2937' }}>
-  <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-    📅 My Schedule Today
-  </h3>
-  {myClasses && myClasses.length > 0 ? (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      {myClasses.map((slot, index) => {
-        const currentTime = new Date().toLocaleTimeString('en-GB', { hour12: false });
-        const isLive = currentTime >= slot.start_time && currentTime <= slot.end_time;
+    <section className="student-section student-section--grow student-section--full faculty-schedule-section">
+      <h3 className="student-section__title">
+        📅 My Weekly Schedule <span className="st-header-sub">({selectedDay})</span>
+      </h3>
 
-        return (
-          <div key={index} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#252940', padding: '1.25rem', borderRadius: '0.75rem', border: '1px solid #374151', gap: '1rem' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              <span style={{ color: '#60a5fa', fontWeight: 'bold', fontSize: '0.875rem' }}>
-                {slot.start_time} - {slot.end_time}
-              </span>
-              <span style={{ color: 'white', fontWeight: '800', fontSize: '1.25rem' }}>
-                {slot.subjects?.name || 'Subject'}
-              </span>
-              <span style={{ color: '#9ca3af', fontSize: '0.875rem', fontWeight: '500' }}>
-                Room: {slot.room_no} &bull; Batch: {slot.batch}
-              </span>
-            </div>
-            
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              {isLive && (
-                <span style={{ padding: '0.375rem 1rem', borderRadius: '9999px', backgroundColor: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)', fontSize: '0.875rem', fontWeight: '900' }}>
-                  🟢 LIVE
-                </span>
-              )}
-              <button 
-                onClick={() => navigate('/faculty/subjects')} 
-                style={{ padding: '0.625rem 1.25rem', backgroundColor: '#2563eb', color: 'white', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 'bold', cursor: 'pointer', border: 'none' }}
+      <div className="st-day-selector">
+        {days.map((day) => (
+          <button
+            key={day}
+            type="button"
+            className={`st-day-btn ${selectedDay === day ? 'active' : ''}`}
+            onClick={() => setSelectedDay(day)}
+          >
+            {day.substring(0, 3)}
+          </button>
+        ))}
+      </div>
+
+      {scheduleLoading ? (
+        <div className="student-empty-box">
+          <p>Loading your schedule…</p>
+        </div>
+      ) : myClasses && myClasses.length > 0 ? (
+        <div className={`st-timeline-container ${myClasses.length > 2 ? 'st-timeline-container--scroll' : ''}`}>
+          {myClasses.map((slot) => {
+            const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+            const currentTime = new Date().toLocaleTimeString('en-GB', { hour12: false });
+            const isLive = selectedDay === today && currentTime >= slot.start_time && currentTime <= slot.end_time;
+
+            const formatBatchDisplay = (batch) => {
+              if (!batch || batch.toLowerCase() === 'all') return 'Batch All (B1 & B2)';
+              return `Section ${batch.toUpperCase()}`;
+            };
+
+            return (
+              <div
+                key={slot.id}
+                className={`st-class-card st-type-${slot.slot_type?.toLowerCase() || 'theory'}`}
               >
-                📝 Take Attendance
-              </button>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  ) : (
-    <div style={{ textAlign: 'center', padding: '2rem', backgroundColor: '#252940', borderRadius: '0.75rem', border: '1px solid #374151' }}>
-      <p style={{ color: '#9ca3af', fontWeight: '500', fontSize: '1.125rem', margin: 0 }}>No classes scheduled for today. Relax! ☕</p>
-    </div>
-  )}
-</div>
+                <div className="st-time-col">
+                  <span className="st-time-badge">
+                    {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                  </span>
+                  {isLive && <span className="student-schedule-card__live">🟢 LIVE</span>}
+                </div>
+                <div className="st-info-col">
+                  <h4>
+                    {slot.subjects?.name || 'Unknown Subject'}{' '}
+                    <span className="st-sub-code">({slot.subjects?.code || 'N/A'})</span>
+                  </h4>
+                  <p className="st-faculty">{slot.user_profiles?.full_name || 'Assigned Faculty'}</p>
+                  <p className="st-faculty">
+                    Room {slot.room_no || 'TBA'} &bull; {formatBatchDisplay(slot.batch)}
+                  </p>
+                </div>
+                <div className="st-room-col">
+                  <button
+                    type="button"
+                    className="faculty-take-attendance-btn"
+                    onClick={() => navigate('/faculty/subjects')}
+                  >
+                    📝 Take Attendance
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="student-empty-box">
+          <p>No classes scheduled for {selectedDay}. Enjoy your day!</p>
+        </div>
+      )}
+    </section>
     </>
   );
 }

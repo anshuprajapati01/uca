@@ -259,6 +259,9 @@
 .timetable-capture {
   background: #0f172a;
   border-radius: 0 0 18px 18px;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .timetable-grid-toolbar {
@@ -325,6 +328,16 @@
 .timetable-meta-input::placeholder {
   color: #64748b;
 }
+
+.tt-reference-section { margin-top: 30px; border-top: 2px dashed rgba(255,255,255,0.1); padding-top: 20px; }
+.tt-reference-title { font-size: 1.1rem; color: #fbbf24; font-weight: 600; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.tt-reference-table { width: 100%; border-collapse: collapse; background: #111827; border: 1px solid #374151; font-size: 0.9rem; }
+.tt-reference-table th { background: #1f2937; color: #ffffff; font-weight: 700; font-size: 0.95rem; padding: 12px; text-align: left; letter-spacing: 0.5px; border: 1px solid #374151; }
+.tt-reference-table td { color: #ffffff; font-weight: 500; font-size: 0.95rem; padding: 12px; border: 1px solid #374151; }
+
+.tt-ref-toggle-container { text-align: center; margin-top: 20px; }
+.tt-ref-toggle-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fbbf24; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; }
+.tt-ref-toggle-btn:hover { background: rgba(255, 255, 255, 0.1); }
 
 .timetable-matrix-wrap {
   overflow-x: auto;
