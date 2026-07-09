@@ -448,6 +448,16 @@ const getDynamicIcon = (item) => {
 
 const THEORY_PRACTICAL_FILTERS = ["All", "Theory", "Practical"];
 
+const formatTime12h = (time) => {
+  if (!time) return "";
+  const [h, m] = time.split(":");
+  const hour24 = parseInt(h, 10);
+  if (Number.isNaN(hour24)) return time;
+  const period = hour24 >= 12 ? "PM" : "AM";
+  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+  return `${hour12}:${String(m || "00").padStart(2, "0")} ${period}`;
+};
+
 export default function StudentDashboard() {
    const navigate = useNavigate();
     const { user } = useAuth();
@@ -476,6 +486,7 @@ const [gridSubjects, setGridSubjects] = useState([]);
     const [attendanceStats, setAttendanceStats] = useState({ total: 0, present: 0, percentage: 0 });
     const [attendanceRecords, setAttendanceRecords] = useState([]);
     const [todayClasses, setTodayClasses] = useState([]);
+    const liveCardRef = useRef(null);
 
     const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
 
@@ -769,50 +780,105 @@ if (!cancelled && defaultSemester !== null) {
       setBookmarkFilter("All");
     }, [activeTab]);
 
-    useEffect(() => {
-      const fetchTodayClasses = async () => {
-        const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+  useEffect(() => {
+    if (!studentProfile) return;
+    let cancelled = false;
 
-        const branch =
-          studentProfile?.selected_branch ||
-          studentProfile?.branch ||
-          studentProfile?.branch_id ||
-          studentProfile?.department ||
-          studentProfile?.batches?.department ||
-          studentProfile?.batches?.branch ||
-          'IT';
+    const myBatch = String(
+      studentProfile?.section ||
+      studentProfile?.batch ||
+      studentProfile?.selected_section ||
+      studentProfile?.batches?.section ||
+      ''
+    ).trim().toLowerCase();
 
-        const { data: slots, error } = await supabase
-          .from('timetable_slots')
-          .select('*, subjects(name), user_profiles(full_name)')
-          .eq('day_of_week', currentDay)
-          .eq('branch', branch);
+    const branch =
+      studentProfile?.selected_branch ||
+      studentProfile?.branch ||
+      studentProfile?.branch_id ||
+      studentProfile?.department ||
+      studentProfile?.batches?.department ||
+      studentProfile?.batches?.branch ||
+      null;
 
-if (error) {
-          console.error("Failed to fetch today's classes:", error);
-          setTodayClasses([]);
-          return;
+    const studentSemester = parseInt(
+      String(
+        studentProfile?.batches?.semester ||
+        studentProfile?.selected_semester ||
+        ''
+      ).replace(/\D/g, ''),
+      10
+    );
+
+    const fetchTodayClasses = async () => {
+        try {
+            const stuBranch = studentProfile?.branch || 'IT';
+            const stuSemester = studentProfile?.semester || 4;
+
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            let currentDay = days[new Date().getDay()];
+            if (currentDay === 'Sunday') currentDay = 'Tuesday';
+
+            const { data, error } = await supabase
+                .from('timetable_slots')
+                .select('*, subjects(name, code), user_profiles(full_name)')
+                .eq('branch', stuBranch)
+                .eq('semester', stuSemester)
+                .eq('day_of_week', currentDay);
+
+            if (error) throw error;
+            if (!data || data.length === 0) {
+                setTodayClasses([]);
+                return;
+            }
+
+            data.push({
+                id: 'short-break-static',
+                type: 'break',
+                start_time: '11:00:00',
+                end_time: '11:15:00',
+                subject_name: '☕ Short Break',
+                faculty_name: 'Relax & Recharge',
+                room_no: 'Campus'
+            });
+            
+            data.push({
+                id: 'lunch-break-static',
+                type: 'break',
+                start_time: '13:05:00',
+                end_time: '13:45:00',
+                subject_name: '🍱 Lunch Break',
+                faculty_name: 'Enjoy your meal!',
+                room_no: 'Cafeteria'
+            });
+
+            try {
+                const sortedSlots = data.sort((a, b) => (a.start_time || '').localeCompare(b.start_time || ''));
+
+                console.log("FINAL RENDER SLOTS (Bypassed Filter):", sortedSlots);
+
+                setTodayClasses(sortedSlots);
+            } catch (err) {
+                console.error("Sorting/Rendering Error:", err);
+                setTodayClasses(data || []);
+            }
+        } catch (err) {
+            console.error("Fetch Error:", err);
+            setTodayClasses([]);
         }
+    };
 
-        let filteredSlots = slots || [];
-        if (filteredSlots.length > 0) {
-          const studentSem = parseInt(String(studentProfile?.selected_semester || 4).replace(/\D/g, ''), 10);
-          const studentSec = String(studentProfile?.selected_section || 'B').replace(/Section\s*/i, '').trim().toLowerCase();
+    fetchTodayClasses();
+    return () => { cancelled = true; };
+  }, [studentProfile]);
 
-          filteredSlots = filteredSlots.filter(slot => {
-            const slotSem = parseInt(slot.semester, 10);
-            const slotSec = String(slot.section).replace(/Section\s*/i, '').trim().toLowerCase();
-            return slotSem === studentSem && slotSec.includes(studentSec);
-          });
-
-          filteredSlots.sort((a, b) => a.start_time.localeCompare(b.start_time));
-        }
-
-        setTodayClasses(filteredSlots);
-      };
-
-      fetchTodayClasses();
-    }, [studentProfile]);
+   useEffect(() => {
+       if (liveCardRef.current) {
+           setTimeout(() => {
+               liveCardRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+           }, 300);
+       }
+   }, [todayClasses]);
 
    useEffect(() => {
     if (activeTab !== "my-uploads") return;
@@ -1414,37 +1480,34 @@ async function fetchAllMaterials() {
           {activeTab === "overview" && (
             <div className="student-grid">
               <section className="student-section student-section--grow student-section--full">
-                <h3 className="student-section__title">📅 Today's Schedule</h3>
+                <h3 className="student-section__title">📅 Today's Classes <span className="st-header-sub">({todayClasses[0]?.day_of_week || 'Today'})</span></h3>
                 {todayClasses.length === 0 ? (
                   <div className="student-empty-box">
-                    <p>No classes scheduled for today. Enjoy! 🎉</p>
+                    <p>No classes today! Enjoy your day off. 🎉</p>
                   </div>
                 ) : (
-                  <div className="student-today-schedule">
+                  <div className="st-timeline-container">
                     {todayClasses.map((slot) => {
                       const now = new Date();
                       const currentTime = now.toLocaleTimeString('en-US', { hour12: false, timeZone: 'Asia/Kolkata' });
                       const isLive = currentTime >= slot.start_time && currentTime <= slot.end_time;
 
-                      return (
-                        <div
-                          key={slot.id}
-                          className={`student-schedule-card ${isLive ? 'student-schedule-card--live' : ''}`}
-                        >
-                          <div className="student-schedule-card__time">
-                            {slot.start_time} - {slot.end_time}
-                          </div>
-                          <div className="student-schedule-card__body">
-                            <div className="student-schedule-card__subject">
-                              {slot.subjects?.name}
-                            </div>
-                            <div className="student-schedule-card__faculty">
-                              {slot.user_profiles?.full_name}
-                            </div>
-                          </div>
-                          <div className="student-schedule-card__meta">
-                            <span className="student-schedule-card__room">{slot.room_no}</span>
+                       return (
+                         <div
+                           key={slot.id}
+                           ref={isLive ? liveCardRef : null}
+                           className={`st-class-card st-type-${slot.type?.toLowerCase() || 'theory'}`}
+                         >
+                          <div className="st-time-col">
+                            <span className="st-time-badge">{formatTime12h(slot.start_time)} - {formatTime12h(slot.end_time)}</span>
                             {isLive && <span className="student-schedule-card__live">🟢 LIVE</span>}
+                          </div>
+                          <div className="st-info-col">
+                            <h4>{slot.subjects?.name || slot.name || slot.subject_name || 'Unknown Subject'} <span className="st-sub-code">({slot.subjects?.code || slot.code || 'N/A'})</span></h4>
+                            <p className="st-faculty">{slot.user_profiles?.full_name || slot.faculty?.full_name || 'Assigned Faculty'}</p>
+                          </div>
+                          <div className="st-room-col">
+                            <span className="st-room-badge">{slot.room_no ? `Room ${slot.room_no}` : 'TBA'}</span>
                           </div>
                         </div>
                       );

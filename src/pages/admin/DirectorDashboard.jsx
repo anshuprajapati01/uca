@@ -16,8 +16,12 @@ const DIRECTOR_NAV = [
   { id: 'departments', label: 'Manage Departments', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=departments`, icon: Layers },
   { id: 'hod-management', label: 'HOD Management', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=hod-management`, icon: UserCheck },
   { id: 'student-directory', label: 'Student Directory', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=student-directory`, icon: Users },
+  { id: 'master-syllabus', label: 'Master Syllabus', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=master-syllabus`, icon: BookOpen },
   { id: 'announcements', label: 'Announcements', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=announcements`, icon: Bell },
 ];
+
+const MASTER_YEARS = [1, 2, 3, 4];
+const MASTER_BRANCHES = ['IT', 'CSE', 'ECE', 'ME', 'CE', 'CS', 'AI ML', 'DS', 'VLSI'];
 
 const YEARS = [
   { id: '1st Year', title: '1st Year', subtitle: 'Foundation', icon: BookOpen, color: 'purple' },
@@ -251,6 +255,16 @@ export default function DirectorDashboard() {
   const [directorActiveFilter, setDirectorActiveFilter] = useState('All');
   const [directorMaterialCategories, setDirectorMaterialCategories] = useState(['All']);
 
+  const [masterYear, setMasterYear] = useState(2);
+  const [masterBranch, setMasterBranch] = useState('IT');
+  const [masterSubjectsList, setMasterSubjectsList] = useState([]);
+  const [masterSubjectsLoading, setMasterSubjectsLoading] = useState(false);
+  const [masterSubjectsError, setMasterSubjectsError] = useState(null);
+  const [showMasterSubjectModal, setShowMasterSubjectModal] = useState(false);
+  const [masterForm, setMasterForm] = useState({ name: '', code: '', credits: 3, type: 'Theory' });
+  const [isAddingMasterSubject, setIsAddingMasterSubject] = useState(false);
+  const [masterSubjectToDelete, setMasterSubjectToDelete] = useState(null);
+
   const [handoverModal, setHandoverModal] = useState({ isOpen: false, faculty: null, replacementFacultyId: '' });
 
   const toggleYear = (year) => {
@@ -427,6 +441,91 @@ useEffect(() => {
   useEffect(() => {
     fetchDirectorSubjects();
   }, [fetchDirectorSubjects]);
+
+  const fetchMasterSubjects = useCallback(async () => {
+    setMasterSubjectsLoading(true);
+    setMasterSubjectsError(null);
+    try {
+      const { data, error } = await supabase
+        .from('master_syllabus')
+        .select('*')
+        .eq('year', masterYear)
+        .eq('branch', masterBranch)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setMasterSubjectsList(data || []);
+    } catch (err) {
+      console.error('Failed to fetch master subjects:', err);
+      setMasterSubjectsError(err.message);
+      setMasterSubjectsList([]);
+    } finally {
+      setMasterSubjectsLoading(false);
+    }
+  }, [masterYear, masterBranch]);
+
+  useEffect(() => {
+    fetchMasterSubjects();
+  }, [fetchMasterSubjects]);
+
+  const isOptionalMasterType = (type) =>
+    type === 'Skill' || type === 'Practical' || type === 'Non-Academic';
+
+  const handleAddMasterSubject = async (e) => {
+    e.preventDefault();
+    const name = masterForm.name.trim();
+    const isOptional = isOptionalMasterType(masterForm.type);
+    const code = isOptional ? (masterForm.code.trim() || 'N/A') : masterForm.code.trim();
+    if (!name || (!isOptional && !code)) {
+      toast.error(isOptional ? 'Subject Name is required.' : 'Subject Name and Subject Code are required.');
+      return;
+    }
+
+    setIsAddingMasterSubject(true);
+    try {
+      const { error } = await supabase
+        .from('master_syllabus')
+        .insert([{
+          name,
+          code,
+          credits: Number(masterForm.credits) || 0,
+          type: masterForm.type,
+          year: masterYear,
+          branch: masterBranch,
+        }]);
+
+      if (error) throw error;
+
+      toast.success('Master subject added successfully.');
+      setMasterForm({ name: '', code: '', credits: 3, type: 'Theory' });
+      setShowMasterSubjectModal(false);
+      fetchMasterSubjects();
+    } catch (err) {
+      console.error('Failed to add master subject:', err);
+      toast.error('Failed to add master subject: ' + err.message);
+    } finally {
+      setIsAddingMasterSubject(false);
+    }
+  };
+
+  const confirmDeleteMasterSubject = async () => {
+    if (!masterSubjectToDelete) return;
+    try {
+      const { error } = await supabase
+        .from('master_syllabus')
+        .delete()
+        .eq('id', masterSubjectToDelete);
+
+      if (error) throw error;
+
+      setMasterSubjectsList(prev => prev.filter(s => s.id !== masterSubjectToDelete));
+      setMasterSubjectToDelete(null);
+      toast.success('Master subject deleted successfully.');
+    } catch (err) {
+      console.error('Failed to delete master subject:', err);
+      toast.error('Failed to delete master subject.');
+    }
+  };
 
   const fetchSubjectViewAnnouncements = useCallback(async () => {
     if (!selectedSemester || !selectedBranch) {
@@ -2018,6 +2117,193 @@ flexShrink: 0,
         {activeTab === 'student-directory' && (
           <section className="director-section">
             <DirectorStudentDirectory />
+          </section>
+        )}
+
+        {/* --- 6. MASTER SYLLABUS (CONTROL CENTER) --- */}
+        {activeTab === 'master-syllabus' && (
+          <section className="director-section">
+            <div className="director-section__header">
+              <BookOpen size={24} />
+              <h2>Master Syllabus</h2>
+            </div>
+
+            <div className="master-syllabus-filter-bar">
+              <div className="master-syllabus-filter-group">
+                <label className="master-syllabus-filter-label" htmlFor="master-year">Year</label>
+                <select
+                  id="master-year"
+                  className="dept-input master-syllabus-select"
+                  value={masterYear}
+                  onChange={(e) => setMasterYear(Number(e.target.value))}
+                >
+                  {MASTER_YEARS.map((y) => (
+                    <option key={y} value={y}>{`Year ${y}`}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="master-syllabus-filter-group">
+                <label className="master-syllabus-filter-label" htmlFor="master-branch">Branch</label>
+                <select
+                  id="master-branch"
+                  className="dept-input master-syllabus-select"
+                  value={masterBranch}
+                  onChange={(e) => setMasterBranch(e.target.value)}
+                >
+                  {MASTER_BRANCHES.map((b) => (
+                    <option key={b} value={b}>{b}</option>
+                  ))}
+                </select>
+              </div>
+              <button
+                className="master-syllabus-add-btn"
+                onClick={() => setShowMasterSubjectModal(true)}
+                type="button"
+              >
+                <BookOpen size={16} />
+                <span>Add Master Subject</span>
+              </button>
+            </div>
+
+            {masterSubjectsError && (
+              <div className="master-syllabus-error">
+                Failed to load master subjects. Please try again later.
+              </div>
+            )}
+
+            {masterSubjectsLoading ? (
+              <div className="master-syllabus-loading">Loading master subjects...</div>
+            ) : masterSubjectsList.length > 0 ? (
+              <div className="master-syllabus-grid">
+                {masterSubjectsList.map((subject) => (
+                  <div key={subject.id} className="master-subject-card">
+                    <div className="master-subject-card__glow" />
+                    <div className="master-subject-card__top">
+                      <span className={`master-subject-card__type master-subject-card__type--${(subject.type || 'Theory').toLowerCase()}`}>
+                        {subject.type || 'Theory'}
+                      </span>
+                      <button
+                        className="master-subject-card__delete-btn"
+                        onClick={() => setMasterSubjectToDelete(subject.id)}
+                        aria-label="Delete subject"
+                        type="button"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                    <div className="master-subject-card__body">
+                      <h4 className="master-subject-card__name">{subject.name}</h4>
+                      <span className="master-subject-card__code">{subject.code}</span>
+                    </div>
+                    <div className="master-subject-card__meta">
+                      <span className="master-subject-card__credits">{subject.credits} Credits</span>
+                      <span className="master-subject-card__ctx">Year {subject.year} · {subject.branch}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="master-syllabus-empty">
+                No master subjects found for <strong>Year {masterYear} · {masterBranch}</strong>. Click “Add Master Subject” to pre-seed the official curriculum.
+              </div>
+            )}
+
+            {/* Add Master Subject Modal */}
+            {showMasterSubjectModal && (
+              <div className="add-faculty-modal-overlay" onClick={() => setShowMasterSubjectModal(false)}>
+                <div className="add-faculty-modal" onClick={(e) => e.stopPropagation()}>
+                  <button className="add-faculty-modal__close" onClick={() => setShowMasterSubjectModal(false)}>
+                    <X size={20} />
+                  </button>
+                  <h3 className="add-faculty-modal__title">Add Master Subject</h3>
+                  <form onSubmit={handleAddMasterSubject} className="add-faculty-form">
+                    <div className="add-faculty-form__row">
+                      <label className="add-faculty-label">Subject Name</label>
+                      <input
+                        className="add-faculty-input"
+                        type="text"
+                        placeholder="e.g., Data Structures"
+                        required
+                        value={masterForm.name}
+                        onChange={(e) => setMasterForm({ ...masterForm, name: e.target.value })}
+                      />
+                    </div>
+                    <div className="add-faculty-form__row">
+                      <label className="add-faculty-label">Subject Code {isOptionalMasterType(masterForm.type) && <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span>}</label>
+                      <input
+                        className="add-faculty-input"
+                        type="text"
+                        placeholder={isOptionalMasterType(masterForm.type) ? 'e.g., CS-301 (defaults to N/A)' : 'e.g., CS-301'}
+                        required={!isOptionalMasterType(masterForm.type)}
+                        value={masterForm.code}
+                        onChange={(e) => setMasterForm({ ...masterForm, code: e.target.value })}
+                      />
+                    </div>
+                    <div className="add-faculty-form__row">
+                      <label className="add-faculty-label">Credits {isOptionalMasterType(masterForm.type) && <span style={{ color: '#9ca3af', fontWeight: 400 }}>(defaults to 0)</span>}</label>
+                      <input
+                        className="add-faculty-input"
+                        type="number"
+                        min="0"
+                        max="10"
+                        required={!isOptionalMasterType(masterForm.type)}
+                        value={masterForm.credits}
+                        onChange={(e) => setMasterForm({ ...masterForm, credits: e.target.value })}
+                      />
+                    </div>
+                    <div className="add-faculty-form__row">
+                      <label className="add-faculty-label">Subject Type</label>
+                      <select
+                        className="add-faculty-input"
+                        value={masterForm.type}
+                        onChange={(e) => setMasterForm({ ...masterForm, type: e.target.value })}
+                      >
+                        <option value="Theory">Theory</option>
+                        <option value="Practical">Practical</option>
+                        <option value="Skill">Skill</option>
+                        <option value="Non-Academic">Non-Academic</option>
+                      </select>
+                    </div>
+                    <div className="add-faculty-form__actions">
+                      <button type="submit" className="add-faculty-submit-btn" disabled={isAddingMasterSubject}>
+                        {isAddingMasterSubject ? 'Saving...' : '✨ Save Subject'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* Delete confirmation modal */}
+            {masterSubjectToDelete !== null && (
+              <div className="delete-dept-modal-overlay" onClick={() => setMasterSubjectToDelete(null)}>
+                <div className="delete-dept-modal" onClick={(e) => e.stopPropagation()}>
+                  <div className="delete-dept-modal__header">
+                    <div className="delete-dept-modal__icon-box">
+                      <Trash2 size={28} />
+                    </div>
+                    <h3 className="delete-dept-modal__title">Delete Master Subject</h3>
+                    <p className="delete-dept-modal__text">This action is permanent. The subject will be removed from the master dictionary.</p>
+                  </div>
+                  <div className="delete-dept-modal__actions">
+                    <button
+                      className="delete-dept-modal__btn delete-dept-modal__btn--cancel"
+                      onClick={() => setMasterSubjectToDelete(null)}
+                      type="button"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className="delete-dept-modal__btn delete-dept-modal__btn--delete"
+                      onClick={confirmDeleteMasterSubject}
+                      type="button"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </section>
         )}
 

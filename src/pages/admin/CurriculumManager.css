@@ -709,6 +709,8 @@
 }
 
 .curriculum-manager__add-button {
+  position: relative;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -967,6 +969,62 @@
   background: transparent;
 }
 
+.cm-subject-combobox {
+  position: relative;
+}
+
+.cm-subject-dropdown {
+  position: absolute;
+  width: 100%;
+  margin-top: 0.5rem;
+  max-height: 14rem;
+  overflow-y: auto;
+  background: #1a1c2e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  z-index: 50;
+  padding: 0.35rem;
+}
+
+.cm-subject-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.7rem 1rem;
+  color: #fff;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.cm-subject-option:hover {
+  background: #2a2c3e;
+}
+
+.cm-subject-option__name {
+  color: #f8fafc;
+}
+
+.cm-subject-option__meta {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #8b5cf6;
+  letter-spacing: 0.02em;
+}
+
+.cm-subject-option--empty {
+  color: #64748b;
+  cursor: default;
+  pointer-events: none;
+}
+
+.cm-subject-option--empty:hover {
+  background: transparent;
+}
+
 .cm-type-group {
   display: flex;
   gap: 0.5rem;
@@ -1160,4 +1218,35 @@
 
 .cm-type-tab--active:hover {
   transform: translateY(-2px);
+}
+
+.cm-input--locked,
+.cm-select--locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: rgba(15, 23, 42, 0.4);
+  border-color: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.cm-select--locked {
+  appearance: none;
+}
+
+.cm-type-group--locked {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.cm-type-group--locked .cm-type-pill {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.cm-subject-option__code {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #fbbf24;
+  letter-spacing: 0.04em;
 }

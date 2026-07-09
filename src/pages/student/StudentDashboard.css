@@ -2295,3 +2295,83 @@ select option {
 .faculty-info { display: flex; align-items: center; gap: 8px; }
 .faculty-info img { width: 32px; height: 32px; border-radius: 50%; }
 .faculty-name { font-size: 0.9rem; font-weight: 500; color: #374151; }
+
+/* ── Premium Timeline for Today's Classes ──────────────── */
+.st-header-sub { font-size: 0.85rem; color: #94a3b8; font-weight: normal; margin-left: 8px; }
+
+/* Scrollable container so it doesn't push Profile down */
+.st-timeline-container {
+  height: 105px;
+  overflow-y: auto;
+  padding-right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+  margin-bottom: 24px;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+}
+.st-timeline-container::-webkit-scrollbar { width: 6px; }
+.st-timeline-container::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+}
+
+/* Premium Card - matching native matte dashboard */
+.st-class-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #1A1D2D;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s ease;
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+.st-class-card:hover {
+  background: #1f2233;
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Left border accents instead of full backgrounds */
+.st-class-card.st-type-theory { border-left: 4px solid #4f46e5; }
+.st-class-card.st-type-lab { border-left: 4px solid #be185d; }
+.st-class-card.st-type-skill { border-left: 4px solid #059669; }
+.st-class-card.st-type-break { border-left: 4px dashed #f59e0b; background: rgba(245, 158, 11, 0.03); justify-content: center; opacity: 0.9; }
+
+/* Columns */
+.st-time-col { flex: 0 0 180px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.st-time-badge {
+  background: rgba(234, 179, 8, 0.12);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #fde047;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 10px rgba(234, 179, 8, 0.05);
+}
+
+.st-info-col { flex: 1; padding: 0 20px; display: flex; flex-direction: column; gap: 4px; }
+.st-info-col h4 { margin: 0; font-size: 1.05rem; color: #ffffff; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.st-sub-code { font-size: 0.85rem; color: #94a3b8; font-weight: 400; }
+.st-faculty { margin: 0; font-size: 0.9rem; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.st-room-col { flex: 0 0 110px; text-align: right; display: flex; justify-content: flex-end; align-items: center; }
+.st-room-badge {
+  background: rgba(234, 179, 8, 0.12);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #fde047;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 0 10px rgba(234, 179, 8, 0.05);
+}

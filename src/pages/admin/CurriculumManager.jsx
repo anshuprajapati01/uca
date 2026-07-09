@@ -26,6 +26,9 @@ const YEAR_SEMESTERS = {
 
 const CURRENT_TERM = 'ODD';
 
+const isOptionalSubjectType = (type) =>
+  type === 'Skill' || type === 'Practical' || type === 'Non-Academic';
+
 function getSemestersForYear(year, isLive = true) {
   if (!year || !YEAR_SEMESTERS[year]) return [];
   return YEAR_SEMESTERS[year].map((semesterNumber) => ({
@@ -71,9 +74,12 @@ export default function CurriculumManager() {
   const [reassignModal, setReassignModal] = useState({ isOpen: false, subject: null, newFacultyId: '' });
   const [reassignSearchTerm, setReassignSearchTerm] = useState('');
   const [isReassignDropdownOpen, setIsReassignDropdownOpen] = useState(false);
+  const [masterSyllabusSubjects, setMasterSyllabusSubjects] = useState([]);
+  const [isSubjectDropdownOpen, setIsSubjectDropdownOpen] = useState(false);
   const toastTimerRef = useRef(null);
   const facultyDropdownRef = useRef(null);
   const reassignDropdownRef = useRef(null);
+  const subjectDropdownRef = useRef(null);
 
   // ── Context Hooks ──
   const {
@@ -141,26 +147,18 @@ export default function CurriculumManager() {
   const selectedFacultyData = dbFacultyList.find((faculty) => faculty.id === selectedFaculty);
 
   // ── useMemo Hooks ──
-  const theorySubjects = useMemo(
-    () => dbSubjectsList.filter((subject) => subject.type?.toLowerCase() === 'theory'),
-    [dbSubjectsList]
-  );
-  const practicalSubjects = useMemo(
-    () => dbSubjectsList.filter((subject) => subject.type?.toLowerCase() === 'practical'),
-    [dbSubjectsList]
+  const branchFilteredSubjects = useMemo(
+    () => dbSubjectsList.filter((subject) => subject.department === effectiveBranchCode),
+    [dbSubjectsList, effectiveBranchCode]
   );
 
-  const branchFilteredTheorySubjects = useMemo(
-    () => theorySubjects.filter((subject) => subject.department === effectiveBranchCode),
-    [theorySubjects, effectiveBranchCode]
+  const filteredSemesterSubjects = useMemo(
+    () =>
+      branchFilteredSubjects.filter(
+        (subject) => subject.type?.toLowerCase() === subjectTypeFilter.toLowerCase()
+      ),
+    [branchFilteredSubjects, subjectTypeFilter]
   );
-  const branchFilteredPracticalSubjects = useMemo(
-    () => practicalSubjects.filter((subject) => subject.department === effectiveBranchCode),
-    [practicalSubjects, effectiveBranchCode]
-  );
-
-  const filteredSemesterSubjects =
-    subjectTypeFilter?.toLowerCase() === 'theory' ? branchFilteredTheorySubjects : branchFilteredPracticalSubjects;
 
   // ── useCallback Hooks ──
   const fetchFaculty = useCallback(async () => {
@@ -259,29 +257,135 @@ const fetchSubjects = useCallback(async () => {
       if (reassignDropdownRef.current && !reassignDropdownRef.current.contains(event.target)) {
         setIsReassignDropdownOpen(false);
       }
+      if (subjectDropdownRef.current && !subjectDropdownRef.current.contains(event.target)) {
+        setIsSubjectDropdownOpen(false);
+      }
     }
     document.addEventListener('mousedown', handleReassignClickOutside);
     return () => document.removeEventListener('mousedown', handleReassignClickOutside);
   }, []);
 
+  // Load the official master syllabus reference list (from the `master_syllabus`
+  // table) to power the "Add New Subject" Creatable dropdown. Scoped to the
+  // selected Year + Department so HODs only see subjects relevant to them.
+  const fetchMasterSyllabusForDropdown = useCallback(async () => {
+    if (!selectedYear || !effectiveBranchCode) {
+      setMasterSyllabusSubjects([]);
+      return;
+    }
+
+    const yearNumber = Number(String(selectedYear).match(/\d+/)?.[0]);
+    if (!yearNumber) {
+      setMasterSyllabusSubjects([]);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('master_syllabus')
+        .select('id, name, code, credits, type, year, branch')
+        .eq('year', yearNumber)
+        .eq('branch', effectiveBranchCode)
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+      setMasterSyllabusSubjects(data || []);
+    } catch (err) {
+      console.error('Failed to load master syllabus:', err);
+      setMasterSyllabusSubjects([]);
+    }
+  }, [selectedYear, effectiveBranchCode]);
+
+  useEffect(() => {
+    fetchMasterSyllabusForDropdown();
+  }, [fetchMasterSyllabusForDropdown]);
+
+  // Suggestions sourced directly from the master_syllabus table (Year + Branch
+  // scoped via fetchMasterSyllabusForDropdown). De-duplicated by a stable
+  // unique key (id first, falling back to name) so that subjects which share
+  // an identical/placeholder code (e.g. 'N/A' for Skill / Non-Academic entries
+  // like Techedge) are NOT accidentally hidden from the dropdown.
+  const uniqueMasterSubjects = useMemo(() => {
+    if (!selectedYear || !effectiveBranchCode) return [];
+
+    const seen = new Map();
+    masterSyllabusSubjects.forEach((s) => {
+      const dedupeKey = (s.id || '').toString().trim() || (s.name || '').trim().toLowerCase();
+      if (!dedupeKey) return;
+      if (!seen.has(dedupeKey)) {
+        seen.set(dedupeKey, {
+          name: s.name,
+          code: s.code || '',
+          credits: s.credits ?? (s.type === 'Skill' ? 0 : 3),
+          type: s.type
+            ? s.type.charAt(0).toUpperCase() + s.type.slice(1).toLowerCase()
+            : 'Theory',
+        });
+      }
+    });
+    return Array.from(seen.values());
+  }, [masterSyllabusSubjects, selectedYear, effectiveBranchCode]);
+
+  // Filtered suggestions as the user types in the Subject Name field.
+  const subjectSuggestions = useMemo(() => {
+    const query = subjectName.trim().toLowerCase();
+    if (!query) return uniqueMasterSubjects;
+    return uniqueMasterSubjects.filter((s) =>
+      s.name.toLowerCase().includes(query) || (s.code || '').toLowerCase().includes(query)
+    );
+  }, [subjectName, uniqueMasterSubjects]);
+
+  const isMasterSubject = useMemo(() => {
+    if (!subjectName.trim()) return false;
+    const key = subjectName.trim().toLowerCase();
+    return uniqueMasterSubjects.some(
+      (s) => s.name.toLowerCase() === key || (s.code || '').toLowerCase() === key
+    );
+  }, [subjectName, uniqueMasterSubjects]);
+
+  const handleSubjectSelect = (subject) => {
+    setSubjectName(subject.name);
+    setSubjectCode(subject.code);
+    setCredits(Number(subject.credits) || 3);
+    setSubjectType(subject.type);
+    setIsSubjectDropdownOpen(false);
+  };
+
   const selectedReassignFaculty = dbFacultyList.find((f) => f.id === reassignModal.newFacultyId);
 
   const handleSubmitSubject = async (e) => {
     e.preventDefault();
-    if (!selectedFacultyData || !selectedSemesterDetails || !effectiveBranchCode || !activeSemesterLive) return;
+    if (!selectedSemesterDetails || !effectiveBranchCode || !activeSemesterLive) return;
+
+    const isNonAcademic = subjectType === 'Non-Academic';
+    const isOptionalCodeType = subjectType === 'Skill' || subjectType === 'Practical' || isNonAcademic;
+
+    // Non-Academic strictly bypasses faculty / code / credits validation.
+    // Theory still requires an assigned faculty teacher.
+    if (!isNonAcademic && !selectedFacultyData) {
+      alert('Please assign a faculty teacher.');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
+      const isSkill = subjectType === 'Skill';
+
+      // Build a null-safe payload. For Non-Academic (and optionally Skill/Practical),
+      // the faculty_id may legitimately be null.
       const payload = {
-        name: subjectName,
-        code: subjectCode,
+        name: subjectName.trim(),
         type: subjectType.toLowerCase(),
-        faculty_id: selectedFacultyData.id,
         department: effectiveBranchCode,
         year: selectedYear,
         semester: selectedSemesterDetails.name,
-        credits,
+        faculty_id: selectedFacultyData ? selectedFacultyData.id : null,
       };
+
+      // Subject Code: optional for Skill / Practical / Non-Academic (defaults to 'N/A').
+      payload.code = subjectCode.trim() || (isOptionalCodeType ? 'N/A' : '');
+      // Credits: 0 for optional types when empty, otherwise default to 3 for Theory.
+      payload.credits = Number(credits) || (isOptionalCodeType ? 0 : 3);
 
       const { error } = await supabase.from('subjects').insert(payload);
 
@@ -594,14 +698,13 @@ const fetchSubjects = useCallback(async () => {
               type="button"
               className="curriculum-manager__add-button"
               onClick={() => setShowAddModal(true)}
-              disabled={!activeSemesterLive}
             >
               + Add New Subject
             </button>
           </div>
 
           <div className="cm-type-tabs" role="tablist" aria-label="Subject type" style={{ marginTop: '1.5rem' }}>
-            {['Theory', 'Practical'].map((type) => (
+            {['Theory', 'Practical', 'Skill', 'Non-Academic'].map((type) => (
               <button
                 key={type}
                 type="button"
@@ -732,37 +835,69 @@ const fetchSubjects = useCallback(async () => {
             <form className="cm-form" onSubmit={handleSubmitSubject}>
               <div className="cm-form__row">
                 <label className="cm-label">Subject Name</label>
-                <input
-                  className="cm-input"
-                  type="text"
-                  placeholder="Discrete Structures & Theory of Logic"
-                  value={subjectName}
-                  onChange={(e) => setSubjectName(e.target.value)}
-                  required
-                />
+                <div className="cm-subject-combobox" ref={subjectDropdownRef}>
+                  <input
+                    className="cm-input"
+                    type="text"
+                    placeholder="Discrete Structures & Theory of Logic"
+                    value={subjectName}
+                    onChange={(e) => {
+                      setSubjectName(e.target.value);
+                      setIsSubjectDropdownOpen(true);
+                    }}
+                    onFocus={() => setIsSubjectDropdownOpen(true)}
+                    required
+                  />
+                  {isSubjectDropdownOpen && (
+                    <div className="cm-subject-dropdown">
+                      {subjectSuggestions.map((sub) => (
+                        <div
+                          key={`${sub.code || 'na'}-${sub.name}`}
+                          className="cm-subject-option"
+                          onClick={() => handleSubjectSelect(sub)}
+                        >
+                          <span className="cm-subject-option__name">{sub.name}</span>
+                          <span className="cm-subject-option__code">{sub.code}</span>
+                        </div>
+                      ))}
+                      {subjectSuggestions.length === 0 && (
+                        <div className="cm-subject-option cm-subject-option--empty">
+                          No match — keep typing to add a new subject
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="cm-form__row">
-                <label className="cm-label">Subject Code</label>
+                <label className="cm-label">
+                  Subject Code {isOptionalSubjectType(subjectType) && <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span>}
+                </label>
                 <input
-                  className="cm-input"
+                  className={`cm-input ${isMasterSubject ? 'cm-input--locked' : ''}`}
                   type="text"
                   placeholder="BCS301"
                   value={subjectCode}
                   onChange={(e) => setSubjectCode(e.target.value)}
-                  required
+                  disabled={isMasterSubject}
+                  readOnly={isMasterSubject}
+                  required={!isOptionalSubjectType(subjectType)}
                 />
               </div>
 
               <div className="cm-form__row">
-                <label className="cm-label">Credits</label>
+                <label className="cm-label">
+                  Credits {isOptionalSubjectType(subjectType) && <span style={{ color: '#9ca3af', fontWeight: 400 }}>(defaults to 0)</span>}
+                </label>
                 <select
-                  className="cm-select"
+                  className={`cm-select ${isMasterSubject ? 'cm-select--locked' : ''}`}
                   value={credits}
                   onChange={(e) => setCredits(Number(e.target.value))}
-                  required
+                  disabled={isMasterSubject}
+                  required={!isOptionalSubjectType(subjectType)}
                 >
-                  {[1, 2, 3, 4, 5].map((value) => (
+                  {[0, 1, 2, 3, 4, 5].map((value) => (
                     <option key={value} value={value}>
                       {value} Credit{value !== 1 ? 's' : ''}
                     </option>
@@ -772,13 +907,14 @@ const fetchSubjects = useCallback(async () => {
 
               <div className="cm-form__row">
                 <label className="cm-label">Subject Type</label>
-                <div className="cm-type-group">
-                  {['Theory', 'Practical'].map((type) => (
+                <div className={`cm-type-group ${isMasterSubject ? 'cm-type-group--locked' : ''}`}>
+                  {['Theory', 'Practical', 'Skill', 'Non-Academic'].map((type) => (
                     <button
                       key={type}
                       type="button"
                       className={`cm-type-pill ${subjectType === type ? 'cm-type-pill--active' : ''}`}
                       onClick={() => setSubjectType(type)}
+                      disabled={isMasterSubject}
                     >
                       {type}
                     </button>
@@ -787,7 +923,9 @@ const fetchSubjects = useCallback(async () => {
               </div>
 
               <div className="cm-form__row">
-                <label className="cm-label">Assign Faculty Teacher</label>
+                <label className="cm-label">
+                  Assign Faculty Teacher {subjectType === 'Non-Academic' && <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span>}
+                </label>
                 <div className="cm-faculty-combobox" ref={facultyDropdownRef}>
                   <input
                     className="cm-input"
@@ -799,7 +937,7 @@ const fetchSubjects = useCallback(async () => {
                       setIsFacultyDropdownOpen(true);
                     }}
                     onFocus={() => setIsFacultyDropdownOpen(true)}
-                    required
+                    required={subjectType !== 'Non-Academic'}
                   />
                   {isFacultyDropdownOpen && (
                     <div className="cm-faculty-dropdown">

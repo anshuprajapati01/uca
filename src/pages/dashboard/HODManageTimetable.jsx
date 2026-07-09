@@ -1,18 +1,52 @@
-import { useState, useMemo, useEffect } from 'react';
-import { Grid } from 'lucide-react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { Grid, Trash2, Download } from 'lucide-react';
 import { useHodContext } from '../../context/HodContext.jsx';
 import { supabase } from '../../lib/supabase.js';
 import toast from 'react-hot-toast';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import './HODManageTimetable.css';
+
+const CAPTURE_BG = '#0f172a';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-const SLOT_TYPES = [
+const COLUMNS = [
+  { type: 'period', label: '9:10-10:05 AM', periodIndex: 0, start: '09:10', end: '10:05' },
+  { type: 'period', label: '10:05-11:00 AM', periodIndex: 1, start: '10:05', end: '11:00' },
+  { type: 'break', label: 'SHORT BREAK (15 Min.)', sub: '11:00-11:15' },
+  { type: 'period', label: '11:15-12:10 PM', periodIndex: 2, start: '11:15', end: '12:10' },
+  { type: 'period', label: '12:10-01:05 PM', periodIndex: 3, start: '12:10', end: '13:05' },
+  { type: 'break', label: 'LUNCH BREAK (40 Min.)', sub: '01:05-01:45' },
+  { type: 'period', label: '01:45-02:40 PM', periodIndex: 4, start: '13:45', end: '14:40' },
+  { type: 'period', label: '02:40-03:35 PM', periodIndex: 5, start: '14:40', end: '15:35' },
+  { type: 'period', label: '03:35-04:30 PM', periodIndex: 6, start: '15:35', end: '16:30' },
+];
+
+const YEAR_OPTIONS = [
+  { value: '1st Year', label: 'Year 1' },
+  { value: '2nd Year', label: 'Year 2' },
+  { value: '3rd Year', label: 'Year 3' },
+  { value: '4th Year', label: 'Year 4' },
+];
+
+const YEAR_SEMESTERS = {
+  '1st Year': [1, 2],
+  '2nd Year': [3, 4],
+  '3rd Year': [5, 6],
+  '4th Year': [7, 8],
+};
+
+const getYearNumber = (yearLabel) => Object.keys(YEAR_SEMESTERS).indexOf(yearLabel) + 1;
+
+const FORM_SLOT_TYPES = [
   { value: 'theory', label: 'Theory' },
   { value: 'lab', label: 'Lab' },
-  { value: 'lunch', label: 'Lunch' },
-  { value: 'break', label: 'Short Break' },
+  { value: 'skill', label: 'Skill' },
+  { value: 'non-academic', label: 'Non-Academic' },
 ];
+
+const isNonAcademicSlot = (slotType) => slotType === 'non-academic';
 
 const BATCH_OPTIONS = [
   { value: 'all', label: 'All' },
@@ -20,25 +54,153 @@ const BATCH_OPTIONS = [
   { value: 'b2', label: 'B2' },
 ];
 
+const getSubjectLabel = (subject) => {
+  if (!subject) return '—';
+  return subject.code ? `${subject.name} (${subject.code})` : subject.name;
+};
+
+const getFacultyName = (slot) => {
+  if (slot?.user_profiles?.full_name) return slot.user_profiles.full_name;
+  return slot?.faculty_name || 'Unassigned';
+};
+
+const getInitials = (name) => {
+  if (!name) return '';
+  const cleanName = name
+    .replace(/\./g, ' ')
+    .replace(/\b(Mr|Mrs|Ms|Dr|Prof|Er)\b/gi, '')
+    .trim();
+  const words = cleanName.split(/\s+/).filter(Boolean);
+  const initials = words
+    .map((word) => word[0] || '')
+    .join('')
+    .toUpperCase();
+  return initials || name.trim()[0]?.toUpperCase() || '';
+};
+
+const SUBJECT_STOP_WORDS = new Set([
+  'of', 'and', 'with', '&', 'for', 'the', 'lab',
+]);
+
+const SUBJECT_SHORT_FALLBACK = {
+  'oop with java': 'OOPS',
+  'oops with java': 'OOPS',
+  'oop with java lab': 'OOPS',
+  'oops with java lab': 'OOPS',
+};
+
+const getSubjectShortName = (name) => {
+  if (!name) return '—';
+  const normalized = name.trim().toLowerCase();
+  if (SUBJECT_SHORT_FALLBACK[normalized]) return SUBJECT_SHORT_FALLBACK[normalized];
+
+  const significant = name
+    .trim()
+    .split(/\s+/)
+    .filter((word) => {
+      const w = word.toLowerCase().replace(/[^a-z]/g, '');
+      return w && !SUBJECT_STOP_WORDS.has(w);
+    });
+
+  if (significant.length === 0) return name.trim().slice(0, 4).toUpperCase();
+
+  return significant
+    .map((word) => word[0] || '')
+    .join('')
+    .toUpperCase();
+};
+
+const getSlotRoom = (slot, fallbackRoom) => slot?.room_no || fallbackRoom || '';
+
 function useSafeHodContext() {
   try {
     return useHodContext();
   } catch {
     return {
       hodAuthorizedBranches: [],
+      hodAssignedYears: [],
       hodDepartmentsData: [],
       isAssigned: false,
     };
   }
 }
 
+function Combobox({ options, value, onChange, placeholder, disabled }) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  const selectedLabel = options.find((o) => o.value === value)?.label ?? '';
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false);
+        setSearchTerm('');
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  const inputValue = isOpen ? searchTerm : selectedLabel;
+  const filteredOptions = options.filter((o) =>
+    o.label.toLowerCase().includes((isOpen ? searchTerm : '').toLowerCase())
+  );
+
+  return (
+    <div className="tt-combobox" ref={containerRef}>
+      <input
+        type="text"
+        className="tt-combobox__input"
+        placeholder={placeholder}
+        value={inputValue}
+        disabled={disabled}
+        onChange={(e) => {
+          setSearchTerm(e.target.value);
+          setIsOpen(true);
+        }}
+        onFocus={() => setIsOpen(true)}
+        onClick={() => setIsOpen(true)}
+      />
+      {isOpen && !disabled && (
+        <ul className="tt-combobox__menu" role="listbox">
+          {filteredOptions.length === 0 ? (
+            <li className="tt-combobox__empty">No matches found</li>
+          ) : (
+            filteredOptions.map((o) => (
+              <li
+                key={o.value}
+                role="option"
+                aria-selected={o.value === value}
+                className={`tt-combobox__option${o.value === value ? ' tt-combobox__option--active' : ''}`}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  onChange(o.value);
+                  setIsOpen(false);
+                  setSearchTerm('');
+                }}
+              >
+                {o.label}
+              </li>
+            ))
+          )}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export default function HODManageTimetable() {
-  const { hodAuthorizedBranches, hodDepartmentsData } = useSafeHodContext();
+  const { hodAuthorizedBranches, hodAssignedYears, hodDepartmentsData } = useSafeHodContext();
+  const [selectedYear, setSelectedYear] = useState('');
   const [selectedBranch, setSelectedBranch] = useState('');
   const [selectedSemester, setSelectedSemester] = useState('');
-  const [selectedSection, setSelectedSection] = useState('');
+  const [wefDate, setWefDate] = useState('');
+  const [roomNo, setRoomNo] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedDay, setSelectedDay] = useState('');
+  const [activeCell, setActiveCell] = useState(null);
   const [subjects, setSubjects] = useState([]);
   const [faculties, setFaculties] = useState([]);
   const [slots, setSlots] = useState([]);
@@ -54,56 +216,318 @@ export default function HODManageTimetable() {
 
   const isHodMode = hodAuthorizedBranches.length > 0;
 
+  const effectiveYear = selectedYear || (isHodMode && hodAssignedYears[0]) || '';
+  const effectiveBranch = selectedBranch || (isHodMode && hodAuthorizedBranches.length === 1 ? hodAuthorizedBranches[0].code : '');
+
   useEffect(() => {
     const fetchDropdownData = async () => {
-      const { data: subjectsData } = await supabase.from('subjects').select('id, name');
-      setSubjects(subjectsData || []);
-
       const { data: facultiesData } = await supabase
         .from('user_profiles')
         .select('id, full_name')
         .eq('role', 'faculty');
       setFaculties(facultiesData || []);
+
+      const semesterLabel = selectedSemester ? `Semester ${selectedSemester}` : null;
+
+      const subjectQuery = supabase
+        .from('subjects')
+        .select('id, name, code, department, year, semester')
+        .order('name', { ascending: true });
+
+      if (effectiveBranch) subjectQuery.eq('department', effectiveBranch);
+      if (effectiveYear) subjectQuery.eq('year', effectiveYear);
+      if (semesterLabel) subjectQuery.eq('semester', semesterLabel);
+
+      const { data: subjectsData, error } = await subjectQuery;
+
+      if (error) {
+        console.error('Error fetching subjects:', error);
+        toast.error('Failed to load subjects');
+        setSubjects([]);
+        return;
+      }
+
+      setSubjects(subjectsData || []);
+
+      if ((effectiveBranch && effectiveYear && semesterLabel) && (subjectsData || []).length === 0) {
+        console.warn(
+          `No subjects found for filters: department=${effectiveBranch}, year=${effectiveYear}, semester=${semesterLabel}`
+        );
+      }
     };
     fetchDropdownData();
-  }, []);
+  }, [effectiveBranch, effectiveYear, selectedSemester]);
 
-  const fetchTimetable = async () => {
+  const fetchTimetable = useCallback(async () => {
+    if (!effectiveYear || !effectiveBranch || !selectedSemester) return;
     const numericSemester = parseInt(String(selectedSemester).replace(/\D/g, ''), 10);
+    console.log('[fetchSlots] Querying timetable_slots for', { branch: effectiveBranch, semester: numericSemester, year: effectiveYear });
     const { data, error } = await supabase
       .from('timetable_slots')
-      .select('*, subjects(name), user_profiles(full_name)')
-      .eq('branch', selectedBranch)
+      .select('*, subjects(name, code), user_profiles(full_name)')
+      .eq('branch', effectiveBranch)
       .eq('semester', numericSemester)
-      .eq('section', selectedSection)
       .order('start_time', { ascending: true });
 
     if (error) {
       console.error('Error fetching timetable:', error);
       toast.error('Failed to load timetable');
     } else {
+      console.log('[fetchSlots] Returned rows:', (data || []).length, data);
       setSlots(data || []);
     }
-  };
+  }, [effectiveYear, effectiveBranch, selectedSemester]);
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    fetchTimetable();
+  }, [fetchTimetable]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const availableBranches = useMemo(() => {
     return [...new Set(hodDepartmentsData.map((d) => d.code || d.name))].filter(Boolean).sort();
   }, [hodDepartmentsData]);
 
   const availableSemesters = useMemo(() => {
-    return [1, 2, 3, 4, 5, 6, 7, 8];
-  }, []);
+    if (!effectiveYear) return [];
+    return YEAR_SEMESTERS[effectiveYear] || [];
+  }, [effectiveYear]);
 
-  const availableSections = useMemo(() => {
-    return ['A', 'B', 'C', 'D', 'E'];
-  }, []);
+  const subjectOptions = useMemo(
+    () => subjects.map((s) => ({ value: s.id, label: getSubjectLabel(s) })),
+    [subjects]
+  );
+
+  const facultyOptions = useMemo(
+    () => faculties.map((f) => ({ value: f.id, label: f.full_name })),
+    [faculties]
+  );
+
+  const yearOptions = useMemo(() => {
+    if (isHodMode) {
+      return hodAssignedYears.map((y) => ({ value: y, label: y }));
+    }
+    return YEAR_OPTIONS;
+  }, [isHodMode, hodAssignedYears]);
+
+  const branchOptions = useMemo(() => {
+    if (isHodMode) {
+      return hodAuthorizedBranches.map((b) => ({ value: b.code, label: b.name || b.code }));
+    }
+    return availableBranches.map((b) => ({ value: b, label: b }));
+  }, [isHodMode, hodAuthorizedBranches, availableBranches]);
+
+  const isSingleYearHod = isHodMode && hodAssignedYears.length <= 1;
+  const isSingleBranchHod = isHodMode && hodAuthorizedBranches.length <= 1;
 
   const handleLoadGrid = async () => {
     await fetchTimetable();
   };
 
-  const handleAddSlot = (day) => {
-    setSelectedDay(day);
+  const handleDownloadPDF = async () => {
+    const input = document.getElementById('timetable-capture');
+    if (!input) {
+      toast.error('Nothing to export yet');
+      return;
+    }
+
+    toast.loading('Generating PDF…', { id: 'pdf-toast' });
+    try {
+      const canvas = await html2canvas(input, {
+        backgroundColor: CAPTURE_BG,
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'pt',
+        format: 'a4',
+      });
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      const margin = 24;
+      const imgWidth = pageWidth - margin * 2;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      const y = margin + (pageHeight - margin * 2 - imgHeight) / 2;
+
+      pdf.addImage(
+        canvas.toDataURL('image/png'),
+        'PNG',
+        margin,
+        Math.max(margin, y),
+        imgWidth,
+        Math.min(imgHeight, pageHeight - margin * 2)
+      );
+
+      const safeBranch = (effectiveBranch || 'Timetable').replace(/[^\w-]+/g, '_');
+      const fileName = `${safeBranch}-Semester-${selectedSemester || ''}-Timetable.pdf`;
+      pdf.save(fileName);
+
+      toast.success('PDF downloaded', { id: 'pdf-toast' });
+    } catch (err) {
+      console.error('PDF export failed:', err);
+      toast.error('Failed to export PDF', { id: 'pdf-toast' });
+    }
+  };
+
+  const handleSlotInputChange = (field, value) => {
+    setSlotData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const getSlotsForCell = (day, start) =>
+    slots.filter((s) => s.day_of_week === day && String(s.start_time || '').slice(0, 5) === start);
+
+  const isSpanType = (slotType) => slotType === 'lab' || slotType === 'skill';
+
+  const openCellModal = (day, col) => {
+    setActiveCell({ day, period: col.label, start: col.start, end: col.end, slotId: null });
+    setSlotData({
+      subject_id: '',
+      faculty_id: '',
+      room: roomNo || '',
+      startTime: col.start,
+      endTime: col.end,
+      slotType: 'theory',
+      batch: 'all',
+    });
+    setIsModalOpen(true);
+  };
+
+  const renderSlotContent = (slot) => {
+    const isSpan = isSpanType(slot.slot_type);
+    const subj = getSubjectShortName(slot.subjects?.name);
+    const fac = getInitials(getFacultyName(slot));
+    const room = getSlotRoom(slot, roomNo);
+    const batchLabel = (slot.batch || 'all').toUpperCase();
+
+    if (isNonAcademicSlot(slot.slot_type)) {
+      return (
+        <div className="tt-slot-nonacademic">
+          <div className="tt-slot-subj">{slot.subjects?.name || subj}</div>
+          {slot.batch && slot.batch !== 'all' && (
+            <span className="tt-slot-tag">{batchLabel}</span>
+          )}
+        </div>
+      );
+    }
+
+    if (isSpan) {
+      return (
+        <div className="tt-slot-line">
+          {subj} Lab-{batchLabel}-{fac}-{room}
+        </div>
+      );
+    }
+
+    return (
+      <div className="tt-slot-theory">
+        <div className="tt-slot-subj">{subj}</div>
+        <div className="tt-slot-fac">({fac})</div>
+        {slot.batch && slot.batch !== 'all' && (
+          <span className="tt-slot-tag">{batchLabel}</span>
+        )}
+      </div>
+    );
+  };
+
+  const renderLabBatch = (slot, batch) => {
+    if (!slot) {
+      return (
+        <div className="tt-slot-lab-half tt-slot-lab-half--empty">
+          <span className="tt-slot-lab-batch-tag">{batch.toUpperCase()}</span>
+        </div>
+      );
+    }
+
+    const subj = getSubjectShortName(slot.subjects?.name);
+    const fac = getInitials(getFacultyName(slot));
+    const room = getSlotRoom(slot, roomNo);
+    const typeLabel = slot.slot_type === 'skill' ? 'Skill' : 'Lab';
+    const batchLabel = (slot.batch && slot.batch !== 'all' ? slot.batch : batch).toUpperCase();
+
+    return (
+      <div className="tt-slot-lab-half">
+        <span className="tt-slot-lab-text">{subj} {typeLabel}-{batchLabel}-{fac}-{room}</span>
+        <button
+          type="button"
+          className="tt-slot-delete"
+          title="Remove slot"
+          data-html2canvas-ignore="true"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDeleteSlot(slot.id);
+          }}
+        >
+          <Trash2 size={13} />
+        </button>
+      </div>
+    );
+  };
+
+  const handleSaveSlot = async () => {
+    if (!activeCell || !slotData.subject_id || !slotData.startTime || !slotData.endTime) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+    if (!isNonAcademicSlot(slotData.slotType) && !slotData.faculty_id) {
+      toast.error('Please assign a faculty');
+      return;
+    }
+
+    const numericSemester = parseInt(String(selectedSemester).replace(/\D/g, ''), 10);
+    const numericYear = getYearNumber(effectiveYear);
+
+    const payload = {
+      branch: effectiveBranch,
+      year: numericYear,
+      semester: numericSemester,
+      section: 'A',
+      day_of_week: activeCell.day,
+      start_time: slotData.startTime,
+      end_time: slotData.endTime,
+      subject_id: slotData.subject_id,
+      faculty_id: isNonAcademicSlot(slotData.slotType) ? (slotData.faculty_id || null) : slotData.faculty_id,
+      room_no: slotData.room || roomNo || null,
+      slot_type: slotData.slotType,
+      batch: slotData.batch,
+    };
+
+    let error;
+    if (activeCell.slotId) {
+      ({ error } = await supabase.from('timetable_slots').update(payload).eq('id', activeCell.slotId));
+    } else {
+      ({ error } = await supabase.from('timetable_slots').insert([payload]));
+    }
+
+    if (error) {
+      console.error('Error saving slot:', error);
+      toast.error('Failed to save slot');
+    } else {
+      toast.success(activeCell.slotId ? 'Slot updated successfully!' : 'Slot saved successfully!');
+      closeModal();
+      fetchTimetable();
+    }
+  };
+
+  const handleDeleteSlot = async (slotId) => {
+    const { error } = await supabase.from('timetable_slots').delete().eq('id', slotId);
+    if (error) {
+      console.error('Error deleting slot:', error);
+      toast.error('Failed to delete slot');
+    } else {
+      toast.success('Slot removed');
+      fetchTimetable();
+    }
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setActiveCell(null);
     setSlotData({
       subject_id: '',
       faculty_id: '',
@@ -113,59 +537,16 @@ export default function HODManageTimetable() {
       slotType: 'theory',
       batch: 'all',
     });
-    setIsModalOpen(true);
-  };
-
-  const handleSlotInputChange = (field, value) => {
-    setSlotData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleSaveSlot = async () => {
-    if (!slotData.subject_id || !slotData.faculty_id || !slotData.startTime || !slotData.endTime || !slotData.room || !selectedDay) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-
-    const numericSemester = parseInt(String(selectedSemester).replace(/\D/g, ''), 10);
-    const calculatedYear = Math.ceil(numericSemester / 2);
-
-    const payload = {
-      branch: selectedBranch,
-      year: calculatedYear,
-      semester: numericSemester,
-      section: selectedSection,
-      day_of_week: selectedDay,
-      start_time: slotData.startTime,
-      end_time: slotData.endTime,
-      subject_id: slotData.subject_id,
-      faculty_id: slotData.faculty_id,
-      room_no: slotData.room,
-      slot_type: slotData.slotType,
-      batch: slotData.batch,
-    };
-
-    const { error } = await supabase.from('timetable_slots').insert([payload]);
-
-    if (error) {
-      console.error('Error saving slot:', error);
-      toast.error('Failed to save slot');
-    } else {
-      toast.success('Slot saved successfully!');
-      setIsModalOpen(false);
-      setSelectedDay('');
-      fetchTimetable();
-    }
   };
 
   const handleCancelModal = () => {
-    setIsModalOpen(false);
-    setSelectedDay('');
+    closeModal();
   };
 
   const resetFilters = () => {
+    setSelectedYear('');
     setSelectedBranch('');
     setSelectedSemester('');
-    setSelectedSection('');
     setSlots([]);
   };
 
@@ -181,21 +562,37 @@ export default function HODManageTimetable() {
 
       <section className="timetable-filters">
         <div className="timetable-filter-group">
+          <label className="timetable-filter-label">Year</label>
+          <select
+            className="timetable-filter-select"
+            value={effectiveYear}
+            onChange={(e) => {
+              setSelectedYear(e.target.value);
+              setSelectedSemester('');
+            }}
+            disabled={isSingleYearHod}
+          >
+            <option value="">-- Select Year --</option>
+            {yearOptions.map((year) => (
+              <option key={year.value} value={year.value}>
+                {year.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="timetable-filter-group">
           <label className="timetable-filter-label">Branch</label>
           <select
             className="timetable-filter-select"
-            value={selectedBranch}
-            onChange={(e) => {
-              setSelectedBranch(e.target.value);
-              setSelectedSemester('');
-              setSelectedSection('');
-            }}
-            disabled={!isHodMode}
+            value={effectiveBranch}
+            onChange={(e) => setSelectedBranch(e.target.value)}
+            disabled={isSingleBranchHod}
           >
             <option value="">-- Select Branch --</option>
-            {availableBranches.map((branch) => (
-              <option key={branch} value={branch}>
-                {branch}
+            {branchOptions.map((branch) => (
+              <option key={branch.value} value={branch.value}>
+                {branch.label}
               </option>
             ))}
           </select>
@@ -207,7 +604,7 @@ export default function HODManageTimetable() {
             className="timetable-filter-select"
             value={selectedSemester}
             onChange={(e) => setSelectedSemester(e.target.value)}
-            disabled={!selectedBranch}
+            disabled={!effectiveYear}
           >
             <option value="">-- Select Semester --</option>
             {availableSemesters.map((sem) => (
@@ -218,82 +615,204 @@ export default function HODManageTimetable() {
           </select>
         </div>
 
-        <div className="timetable-filter-group">
-          <label className="timetable-filter-label">Section</label>
-          <select
-            className="timetable-filter-select"
-            value={selectedSection}
-            onChange={(e) => setSelectedSection(e.target.value)}
-            disabled={!selectedSemester}
-          >
-            <option value="">-- Select Section --</option>
-            {availableSections.map((section) => (
-              <option key={section} value={section}>
-                Section {section}
-              </option>
-            ))}
-          </select>
-        </div>
-
         <button
           className="timetable-load-btn"
           onClick={handleLoadGrid}
-          disabled={!selectedBranch || !selectedSemester || !selectedSection}
+          disabled={!effectiveBranch || !effectiveYear || !selectedSemester}
         >
           Load Grid
         </button>
 
-        {(selectedBranch || selectedSemester || selectedSection) && (
+        {(effectiveBranch || effectiveYear || selectedSemester) && (
           <button onClick={resetFilters} className="timetable-reset-btn">
             Reset
           </button>
         )}
       </section>
 
-      {selectedBranch && selectedSemester && selectedSection && (
+      {effectiveBranch && effectiveYear && selectedSemester && (
         <section className="timetable-grid-section">
-          <h2 className="timetable-grid-title">
-            {selectedBranch} - Semester {selectedSemester} - Section {selectedSection}
-          </h2>
-          <div className="timetable-grid">
-            <div className="timetable-grid-header">
-              <div className="timetable-day-header">Day</div>
-              <div className="timetable-slots-header">Slots</div>
+          <div className="timetable-grid-actions">
+            <button
+              type="button"
+              className="timetable-download-btn"
+              onClick={handleDownloadPDF}
+            >
+              <Download size={18} />
+              Download PDF
+            </button>
+          </div>
+
+          <div id="timetable-capture" className="timetable-capture">
+            <div className="timetable-grid-toolbar">
+              <h2 className="timetable-grid-title">
+                {effectiveBranch} &middot; {effectiveYear} &middot; Semester {selectedSemester}
+              </h2>
+              <div className="timetable-meta-inputs">
+                <label className="timetable-meta-field">
+                  <span className="timetable-meta-label">W.E.F. Date</span>
+                  <input
+                    type="date"
+                    className="timetable-meta-input"
+                    value={wefDate}
+                    onChange={(e) => setWefDate(e.target.value)}
+                  />
+                </label>
+                <label className="timetable-meta-field">
+                  <span className="timetable-meta-label">Room No.</span>
+                  <input
+                    type="text"
+                    className="timetable-meta-input"
+                    placeholder="e.g., 125"
+                    value={roomNo}
+                    onChange={(e) => setRoomNo(e.target.value)}
+                  />
+                </label>
+              </div>
             </div>
 
-            {DAYS_OF_WEEK.map((day) => {
-              const daySlots = slots.filter((s) => s.day_of_week === day);
-              return (
-                <div className="timetable-day-row" key={day}>
-                  <div className="timetable-day-cell">{day}</div>
-                  <div className="timetable-slots-cell">
-                    <div className="timetable-slots-list">
-                      {daySlots.map((slot) => (
-                        <div
-                          key={slot.id}
-                          className={`timetable-slot-card timetable-slot-card--${slot.slot_type}`}
-                        >
-                          <span className="timetable-slot-subject">{slot.subjects?.name}</span>
-                          <span className="timetable-slot-time">
-                            {slot.start_time} - {slot.end_time}
-                          </span>
-                          <span className="timetable-slot-room">{slot.room_no}</span>
-                          {slot.batch && slot.batch !== 'all' && (
-                            <span className="timetable-slot-batch">{slot.batch.toUpperCase()}</span>
-                          )}
-                        </div>
-                      ))}
-                      <button
-                        className="timetable-add-slot-btn"
-                        onClick={() => handleAddSlot(day)}
-                      >
-                        + Add Slot
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            <div className="timetable-matrix-wrap">
+              <table className="timetable-matrix">
+                <thead>
+                  <tr>
+                    <th className="tt-matrix-corner">Day</th>
+                    {COLUMNS.map((col, i) =>
+                      col.type === 'break' ? (
+                        <th key={i} className="tt-matrix-break-cell"></th>
+                      ) : (
+                        <th key={i} className="tt-matrix-period-header">
+                          {col.label}
+                        </th>
+                      )
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {DAYS_OF_WEEK.map((day, dayIdx) => {
+                    let skipNext = false;
+                    return (
+                      <tr key={day}>
+                        <td className="tt-matrix-day-cell">{day}</td>
+                        {COLUMNS.map((col, colIdx) => {
+                          if (skipNext) {
+                            skipNext = false;
+                            return null;
+                          }
+                          if (col.type === 'break') {
+                            if (dayIdx === 0) {
+                              return (
+                                <td
+                                  key={colIdx}
+                                  rowSpan={DAYS_OF_WEEK.length}
+                                  className="tt-matrix-break-cell"
+                                >
+                                  <div className="tt-break-wrapper">
+                                    <span className="tt-print-safe-rotate">
+                                      {col.label}
+                                      <small>{col.sub}</small>
+                                    </span>
+                                  </div>
+                                </td>
+                              );
+                            }
+                            return null;
+                          }
+                          const cellSlots = getSlotsForCell(day, col.start);
+                          const isSpan = cellSlots.some((s) => isSpanType(s.slot_type));
+                          const isAllBatchSpan = isSpan && cellSlots.some((s) => (s.batch || 'all').toLowerCase() === 'all');
+                          const nextCol = COLUMNS[colIdx + 1];
+                          const canSpan = isSpan && nextCol && nextCol.type !== 'break';
+                          if (canSpan) skipNext = true;
+                          const isFilled = cellSlots.length > 0;
+                          const repType = cellSlots[0]?.slot_type || 'theory';
+
+                          return (
+                            <td
+                              key={colIdx}
+                              colSpan={canSpan ? 2 : 1}
+                              className={`tt-matrix-cell${isFilled ? ` tt-matrix-cell--filled tt-matrix-cell--${repType}` : ''}${canSpan ? ' tt-matrix-cell--span' : ''}`}
+                              onClick={() => openCellModal(day, col)}
+                            >
+                              {isFilled ? (
+                                isAllBatchSpan ? (
+                                  <div className="tt-slot-allbatch">
+                                    {cellSlots.map((slot) => {
+                                      const allBatchText = [
+                                        getSubjectShortName(slot.subjects?.name),
+                                        getInitials(getFacultyName(slot)),
+                                        getSlotRoom(slot, roomNo),
+                                      ]
+                                        .filter(Boolean)
+                                        .join(' - ');
+                                      return (
+                                        <div
+                                          key={slot.id}
+                                          className={`tt-slot-allbatch-inner tt-slot-allbatch-inner--${slot.slot_type || 'theory'}`}
+                                        >
+                                          <span className="tt-slot-allbatch-text">{allBatchText}</span>
+                                          <button
+                                            type="button"
+                                            className="tt-slot-delete"
+                                            title="Remove slot"
+                                            data-html2canvas-ignore="true"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleDeleteSlot(slot.id);
+                                            }}
+                                          >
+                                            <Trash2 size={13} />
+                                          </button>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                ) : isSpan ? (
+                                  <div className="tt-slot-lab-split">
+                                    {renderLabBatch(
+                                      cellSlots.find((s) => (s.batch || 'all').toLowerCase() === 'b1'),
+                                      'b1'
+                                    )}
+                                    {renderLabBatch(
+                                      cellSlots.find((s) => (s.batch || 'all').toLowerCase() === 'b2'),
+                                      'b2'
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className={`tt-slot-stack${cellSlots.length > 1 ? ' tt-slot-stack--split' : ''}`}>
+                                    {cellSlots.map((slot) => (
+                                      <div
+                                        key={slot.id}
+                                        className={`tt-slot-row tt-slot-row--${slot.slot_type || 'theory'}`}
+                                      >
+                                        {renderSlotContent(slot)}
+                                        <button
+                                          type="button"
+                                          className="tt-slot-delete"
+                                          title="Remove slot"
+                                          data-html2canvas-ignore="true"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteSlot(slot.id);
+                                          }}
+                                        >
+                                          <Trash2 size={13} />
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )
+                              ) : (
+                                <span className="tt-matrix-add" data-html2canvas-ignore="true">+ Add</span>
+                              )}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
       )}
@@ -302,7 +821,9 @@ export default function HODManageTimetable() {
         <div className="timetable-modal-overlay" onClick={handleCancelModal}>
           <div className="timetable-modal" onClick={(e) => e.stopPropagation()}>
             <div className="timetable-modal-header">
-              <h3 className="timetable-modal-title">Add Slot for {selectedDay}</h3>
+              <h3 className="timetable-modal-title">
+                Add Slot &middot; {activeCell?.day} &middot; {activeCell?.period}
+              </h3>
               <button className="timetable-modal-close" onClick={handleCancelModal}>
                 &times;
               </button>
@@ -310,96 +831,47 @@ export default function HODManageTimetable() {
 
             <div className="timetable-modal-body">
               <div className="timetable-field">
-                <label className="timetable-field-label">Day of Week</label>
-                <input
-                  type="text"
-                  className="timetable-field-input"
-                  value={selectedDay}
-                  disabled
-                />
+                <label className="timetable-field-label">Slot Type</label>
+                <div className="timetable-radio-group">
+                  {FORM_SLOT_TYPES.map((type) => (
+                    <label
+                      key={type.value}
+                      className={`timetable-radio${slotData.slotType === type.value ? ' timetable-radio--active' : ''}`}
+                    >
+                      <input
+                        type="radio"
+                        name="slotType"
+                        value={type.value}
+                        checked={slotData.slotType === type.value}
+                        onChange={(e) => handleSlotInputChange('slotType', e.target.value)}
+                      />
+                      {type.label}
+                    </label>
+                  ))}
+                </div>
               </div>
 
               <div className="timetable-field">
                 <label className="timetable-field-label">Subject</label>
-                <select
-                  className="timetable-field-select"
+                <Combobox
+                  options={subjectOptions}
                   value={slotData.subject_id}
-                  onChange={(e) => handleSlotInputChange('subject_id', e.target.value)}
-                >
-                  <option value="">-- Select Subject --</option>
-                  {subjects.map((subject) => (
-                    <option key={subject.id} value={subject.id}>
-                      {subject.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => handleSlotInputChange('subject_id', v)}
+                  placeholder="-- Select Subject --"
+                />
               </div>
 
               <div className="timetable-field">
-                <label className="timetable-field-label">Faculty</label>
-                <select
-                  className="timetable-field-select"
+                <label className="timetable-field-label">Faculty {isNonAcademicSlot(slotData.slotType) && <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span>}</label>
+                <Combobox
+                  options={facultyOptions}
                   value={slotData.faculty_id}
-                  onChange={(e) => handleSlotInputChange('faculty_id', e.target.value)}
-                >
-                  <option value="">-- Select Faculty --</option>
-                  {faculties.map((faculty) => (
-                    <option key={faculty.id} value={faculty.id}>
-                      {faculty.full_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="timetable-field">
-                <label className="timetable-field-label">Room Number</label>
-                <input
-                  type="text"
-                  className="timetable-field-input"
-                  placeholder="e.g., 125 or L-304"
-                  value={slotData.room}
-                  onChange={(e) => handleSlotInputChange('room', e.target.value)}
+                  onChange={(v) => handleSlotInputChange('faculty_id', v)}
+                  placeholder="-- Select Faculty --"
                 />
               </div>
 
               <div className="timetable-field-row">
-                <div className="timetable-field">
-                  <label className="timetable-field-label">Start Time</label>
-                  <input
-                    type="time"
-                    className="timetable-field-input"
-                    value={slotData.startTime}
-                    onChange={(e) => handleSlotInputChange('startTime', e.target.value)}
-                  />
-                </div>
-
-                <div className="timetable-field">
-                  <label className="timetable-field-label">End Time</label>
-                  <input
-                    type="time"
-                    className="timetable-field-input"
-                    value={slotData.endTime}
-                    onChange={(e) => handleSlotInputChange('endTime', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="timetable-field-row">
-                <div className="timetable-field">
-                  <label className="timetable-field-label">Slot Type</label>
-                  <select
-                    className="timetable-field-select"
-                    value={slotData.slotType}
-                    onChange={(e) => handleSlotInputChange('slotType', e.target.value)}
-                  >
-                    {SLOT_TYPES.map((type) => (
-                      <option key={type.value} value={type.value}>
-                        {type.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
                 <div className="timetable-field">
                   <label className="timetable-field-label">Batch</label>
                   <select
@@ -413,6 +885,17 @@ export default function HODManageTimetable() {
                       </option>
                     ))}
                   </select>
+                </div>
+
+                <div className="timetable-field">
+                  <label className="timetable-field-label">Room No. (optional)</label>
+                  <input
+                    type="text"
+                    className="timetable-field-input"
+                    placeholder={roomNo ? `${roomNo} (default)` : 'e.g., 125 or L-304'}
+                    value={slotData.room}
+                    onChange={(e) => handleSlotInputChange('room', e.target.value)}
+                  />
                 </div>
               </div>
             </div>
