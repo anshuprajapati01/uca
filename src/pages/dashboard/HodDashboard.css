@@ -1,6 +1,11 @@
 .hod-dashboard {
-  --hod-bg: #080b16;
+  --hod-bg: #0a0a13;
   --hod-card: rgba(15, 23, 42, 0.78);
+  background: radial-gradient(ellipse 80% 60% at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 60%),
+              radial-gradient(ellipse 60% 50% at 85% 80%, rgba(139, 92, 246, 0.07) 0%, transparent 55%),
+              #0a0a13;
+  background-attachment: fixed;
+  min-height: 100vh;
   --hod-card-strong: rgba(17, 24, 39, 0.92);
   --hod-border: rgba(255, 255, 255, 0.08);
   --hod-border-strong: rgba(129, 140, 248, 0.24);
@@ -20,6 +25,25 @@
   min-height: 100%;
   padding: 1.5rem;
   color: var(--hod-text);
+}
+
+/* Force glassmorphism on HOD inner containers */
+.admin-overview,
+.hod-dashboard-inner,
+.dashboard-content {
+    background: transparent !important;
+}
+
+/* Target the cards and form wrappers specifically to give them the glass effect */
+.admin-overview .stat-card,
+.admin-overview .recent-activity-container,
+.director-semester-card {
+    background: rgba(255, 255, 255, 0.03) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1) !important;
 }
 
 .hod-hero {

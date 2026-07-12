@@ -26,6 +26,7 @@ export default function DashboardLayout({ title, navItems, children }) {
         navItems={navItems}
         isOpen={isSidebarOpen}
         onClose={closeSidebar}
+        title={title}
       />
 
       <div className="dashboard-layout__main">

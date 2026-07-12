@@ -1,4 +1,4 @@
-import { Menu } from 'lucide-react';
+import { LogOut, Menu } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../config/constants.js';
 import { useAuth } from '../../hooks/useAuth.js';
@@ -89,7 +89,14 @@ export default function TopNavbar({ title, onMenuClick }) {
           onClick={handleLogout}
           disabled={isLoading}
         >
-          {isLoading ? 'Signing out…' : 'Sign out'}
+          {isLoading ? (
+            'Signing out…'
+          ) : (
+            <>
+              <LogOut size={16} aria-hidden="true" />
+              Sign Out
+            </>
+          )}
         </button>
       </div>
     </header>

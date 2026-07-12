@@ -2,7 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { APP_SHORT_NAME } from '../../config/constants.js';
 import './DashboardLayout.css';
 
-export default function Sidebar({ navItems, isOpen, onClose }) {
+export default function Sidebar({ navItems, isOpen, onClose, title }) {
   const location = useLocation();
 
   const isItemActive = (item) => {
@@ -30,26 +30,29 @@ export default function Sidebar({ navItems, isOpen, onClose }) {
       ) : null}
 
       <aside
-        className={`dashboard-layout__sidebar${isOpen ? ' dashboard-layout__sidebar--open' : ''}`}
+        className={`faculty-sidebar dashboard-layout__sidebar${isOpen ? ' dashboard-layout__sidebar--open' : ''}`}
         aria-label="Dashboard navigation"
       >
-        <div className="dashboard-sidebar__header">
-          <p className="dashboard-sidebar__brand">{APP_SHORT_NAME}</p>
+        <div className="faculty-sidebar__header">
+          <div className="faculty-sidebar__logo">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+              <path d="M6 12v5c0 2 6 3 6 3s6-1 6-3v-5" />
+            </svg>
+          </div>
+          <h1 className="faculty-sidebar__brand">{APP_SHORT_NAME}</h1>
         </div>
 
-        <nav className="dashboard-sidebar__nav">
+        <nav className="faculty-sidebar__nav">
           {navItems.map((item) => {
-            const Icon = item.icon;
-
             if (item.disabled) {
               return (
                 <span
                   key={item.path}
-                  className="dashboard-sidebar__link dashboard-sidebar__link--disabled"
+                  className="faculty-sidebar__link faculty-sidebar__link--disabled"
                   aria-disabled="true"
                 >
-                  <Icon className="dashboard-sidebar__icon" aria-hidden="true" />
-                  {item.label}
+                  <span className="faculty-sidebar__link-label">{item.label}</span>
                 </span>
               );
             }
@@ -60,15 +63,18 @@ export default function Sidebar({ navItems, isOpen, onClose }) {
               <NavLink
                 key={item.path}
                 to={item.path}
-                className={`dashboard-sidebar__link${active ? ' dashboard-sidebar__link--active' : ''}`}
+                className={`faculty-sidebar__link${active ? ' faculty-sidebar__link--active' : ''}`}
                 onClick={onClose}
               >
-                <Icon className="dashboard-sidebar__icon" aria-hidden="true" />
-                {item.label}
+                <span className="faculty-sidebar__link-label">{item.label}</span>
               </NavLink>
             );
           })}
         </nav>
+
+        <div className="faculty-sidebar__footer">
+          <span>{title ? `${title} · v1.0` : 'Portal · v1.0'}</span>
+        </div>
       </aside>
     </>
   );

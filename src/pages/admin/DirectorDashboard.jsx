@@ -3,21 +3,21 @@ import { useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { supabase, createTempClient } from '../../lib/supabase.js';
 import { ROUTES, AGGREGATE_DEPARTMENTS } from '../../config/constants.js';
-import { Shield, Users, BarChart3, Layers, Bell, LayoutDashboard, BookOpen, Target, Award, ArrowLeft, UploadCloud, Send, FileText, Archive, ScrollText, PenTool, Phone, Mail, X, Trash2, GraduationCap, UserCheck, Eye } from 'lucide-react';
+import { Shield, Users, BarChart3, Layers, BookOpen, Target, Award, ArrowLeft, UploadCloud, Send, FileText, Archive, ScrollText, PenTool, Phone, Mail, X, Trash2, GraduationCap, Eye } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout.jsx';
 import './DirectorDashboard-v2.css';
 import HodManagement from './HodManagement.jsx';
 import DirectorStudentDirectory from './DirectorStudentDirectory.jsx';
 
 const DIRECTOR_NAV = [
-  { id: 'overview', label: 'Overview', path: ROUTES.DIRECTOR_DASHBOARD, icon: LayoutDashboard },
-  { id: 'academic', label: 'Academic Hub', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=academic`, icon: Layers },
-  { id: 'faculty', label: 'Manage Faculty', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=faculty`, icon: Users },
-  { id: 'departments', label: 'Manage Departments', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=departments`, icon: Layers },
-  { id: 'hod-management', label: 'HOD Management', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=hod-management`, icon: UserCheck },
-  { id: 'student-directory', label: 'Student Directory', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=student-directory`, icon: Users },
-  { id: 'master-syllabus', label: 'Master Syllabus', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=master-syllabus`, icon: BookOpen },
-  { id: 'announcements', label: 'Announcements', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=announcements`, icon: Bell },
+  { id: 'overview', label: '🏠 Overview', path: ROUTES.DIRECTOR_DASHBOARD },
+  { id: 'academic', label: '🎓 Academic Hub', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=academic` },
+  { id: 'faculty', label: '👥 Manage Faculty', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=faculty` },
+  { id: 'departments', label: '🏢 Manage Departments', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=departments` },
+  { id: 'hod-management', label: '👨‍🏫 HOD Management', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=hod-management` },
+  { id: 'student-directory', label: '📖 Student Directory', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=student-directory` },
+  { id: 'master-syllabus', label: '📚 Master Syllabus', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=master-syllabus` },
+  { id: 'announcements', label: '📢 Announcements', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=announcements` },
 ];
 
 const MASTER_YEARS = [1, 2, 3, 4];
