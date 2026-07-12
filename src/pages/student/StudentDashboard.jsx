@@ -8,6 +8,7 @@ import { signOut } from "../../services/authService.js";
 import StudentAssignments from "./StudentAssignments.jsx";
 import StudentResults from "./StudentResults.jsx";
 import UploadResourceModal from "./UploadResourceModal.jsx";
+import Attendance from "./Attendance.jsx";
 import "./StudentDashboard.css";
 
 const IconOverview = () => (
@@ -496,7 +497,7 @@ const [gridSubjects, setGridSubjects] = useState([]);
         acc[subjectName] = { total: 0, present: 0 };
       }
       acc[subjectName].total += 1;
-      if (record.status === 'Present') {
+      if (String(record.status).toUpperCase() === 'P') {
         acc[subjectName].present += 1;
       }
       return acc;
@@ -512,6 +513,32 @@ const [gridSubjects, setGridSubjects] = useState([]);
     const recentRecords = [...attendanceRecords]
       .sort((a, b) => new Date(b.marked_at || 0) - new Date(a.marked_at || 0))
       .slice(0, 5);
+
+    // Build the full subject list (every enrolled subject) merged with
+    // attendance stats. This ensures a pill is rendered for ALL subjects,
+    // even those the student hasn't been marked for yet (0% / no history).
+    const attendanceSubjects = (
+      gridSubjects.length > 0 ? gridSubjects : subjectWiseData
+    ).map((sub) => {
+      const subName = sub.subject_name || sub.name || sub.title || "";
+      const subCode = sub.subject_code || sub.code || "";
+      const subType =
+        sub.type ||
+        (String(subName).toLowerCase().includes("lab") ? "Lab" : "Theory");
+      const match = subjectWiseData.find(
+        (sw) =>
+          (subName && sw.name && sw.name.toLowerCase() === subName.toLowerCase()) ||
+          (subCode && sw.name && sw.name.includes(subCode))
+      );
+      return {
+        name: subName,
+        code: subCode,
+        type: subType,
+        present: match?.present ?? 0,
+        total: match?.total ?? 0,
+        percentage: match?.percentage ?? 0,
+      };
+    });
 
    useEffect(() => {
      bookmarkedIdsRef.current = bookmarkedIds;
@@ -626,13 +653,17 @@ const { data: profileData, error: profileError } = await supabase
 
            if (!cancelled) setAnnouncements(announcementData || []);
 
-const { data: attendanceData, error: attendanceError } = await supabase
+            // Strict fetch: attendance_sessions!inner REQUIRES the parent session
+            // to still exist. If the faculty portal deleted a session (and its
+            // records), those rows are dropped here, so orphaned attendance for
+            // deleted dates (e.g. July 4th / July 8th) never reaches the UI.
+            // No stale/cached data is used — every load re-queries Supabase fresh.
+            const { data: attendanceData, error: attendanceError } = await supabase
               .from('attendance_records')
               .select(`
-                status,
-                marked_at,
-                attendance_sessions (
-                  date,
+                *,
+                attendance_sessions!inner (
+                  *,
                   subjects ( name )
                 )
               `)
@@ -641,7 +672,7 @@ const { data: attendanceData, error: attendanceError } = await supabase
             if (attendanceError) console.error("Failed to fetch attendance:", attendanceError);
             if (!cancelled && attendanceData) {
              const total = attendanceData.length;
-             const present = attendanceData.filter((r) => r.status === 'Present').length;
+              const present = attendanceData.filter((r) => String(r.status).toUpperCase() === 'P').length;
              const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
              setAttendanceStats({ total, present, percentage });
              setAttendanceRecords(attendanceData);
@@ -2384,148 +2415,15 @@ async function fetchAllMaterials() {
              </section>
            )}
 
-{activeTab === "attendance" && (
-              <section className="student-section">
-                <h3 className="student-section__title">Attendance Overview</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '600px' }}>
-                  <div style={{
-                    background: 'rgba(20, 20, 40, 0.75)',
-                    backdropFilter: 'blur(16px)',
-                    border: '1px solid rgba(255, 255, 255, 0.07)',
-                    borderRadius: '20px',
-                    padding: '2.5rem',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    boxShadow: '0 6px 30px rgba(0, 0, 0, 0.35)',
-                  }}>
-                    <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      Overall Percentage
-                    </div>
-                    <div style={{ fontSize: '3.5rem', fontWeight: '800', color: '#f1f5f9', lineHeight: '1' }}>
-                      {attendanceStats.percentage}%
-                    </div>
-                    <div style={{
-                      fontSize: '0.95rem',
-                      fontWeight: '700',
-                      color: attendanceStats.percentage >= 75 ? '#22c55e' : '#ef4444',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.06em',
-                    }}>
-                      {attendanceStats.percentage >= 75 ? 'Safe Zone' : 'Danger Zone'}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: '1rem' }}>
-                    <div style={{
-                      flex: 1,
-                      background: 'rgba(20, 20, 40, 0.72)',
-                      backdropFilter: 'blur(12px)',
-                      border: '1px solid rgba(255, 255, 255, 0.07)',
-                      borderRadius: '16px',
-                      padding: '1.5rem',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '0.5rem',
-                    }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase' }}>Total Classes</span>
-                      <span style={{ fontSize: '2rem', fontWeight: '700', color: '#e2e8f0' }}>{attendanceStats.total}</span>
-                    </div>
-                    <div style={{
-                      flex: 1,
-                      background: 'rgba(20, 20, 40, 0.72)',
-                      backdropFilter: 'blur(12px)',
-                      border: '1px solid rgba(255, 255, 255, 0.07)',
-                      borderRadius: '16px',
-                      padding: '1.5rem',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '0.5rem',
-                    }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase' }}>Classes Attended</span>
-                      <span style={{ fontSize: '2rem', fontWeight: '700', color: '#e2e8f0' }}>{attendanceStats.present}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <h3 style={{ marginTop: '2rem', marginBottom: '1rem', fontSize: '1.05rem', fontWeight: '650', color: '#e2e8f0' }}>Subject-wise Attendance</h3>
-                {subjectWiseData.length === 0 ? (
-                  <div className="student-empty-box">
-                    <p>No subject data available.</p>
-                  </div>
-                ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-                    {subjectWiseData.map((subject) => (
-                      <div key={subject.name} style={{
-                        background: 'rgba(20, 20, 40, 0.72)',
-                        backdropFilter: 'blur(12px)',
-                        border: '1px solid rgba(255, 255, 255, 0.07)',
-                        borderRadius: '16px',
-                        padding: '1.25rem',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '0.5rem',
-                      }}>
-                        <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#d1d5db' }}>{subject.name}</span>
-                        <span style={{ fontSize: '1.75rem', fontWeight: '700', color: '#e2e8f0' }}>{subject.percentage}%</span>
-                        <div style={{
-                          width: '12px',
-                          height: '12px',
-                          borderRadius: '50%',
-                          background: subject.percentage >= 75 ? '#22c55e' : '#ef4444',
-                          boxShadow: subject.percentage >= 75 ? '0 0 8px rgba(34, 197, 94, 0.5)' : '0 0 8px rgba(239, 68, 68, 0.5)',
-                        }} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <h3 style={{ marginTop: '2rem', marginBottom: '1rem', fontSize: '1.05rem', fontWeight: '650', color: '#e2e8f0' }}>Recent Classes</h3>
-                {recentRecords.length === 0 ? (
-                  <div className="student-empty-box">
-                    <p>No recent attendance records.</p>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                     {recentRecords.map((record, index) => {
-                       const subjectName = record.attendance_sessions?.subjects?.name || 'Unknown';
-                       const status = record.status || 'Unknown';
-                       const rawDate = record.attendance_sessions?.date || record.marked_at;
-                       const displayDate = rawDate ? new Date(rawDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'N/A';
-                       return (
-                        <div key={index} style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          padding: '0.875rem 1rem',
-                          background: 'rgba(20, 20, 40, 0.55)',
-                          border: '1px solid rgba(255, 255, 255, 0.06)',
-                          borderRadius: '12px',
-                        }}>
-                          <span style={{ fontSize: '0.85rem', color: '#d1d5db', flex: 1 }}>
-                            {displayDate}
-                          </span>
-                          <span style={{ fontSize: '0.85rem', color: '#a5b4fc', flex: 2 }}>{subjectName}</span>
-                          <span style={{
-                            fontSize: '0.75rem',
-                            fontWeight: '600',
-                            padding: '0.25rem 0.75rem',
-                            borderRadius: '999px',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                            background: status === 'Present' ? '#22c55e' : status === 'Late' ? '#f59e0b' : '#ef4444',
-                            color: '#fff',
-                          }}>
-                            {status}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </section>
+            {activeTab === "attendance" && (
+              <Attendance
+                overall={attendanceStats}
+                subjects={attendanceSubjects}
+                records={attendanceRecords}
+                loading={isLoading && attendanceRecords.length === 0}
+              />
             )}
-            
+
             {activeTab === "results" && <StudentResults />}
           </div>
        </main>

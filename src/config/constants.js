@@ -10,6 +10,7 @@ export const ROUTES = {
   FORGOT_PASSWORD: '/forgot-password',
   STUDENT_DASHBOARD: '/student',
   FACULTY_DASHBOARD: '/faculty',
+  TAKE_ATTENDANCE: '/faculty/take-attendance',
   ADMIN_DASHBOARD: '/admin',
   DIRECTOR_DASHBOARD: '/director',
   HOD_DASHBOARD: '/hod-dashboard',

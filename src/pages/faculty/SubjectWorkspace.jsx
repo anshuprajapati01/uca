@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabase.js';
 import { Trash2, ArrowLeft, Eye, FileText, Link as LinkIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -12,6 +12,7 @@ import './SubjectWorkspace.css';
 export default function SubjectWorkspace() {
   const { subjectId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [subject, setSubject] = useState(null);
   const [resources, setResources] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -19,7 +20,7 @@ export default function SubjectWorkspace() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState('All');
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, resourceId: null });
-  const [mainTab, setMainTab] = useState('Resources');
+  const [mainTab, setMainTab] = useState(location.state?.openAttendance ? 'Attendance' : 'Resources');
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
@@ -338,7 +339,7 @@ export default function SubjectWorkspace() {
 
         {mainTab === 'Announcements' && <AnnouncementsTab subjectId={subjectId} />}
 
-        {mainTab === 'Attendance' && <TakeAttendance subjectId={subjectId} subjectDetails={subject} />}
+        {mainTab === 'Attendance' && <TakeAttendance subjectId={subjectId} subjectDetails={subject} initialSection={location.state?.sectionContext} />}
         
       </div>
 

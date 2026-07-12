@@ -110,6 +110,14 @@ const getSubjectShortName = (name) => {
     .toUpperCase();
 };
 
+const getSectionDisplayLabel = (value) => {
+  if (value == null || value === '') return 'All';
+  const normalized = String(value).trim();
+  if (!normalized) return 'All';
+  if (/&/i.test(normalized) || normalized.includes(',')) return `Both (${normalized})`;
+  return `Section ${normalized}`;
+};
+
 const getSlotRoom = (slot, fallbackRoom) => slot?.room_no || fallbackRoom || '';
 
 function useSafeHodContext() {
@@ -198,6 +206,8 @@ export default function HODManageTimetable() {
   const [selectedBranch, setSelectedBranch] = useState('');
   const [selectedSemester, setSelectedSemester] = useState('');
   const [timetableMeta, setTimetableMeta] = useState({ wefDate: '', roomNo: '' });
+  const [semesterStartDate, setSemesterStartDate] = useState('');
+  const [isSemesterSettingsLoading, setIsSemesterSettingsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeCell, setActiveCell] = useState(null);
   const [subjects, setSubjects] = useState([]);
@@ -297,6 +307,65 @@ export default function HODManageTimetable() {
       return data || [];
     }
   }, [effectiveYear, effectiveBranch, selectedSemester]);
+
+  const fetchSemesterSettings = useCallback(async () => {
+    if (!effectiveBranch) return;
+    setIsSemesterSettingsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('system_settings')
+        .select('semester_start_date')
+        .eq('department', effectiveBranch)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching semester settings:', error);
+      } else if (data?.semester_start_date) {
+        setSemesterStartDate(data.semester_start_date);
+      }
+    } catch (err) {
+      console.error('Failed to fetch semester settings:', err);
+    } finally {
+      setIsSemesterSettingsLoading(false);
+    }
+  }, [effectiveBranch]);
+
+  const saveSemesterSettings = useCallback(async () => {
+    if (!effectiveBranch || !semesterStartDate) {
+      toast.error('Please select a semester start date');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('system_settings')
+        .upsert(
+          {
+            department: effectiveBranch,
+            semester_start_date: semesterStartDate,
+            is_active: true,
+          },
+          { onConflict: 'department' }
+        );
+
+      if (error) {
+        console.error('Error saving semester settings:', error);
+        toast.error('Failed to save semester settings');
+      } else {
+        toast.success('Semester start date saved successfully!');
+      }
+    } catch (err) {
+      console.error('Failed to save semester settings:', err);
+      toast.error('Failed to save semester settings');
+    }
+  }, [effectiveBranch, semesterStartDate]);
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    fetchSemesterSettings();
+  }, [fetchSemesterSettings]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -562,14 +631,23 @@ export default function HODManageTimetable() {
     const numericSemester = parseInt(String(selectedSemester).replace(/\D/g, ''), 10);
     const numericYear = getYearNumber(effectiveYear);
 
+    const isLabSlot = slotData.slotType === 'lab' || slotData.slotType === 'skill';
+    const startDate = new Date(`2000-01-01T${slotData.startTime}:00`);
+    if (isLabSlot) {
+      startDate.setMinutes(startDate.getMinutes() + 110);
+    } else {
+      startDate.setMinutes(startDate.getMinutes() + 55);
+    }
+    const endTime = startDate.toTimeString().slice(0, 5);
+
     const newSlot = {
       branch: effectiveBranch,
       year: numericYear,
       semester: numericSemester,
-      section: 'A',
+      section: null,
       day_of_week: activeCell.day,
       start_time: `${slotData.startTime}:00`,
-      end_time: `${slotData.endTime}:00`,
+      end_time: `${endTime}:00`,
       subject_id: slotData.subject_id,
       faculty_id: isNonAcademicSlot(slotData.slotType) ? (slotData.faculty_id || null) : slotData.faculty_id,
       room_no: slotData.room || timetableMeta.roomNo || null,
@@ -645,6 +723,30 @@ export default function HODManageTimetable() {
       </header>
 
       <section className="timetable-filters">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px', padding: '20px', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <label style={{ fontSize: '0.85rem', color: '#a1a1aa', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            Global Semester Start Date
+          </label>
+          <input
+            type="date"
+            value={semesterStartDate}
+            onChange={(e) => setSemesterStartDate(e.target.value)}
+            style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid #3f3f46', backgroundColor: '#18181b', color: '#fff', outline: 'none', colorScheme: 'dark', fontFamily: 'inherit' }}
+            disabled={isSemesterSettingsLoading}
+          />
+        </div>
+        <button
+          onClick={saveSemesterSettings}
+          style={{ marginTop: '24px', padding: '10px 20px', backgroundColor: '#6366f1', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', transition: 'all 0.2s' }}
+          onMouseOver={(e) => e.target.style.backgroundColor = '#4f46e5'}
+          onMouseOut={(e) => e.target.style.backgroundColor = '#6366f1'}
+          disabled={isSemesterSettingsLoading || !semesterStartDate}
+        >
+          Apply Config to All Portals
+        </button>
+      </div>
+
         <div className="timetable-filter-group">
           <label className="timetable-filter-label">Year</label>
           <select

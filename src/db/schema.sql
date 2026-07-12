@@ -32,3 +32,19 @@ create table if not exists timetable_configs (
 );
 
 create index if not exists idx_timetable_configs_branch_semester_year on timetable_configs(branch, semester, year);
+
+-- System Settings Table
+-- Stores global academic configuration such as semester start dates
+
+create table if not exists system_settings (
+    id uuid primary key default gen_random_uuid(),
+    department text not null,
+    semester_start_date date not null,
+    is_active boolean default true,
+    created_at timestamp with time zone default now(),
+    updated_at timestamp with time zone default now(),
+    unique(department)
+);
+
+create index if not exists idx_system_settings_department on system_settings(department);
+create index if not exists idx_system_settings_active on system_settings(is_active);

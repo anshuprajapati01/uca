@@ -211,6 +211,7 @@ export default function DirectorDashboard() {
 
   const [dbDepartments] = useState([]);
   const [dbFaculty, setDbFaculty] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [totalStudents, setTotalStudents] = useState(0);
   const [totalFaculty, setTotalFaculty] = useState(0);
   const [directorName, setDirectorName] = useState('Director');
@@ -1934,9 +1935,41 @@ flexShrink: 0,
             )}
 
             {/* 👇 YAHAN SE SCROLLABLE AREA START HOTA HAI */}
+            <div style={{ marginBottom: '24px', position: 'relative' }}>
+              <input
+                type="text"
+                placeholder="🔍 Search faculty by name, email, or phone..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '14px 20px',
+                  borderRadius: '12px',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  fontSize: '15px',
+                  outline: 'none',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                  transition: 'all 0.3s ease'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#4f46e5'}
+                onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
+              />
+            </div>
             <div style={{ overflowY: 'auto', flexGrow: 1, paddingBottom: '40px', paddingRight: '10px' }}>
               <div className="premium-faculty-grid">
-                {dbFaculty.length > 0 ? dbFaculty.map((faculty) => {
+                {(() => {
+                  const filteredFaculties = dbFaculty.filter((faculty) => {
+                    const query = searchQuery.toLowerCase();
+                    const name = faculty.full_name?.toLowerCase() || '';
+                    const email = faculty.email?.toLowerCase() || '';
+                    const phone = faculty.phone?.toLowerCase() || '';
+
+                    return name.includes(query) || email.includes(query) || phone.includes(query);
+                  });
+
+                  return filteredFaculties.length > 0 ? filteredFaculties.map((faculty) => {
                   const fullName = faculty.full_name || faculty.name || 'Unknown';
                   const email = faculty.email || '—';
                   const phone = faculty.phone || faculty.phone_number || '—';
@@ -1981,10 +2014,13 @@ flexShrink: 0,
                             </div>
                       </div>
                     </div>
-                  );
-                }) : (
-                  <div className="premium-faculty-empty">No faculty members found in the database.</div>
-                )}
+                   );
+                 }) : (
+                   <div className="premium-faculty-empty">
+                     {searchQuery ? 'No faculty members match your search.' : 'No faculty members found in the database.'}
+                    </div>
+                  )}
+                )()}
               </div>
             </div>
           </section>

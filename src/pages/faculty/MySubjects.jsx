@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { BookOpen } from 'lucide-react';
 import { supabase } from '../../lib/supabase.js';
 import { ROUTES, USER_ROLES, AGGREGATE_DEPARTMENTS } from '../../config/constants.js';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './MySubjects.css';
 
 function normalizeSubject(subject) {
@@ -23,6 +23,7 @@ function normalizeSubject(subject) {
 
 export default function MySubjects() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [, setFacultyProfile] = useState(null);
   const [subjects, setSubjects] = useState([]);
@@ -125,7 +126,7 @@ export default function MySubjects() {
   }, [navigate]);
 
   function handleCardClick(subject) {
-    navigate(`/faculty/workspace/${encodeURIComponent(subject.id)}`);
+    navigate(`/faculty/workspace/${encodeURIComponent(subject.id)}`, { state: { activeSlot: location.state?.activeSlot || location.state?.targetSlot || null } });
   }
 
   if (isLoading) {

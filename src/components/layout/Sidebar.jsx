@@ -4,14 +4,18 @@ import './DashboardLayout.css';
 
 export default function Sidebar({ navItems, isOpen, onClose }) {
   const location = useLocation();
-  const currentSearch = new URLSearchParams(location.search);
-  const currentTab = currentSearch.get('tab') || 'overview';
 
   const isItemActive = (item) => {
-    if (item.disabled) return false;
-    const itemSearch = new URLSearchParams(item.path.split('?')[1] || '');
-    const itemTab = itemSearch.get('tab') || 'overview';
-    return itemTab === currentTab;
+    if (item.path.startsWith('/director')) {
+      const currentTab = new URLSearchParams(location.search).get('tab') || 'overview';
+      const itemTab = item.path.includes('?tab=')
+        ? new URLSearchParams(item.path.split('?')[1]).get('tab')
+        : 'overview';
+
+      return currentTab === itemTab;
+    }
+
+    return location.pathname === item.path;
   };
 
   return (

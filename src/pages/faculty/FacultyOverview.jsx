@@ -33,7 +33,24 @@ const formatTime = (timeString) => {
     return `${h12}:${minutes} ${ampm}`;
 };
 
+// Turn a numeric/string year (1..4) into an ordinal label, e.g. 2 -> "2nd Year"
+const getYearLabel = (year) => {
+  if (year === null || year === undefined || year === '') return '';
+  const n = parseInt(year, 10);
+  if (Number.isNaN(n)) return String(year);
+  const suffix = ({ 1: 'st', 2: 'nd', 3: 'rd' })[n] || 'th';
+  return `${n}${suffix} Year`;
+};
+
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+const formatSectionLabel = (val) => {
+  if (!val || val.toString().toLowerCase() === 'all') {
+    return 'All';
+  }
+  const sectionName = val.toString().toUpperCase();
+  return `Section ${sectionName}`;
+};
 
 const getInitialDay = () => {
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
@@ -51,6 +68,8 @@ export default function FacultyOverview() {
   const [myClasses, setMyClasses] = useState([]);
   const [scheduleLoading, setScheduleLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState(getInitialDay);
+  const [uniqueBranches, setUniqueBranches] = useState([]);
+  const [activeFilter, setActiveFilter] = useState('All');
 
   useEffect(() => {
     let cancelled = false;
@@ -77,6 +96,35 @@ export default function FacultyOverview() {
       }
     }
     load();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadFilters() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // Fetch every branch/year this faculty is assigned to across the whole week
+        const { data, error } = await supabase
+          .from('timetable_slots')
+          .select('branch, year')
+          .eq('faculty_id', user.id);
+
+        if (error) throw error;
+        if (!cancelled) {
+          const branches = [...new Set((data || []).map((s) => s.branch).filter(Boolean))].sort();
+          setUniqueBranches(branches);
+          // If the currently active filter is no longer valid, reset to "All"
+          setActiveFilter((prev) => (prev === 'All' || branches.includes(prev) ? prev : 'All'));
+        }
+      } catch (err) {
+        console.error('Failed to load schedule filters:', err);
+        if (!cancelled) setUniqueBranches([]);
+      }
+    }
+    loadFilters();
     return () => { cancelled = true; };
   }, []);
 
@@ -113,6 +161,32 @@ export default function FacultyOverview() {
     return () => { cancelled = true; };
   }, [selectedDay]);
 
+  // Apply the active branch filter to the day's schedule
+  const displayedSchedule = myClasses.filter(
+    (slot) => activeFilter === 'All' || slot.branch === activeFilter
+  );
+
+  // Route straight to the subject workspace with the Attendance tab open,
+  // carrying the section/batch context so faculty need not re-select it.
+  const handleTakeAttendance = (slot) => {
+    const batch = (slot.batch || '').toLowerCase();
+    const sectionContext = batch && batch !== 'all' ? batch.toUpperCase() : 'All';
+
+    if (!slot.subject_id) {
+      // Non-academic / unlinked slot: fall back to the subjects list
+      navigate('/faculty/subjects', { state: { targetSlot: slot } });
+      return;
+    }
+
+    navigate(`/faculty/workspace/${encodeURIComponent(slot.subject_id)}`, {
+      state: {
+        activeSlot: slot,
+        openAttendance: true,
+        sectionContext,
+      },
+    });
+  };
+
   return (
     <>
       <section className="faculty-overview__welcome">
@@ -131,6 +205,28 @@ export default function FacultyOverview() {
         📅 My Weekly Schedule <span className="st-header-sub">({selectedDay})</span>
       </h3>
 
+      {uniqueBranches.length > 0 && (
+        <div className="faculty-filter-pills">
+          <button
+            type="button"
+            className={`faculty-filter-pill ${activeFilter === 'All' ? 'active' : ''}`}
+            onClick={() => setActiveFilter('All')}
+          >
+            All
+          </button>
+          {uniqueBranches.map((branch) => (
+            <button
+              key={branch}
+              type="button"
+              className={`faculty-filter-pill ${activeFilter === branch ? 'active' : ''}`}
+              onClick={() => setActiveFilter(branch)}
+            >
+              {branch}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="st-day-selector">
         {days.map((day) => (
           <button
@@ -148,17 +244,21 @@ export default function FacultyOverview() {
         <div className="student-empty-box">
           <p>Loading your schedule…</p>
         </div>
-      ) : myClasses && myClasses.length > 0 ? (
-        <div className={`st-timeline-container ${myClasses.length > 2 ? 'st-timeline-container--scroll' : ''}`}>
-          {myClasses.map((slot) => {
+      ) : displayedSchedule && displayedSchedule.length > 0 ? (
+        <div className={`st-timeline-container ${displayedSchedule.length > 2 ? 'st-timeline-container--scroll' : ''}`}>
+          {displayedSchedule.map((slot) => {
             const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
             const currentTime = new Date().toLocaleTimeString('en-GB', { hour12: false });
             const isLive = selectedDay === today && currentTime >= slot.start_time && currentTime <= slot.end_time;
 
-            const formatBatchDisplay = (batch) => {
-              if (!batch || batch.toLowerCase() === 'all') return 'Batch All (B1 & B2)';
-              return `Section ${batch.toUpperCase()}`;
-            };
+            const yearLabel = getYearLabel(slot.year);
+            const metaParts = [
+              slot.room_no ? `📍 Room ${slot.room_no}` : '📍 Room TBA',
+               formatSectionLabel(slot.batch || slot.section || ''),
+            ];
+            if (slot.branch || yearLabel) {
+              metaParts.push([slot.branch, yearLabel].filter(Boolean).join(' '));
+            }
 
             return (
               <div
@@ -171,21 +271,26 @@ export default function FacultyOverview() {
                   </span>
                   {isLive && <span className="student-schedule-card__live">🟢 LIVE</span>}
                 </div>
-                <div className="st-info-col">
+                <div className="st-info-col class-card-body">
                   <h4>
                     {slot.subjects?.name || 'Unknown Subject'}{' '}
                     <span className="st-sub-code">({slot.subjects?.code || 'N/A'})</span>
                   </h4>
                   <p className="st-faculty">{slot.user_profiles?.full_name || 'Assigned Faculty'}</p>
-                  <p className="st-faculty">
-                    Room {slot.room_no || 'TBA'} &bull; {formatBatchDisplay(slot.batch)}
-                  </p>
+                  <div className="st-meta-row">
+                    {metaParts.map((part, idx) => (
+                      <span key={idx} className="st-meta-item">
+                        {idx > 0 && <span className="st-meta-dot">•</span>}
+                        {part}
+                      </span>
+                    ))}
+                  </div>
                 </div>
                 <div className="st-room-col">
                   <button
                     type="button"
                     className="faculty-take-attendance-btn"
-                    onClick={() => navigate('/faculty/subjects')}
+                    onClick={() => handleTakeAttendance(slot)}
                   >
                     📝 Take Attendance
                   </button>
@@ -196,7 +301,11 @@ export default function FacultyOverview() {
         </div>
       ) : (
         <div className="student-empty-box">
-          <p>No classes scheduled for {selectedDay}. Enjoy your day!</p>
+          <p>
+            {myClasses.length > 0 && activeFilter !== 'All'
+              ? `No ${activeFilter} classes on ${selectedDay}. Try another branch or day.`
+              : `No classes scheduled for ${selectedDay}. Enjoy your day!`}
+          </p>
         </div>
       )}
     </section>

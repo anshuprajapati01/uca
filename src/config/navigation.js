@@ -165,23 +165,26 @@ export const HOD_NAV_ITEMS = [
 
 /** @type {NavItem[]} */
 export const DIRECTOR_NAV_ITEMS = [
-  { label: 'Overview', path: ROUTES.DIRECTOR_DASHBOARD, icon: LayoutDashboard },
+  { label: 'Overview', path: ROUTES.DIRECTOR_DASHBOARD, icon: LayoutDashboard, tab: 'overview' },
   {
     label: 'Academic Hub',
     path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=academic`,
     icon: Layers,
+    tab: 'academic',
   },
   {
     label: 'Manage Departments',
     path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=manage-departments`,
     icon: Layers,
+    tab: 'manage-departments',
   },
-  { label: 'Manage Faculty', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=manage-faculty`, icon: UserPlus },
-  { label: 'HOD Management', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=hod-management`, icon: UserCheck },
-  { label: 'Student Directory', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=student-directory`, icon: Users },
+  { label: 'Manage Faculty', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=manage-faculty`, icon: UserPlus, tab: 'manage-faculty' },
+  { label: 'HOD Management', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=hod-management`, icon: UserCheck, tab: 'hod-management' },
+  { label: 'Student Directory', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=student-directory`, icon: Users, tab: 'student-directory' },
   {
     label: 'Announcements',
     path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=announcements`,
     icon: Megaphone,
+    tab: 'announcements',
   },
 ];
