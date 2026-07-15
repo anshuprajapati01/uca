@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AuthContext } from '../contexts/AuthContext.jsx';
 import AuthLoading from '../components/common/AuthLoading.jsx';
 import { supabase } from '../lib/supabase.js';
-import { fetchUserProfile } from '../services/userProfileService.js';
+import { fetchUserProfile, fetchUserAvatarUrl } from '../services/userProfileService.js';
 import { getAuthErrorMessage } from '../utils/authErrors.js';
 
 export default function AuthProvider({ children }) {
@@ -34,6 +34,18 @@ export default function AuthProvider({ children }) {
       setProfile(userProfile);
       setRole(userProfile.role);
       setProfileError(null);
+
+      // Lazy, non-blocking: the avatar is a (potentially large) Base64 string,
+      // so fetch it separately and merge it into the profile once available
+      // instead of delaying the initial auth load.
+      fetchUserAvatarUrl(authUser.id)
+        .then((avatarUrl) => {
+          if (!avatarUrl) return;
+          setProfile((prev) =>
+            prev && prev.id === authUser.id ? { ...prev, avatar_url: avatarUrl } : prev,
+          );
+        })
+        .catch(() => {});
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
       setProfile(null);

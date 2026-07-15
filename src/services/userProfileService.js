@@ -6,6 +6,7 @@ import { USER_ROLES } from '../config/constants.js';
  * @property {string} id
  * @property {string} role
  * @property {string | null} [full_name]
+ * @property {string | null} [avatar_url]
  * @property {boolean} [can_view_faculty]
  * @property {boolean} [can_view_hod]
  * @property {boolean} inferred
@@ -38,6 +39,7 @@ function buildFallbackProfile(userId, email) {
     id: userId,
     role,
     full_name: null,
+    avatar_url: null,
     inferred: true,
   };
 }
@@ -66,5 +68,29 @@ export async function fetchUserProfile(userId, email) {
     return buildFallbackProfile(userId, email);
   } catch {
     return buildFallbackProfile(userId, email);
+  }
+}
+
+/**
+ * Lazily fetches only the (potentially large, Base64) avatar_url for a user.
+ * Kept separate from fetchUserProfile so the blocking auth load stays lean.
+ * @param {string} userId
+ * @returns {Promise<string | null>}
+ */
+export async function fetchUserAvatarUrl(userId) {
+  try {
+    const { data, error } = await supabase
+      .from(PROFILES_TABLE)
+      .select('avatar_url')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (error || !data) {
+      return null;
+    }
+
+    return data.avatar_url ?? null;
+  } catch {
+    return null;
   }
 }

@@ -1,5 +1,26 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
+/* --- MANAGE STUDENTS: SECTION MOVE BUTTONS --- */
+.move-to-section-btn {
+  transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+
+.move-to-section-btn:hover:not(:disabled) {
+  background-color: #6366f1 !important;
+  color: #ffffff !important;
+}
+
+.move-to-section-btn:active:not(:disabled) {
+  background-color: #4f46e5 !important;
+  color: #ffffff !important;
+  transform: scale(0.95);
+}
+
+.move-to-section-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 .director-dashboard {

@@ -110,14 +110,6 @@ const getSubjectShortName = (name) => {
     .toUpperCase();
 };
 
-const getSectionDisplayLabel = (value) => {
-  if (value == null || value === '') return 'All';
-  const normalized = String(value).trim();
-  if (!normalized) return 'All';
-  if (/&/i.test(normalized) || normalized.includes(',')) return `Both (${normalized})`;
-  return `Section ${normalized}`;
-};
-
 const getSlotRoom = (slot, fallbackRoom) => slot?.room_no || fallbackRoom || '';
 
 function useSafeHodContext() {
@@ -214,6 +206,7 @@ export default function HODManageTimetable() {
   const [faculties, setFaculties] = useState([]);
   const [slots, setSlots] = useState([]);
   const [showRefTable, setShowRefTable] = useState(false);
+  const [slotToDelete, setSlotToDelete] = useState(null);
   const [slotData, setSlotData] = useState({
     subject_id: '',
     faculty_id: '',
@@ -234,7 +227,7 @@ export default function HODManageTimetable() {
       const { data: facultiesData } = await supabase
         .from('user_profiles')
         .select('id, full_name')
-        .eq('role', 'faculty');
+        .in('role', ['faculty', 'director']);
       setFaculties(facultiesData || []);
 
       const semesterLabel = selectedSemester ? `Semester ${selectedSemester}` : null;
@@ -271,41 +264,66 @@ export default function HODManageTimetable() {
   const fetchTimetable = useCallback(async () => {
     if (!effectiveYear || !effectiveBranch || !selectedSemester) return;
     const numericSemester = parseInt(String(selectedSemester).replace(/\D/g, ''), 10);
-    console.log('[fetchSlots] Querying timetable_slots for', { branch: effectiveBranch, semester: numericSemester, year: effectiveYear });
-    const { data, error } = await supabase
-      .from('timetable_slots')
-      .select('*, subjects(name, code), user_profiles(full_name)')
-      .eq('branch', effectiveBranch)
-      .eq('semester', numericSemester)
-      .order('start_time', { ascending: true });
+    console.log('[fetchSlots] Querying timetable_drafts for', { branch: effectiveBranch, semester: numericSemester, year: effectiveYear });
 
-    if (error) {
-      console.error('Error fetching timetable:', error);
-      toast.error('Failed to load timetable');
-      return null;
-    } else {
-      console.log('[fetchSlots] Returned rows:', (data || []).length, data);
-      setSlots(data || []);
-
-      const { data: metaData, error: metaError } = await supabase
-        .from('timetable_configs')
-        .select('wef_date, room_no')
+    let drafts = [];
+    try {
+      const { data: rawDrafts, error: draftError } = await supabase
+        .from('timetable_drafts')
+        .select('*')
         .eq('branch', effectiveBranch)
         .eq('semester', numericSemester)
-        .eq('year', effectiveYear)
-        .maybeSingle();
+        .order('start_time', { ascending: true });
 
-      if (metaError) {
-        console.error('Error fetching timetable config:', metaError);
-      } else {
-        setTimetableMeta({
-          wefDate: metaData?.wef_date || '',
-          roomNo: metaData?.room_no || '',
-        });
-      }
+      if (draftError) throw draftError;
 
-      return data || [];
+      const subjectIds = [...new Set((rawDrafts || []).map((d) => d.subject_id).filter(Boolean))];
+      const facultyIds = [...new Set((rawDrafts || []).map((d) => d.faculty_id).filter(Boolean))];
+
+      const [subjectsRes, facultiesRes] = await Promise.all([
+        subjectIds.length
+          ? supabase.from('subjects').select('id, name, code').in('id', subjectIds)
+          : Promise.resolve({ data: [] }),
+        facultyIds.length
+          ? supabase.from('user_profiles').select('id, full_name').in('id', facultyIds)
+          : Promise.resolve({ data: [] }),
+      ]);
+
+      const subjectMap = new Map((subjectsRes.data || []).map((s) => [s.id, s]));
+      const facultyMap = new Map((facultiesRes.data || []).map((f) => [f.id, f]));
+
+      drafts = (rawDrafts || []).map((draft) => ({
+        ...draft,
+        subjects: subjectMap.get(draft.subject_id) || null,
+        user_profiles: facultyMap.get(draft.faculty_id) || null,
+      }));
+    } catch (err) {
+      console.error('Error fetching timetable drafts:', err);
+      toast.error('Failed to load timetable');
+      return null;
     }
+
+    console.log('[fetchSlots] Returned rows:', (drafts || []).length, drafts);
+    setSlots(drafts || []);
+
+    const { data: metaData, error: metaError } = await supabase
+      .from('timetable_configs')
+      .select('wef_date, room_no')
+      .eq('branch', effectiveBranch)
+      .eq('semester', numericSemester)
+      .eq('year', effectiveYear)
+      .maybeSingle();
+
+    if (metaError) {
+      console.error('Error fetching timetable config:', metaError);
+    } else {
+      setTimetableMeta({
+        wefDate: metaData?.wef_date || '',
+        roomNo: metaData?.room_no || '',
+      });
+    }
+
+    return drafts || [];
   }, [effectiveYear, effectiveBranch, selectedSemester]);
 
   const fetchSemesterSettings = useCallback(async () => {
@@ -433,13 +451,108 @@ export default function HODManageTimetable() {
     );
   }, [slots]);
 
-  const handleLoadGrid = async () => {
-    const data = await fetchTimetable();
-    if (data === null) return;
-    if (data.length > 0) {
-      toast.success('Timetable & Settings loaded successfully! 📅');
-    } else {
-      toast.info('No timetable found for this selection.');
+  const handlePublishTimetable = async () => {
+    console.log('[Publish] Button clicked', {
+      effectiveYear,
+      effectiveBranch,
+      selectedSemester,
+    });
+    if (!effectiveYear || !effectiveBranch || !selectedSemester) {
+      toast.error('Please select Year, Branch and Semester first');
+      return;
+    }
+    const numericSemester = parseInt(String(selectedSemester).replace(/\D/g, ''), 10);
+
+    toast.loading('Publishing timetable...', { id: 'publish-toast' });
+
+    try {
+      console.log('[Publish] Fetching drafts for', { branch: effectiveBranch, semester: numericSemester });
+      const { data: draftSlots, error: fetchError } = await supabase
+        .from('timetable_drafts')
+        .select('*')
+        .eq('branch', effectiveBranch)
+        .eq('semester', numericSemester);
+
+      if (fetchError) {
+        console.error('[Publish Error] fetch drafts failed:', fetchError);
+        throw fetchError;
+      }
+      console.log(`[Publish] Fetched ${draftSlots ? draftSlots.length : 0} draft slot(s)`);
+
+      console.log('[Publish] Clearing old slots in timetable_slots for', { branch: effectiveBranch, semester: numericSemester });
+      const { error: deleteError } = await supabase
+        .from('timetable_slots')
+        .delete()
+        .eq('branch', effectiveBranch)
+        .eq('semester', numericSemester);
+
+      if (deleteError) {
+        console.error('[Publish Error] delete old slots failed:', deleteError);
+        throw deleteError;
+      }
+
+      if (draftSlots && draftSlots.length > 0) {
+        const slotsToInsert = draftSlots.map(({ id, created_at, updated_at, ...rest }) => rest);
+        console.log(`[Publish] Upserting ${slotsToInsert.length} slot(s) into timetable_slots`);
+        const { error: insertError } = await supabase
+          .from('timetable_slots')
+          .upsert(slotsToInsert, { onConflict: 'branch, semester, section, day_of_week, start_time, batch' });
+
+        if (insertError) {
+          console.error('[Publish Error] upsert slots failed:', insertError);
+          throw insertError;
+        }
+        console.log('[Publish] Upsert completed successfully');
+      } else {
+        console.log('[Publish] No draft slots to publish (drafts table empty for this branch/semester)');
+      }
+
+      toast.success('Timetable Published! Now live for Students & Faculty.', { id: 'publish-toast' });
+    } catch (err) {
+      console.error('[Publish Error]', err);
+      toast.error('Failed to publish timetable', { id: 'publish-toast' });
+    }
+  };
+
+  const handleSyncLiveToDraft = async () => {
+    if (!effectiveYear || !effectiveBranch || !selectedSemester) {
+      toast.error('Please select Year, Branch and Semester first');
+      return;
+    }
+    const numericSemester = parseInt(String(selectedSemester).replace(/\D/g, ''), 10);
+    
+    toast.loading('Syncing live timetable to drafts...', { id: 'sync-toast' });
+    
+    try {
+      const { data: liveSlots, error: fetchError } = await supabase
+        .from('timetable_slots')
+        .select('*')
+        .eq('branch', effectiveBranch)
+        .eq('semester', numericSemester);
+      
+      if (fetchError) throw fetchError;
+      
+      const { error: deleteError } = await supabase
+        .from('timetable_drafts')
+        .delete()
+        .eq('branch', effectiveBranch)
+        .eq('semester', numericSemester);
+      
+      if (deleteError) throw deleteError;
+      
+      if (liveSlots && liveSlots.length > 0) {
+        const { error: insertError } = await supabase
+          .from('timetable_drafts')
+          .upsert(liveSlots, { onConflict: 'branch, semester, section, day_of_week, start_time, batch' });
+        
+        if (insertError) throw insertError;
+      }
+      
+      await fetchTimetable();
+      toast.success('Live timetable loaded into Draft mode for editing.', { id: 'sync-toast' });
+    } catch (err) {
+      console.error('Error syncing live to draft:', err);
+      toast.error('Failed to sync live timetable to drafts', { id: 'sync-toast' });
     }
   };
 
@@ -609,7 +722,7 @@ export default function HODManageTimetable() {
           data-html2canvas-ignore="true"
           onClick={(e) => {
             e.stopPropagation();
-            handleDeleteSlot(slot.id);
+            setSlotToDelete(slot.id);
           }}
         >
           <Trash2 size={13} />
@@ -619,11 +732,22 @@ export default function HODManageTimetable() {
   };
 
   const handleSaveSlot = async () => {
+    console.log('Button clicked');
     if (!activeCell || !slotData.subject_id || !slotData.startTime || !slotData.endTime) {
+      console.warn('[handleSaveSlot] Early exit: missing required fields', {
+        activeCell,
+        subject_id: slotData.subject_id,
+        startTime: slotData.startTime,
+        endTime: slotData.endTime,
+      });
       toast.error('Please fill in all required fields');
       return;
     }
     if (!isNonAcademicSlot(slotData.slotType) && !slotData.faculty_id) {
+      console.warn('[handleSaveSlot] Early exit: faculty not assigned', {
+        slotType: slotData.slotType,
+        faculty_id: slotData.faculty_id,
+      });
       toast.error('Please assign a faculty');
       return;
     }
@@ -644,7 +768,7 @@ export default function HODManageTimetable() {
       branch: effectiveBranch,
       year: numericYear,
       semester: numericSemester,
-      section: null,
+      section: 'A',
       day_of_week: activeCell.day,
       start_time: `${slotData.startTime}:00`,
       end_time: `${endTime}:00`,
@@ -655,29 +779,34 @@ export default function HODManageTimetable() {
       batch: slotData.batch,
     };
 
-    let error;
-    if (activeCell.slotId) {
-      ({ error } = await supabase.from('timetable_slots').update(newSlot).eq('id', activeCell.slotId));
-    } else {
-      ({ error } = await supabase
-        .from('timetable_slots')
-        .upsert([newSlot], {
-          onConflict: 'branch, semester, section, day_of_week, start_time, batch',
-        }));
-    }
+    try {
+      let error;
+      if (activeCell.slotId) {
+        ({ error } = await supabase.from('timetable_drafts').update(newSlot).eq('id', activeCell.slotId));
+      } else {
+        ({ error } = await supabase
+          .from('timetable_drafts')
+          .upsert([newSlot], {
+            onConflict: 'branch, semester, section, day_of_week, start_time, batch',
+          }));
+      }
 
-    if (error) {
-      console.error('Error saving slot:', error);
+      if (error) {
+        console.error('Error saving slot:', error);
+        toast.error('Failed to save slot');
+      } else {
+        toast.success(activeCell.slotId ? 'Slot updated successfully!' : 'Slot saved successfully!');
+        closeModal();
+        fetchTimetable();
+      }
+    } catch (err) {
+      console.error('[handleSaveSlot] Unexpected error:', err);
       toast.error('Failed to save slot');
-    } else {
-      toast.success(activeCell.slotId ? 'Slot updated successfully!' : 'Slot saved successfully!');
-      closeModal();
-      fetchTimetable();
     }
   };
 
   const handleDeleteSlot = async (slotId) => {
-    const { error } = await supabase.from('timetable_slots').delete().eq('id', slotId);
+    const { error } = await supabase.from('timetable_drafts').delete().eq('id', slotId);
     if (error) {
       console.error('Error deleting slot:', error);
       toast.error('Failed to delete slot');
@@ -685,6 +814,12 @@ export default function HODManageTimetable() {
       toast.success('Slot removed');
       fetchTimetable();
     }
+  };
+
+  const confirmDelete = async () => {
+    if (!slotToDelete) return;
+    await handleDeleteSlot(slotToDelete);
+    setSlotToDelete(null);
   };
 
   const closeModal = () => {
@@ -703,13 +838,6 @@ export default function HODManageTimetable() {
 
   const handleCancelModal = () => {
     closeModal();
-  };
-
-  const resetFilters = () => {
-    setSelectedYear('');
-    setSelectedBranch('');
-    setSelectedSemester('');
-    setSlots([]);
   };
 
   return (
@@ -801,19 +929,23 @@ export default function HODManageTimetable() {
           </select>
         </div>
 
-        <button
-          className="timetable-load-btn"
-          onClick={handleLoadGrid}
-          disabled={!effectiveBranch || !effectiveYear || !selectedSemester}
-        >
-          Load Timetable
-        </button>
-
-        {(effectiveBranch || effectiveYear || selectedSemester) && (
-          <button onClick={resetFilters} className="timetable-reset-btn">
-            Reset
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <span className="timetable-draft-badge">Draft Mode</span>
+          <button
+            className="timetable-sync-btn"
+            onClick={handleSyncLiveToDraft}
+            disabled={!effectiveBranch || !effectiveYear || !selectedSemester}
+          >
+            Sync Live to Draft
           </button>
-        )}
+          <button
+            className="timetable-publish-btn"
+            onClick={handlePublishTimetable}
+            disabled={!effectiveBranch || !effectiveYear || !selectedSemester}
+          >
+            Publish Timetable
+          </button>
+        </div>
       </section>
 
       {effectiveBranch && effectiveYear && selectedSemester && (
@@ -937,17 +1069,17 @@ export default function HODManageTimetable() {
                                           key={slot.id}
                                           className={`tt-slot-allbatch-inner tt-slot-allbatch-inner--${slot.slot_type || 'theory'}`}
                                         >
-                                          <span className="tt-slot-allbatch-text">{allBatchText}</span>
-                                          <button
-                                            type="button"
-                                            className="tt-slot-delete"
-                                            title="Remove slot"
-                                            data-html2canvas-ignore="true"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              handleDeleteSlot(slot.id);
-                                            }}
-                                          >
+                                            <span className="tt-slot-allbatch-text">{allBatchText}</span>
+                                            <button
+                                              type="button"
+                                              className="tt-slot-delete"
+                                              title="Remove slot"
+                                              data-html2canvas-ignore="true"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSlotToDelete(slot.id);
+                                              }}
+                                            >
                                             <Trash2 size={13} />
                                           </button>
                                         </div>
@@ -980,7 +1112,7 @@ export default function HODManageTimetable() {
                                           data-html2canvas-ignore="true"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            handleDeleteSlot(slot.id);
+                                            setSlotToDelete(slot.id);
                                           }}
                                         >
                                           <Trash2 size={13} />
@@ -1130,6 +1262,32 @@ export default function HODManageTimetable() {
               </button>
               <button className="timetable-modal-btn timetable-modal-btn--save" onClick={handleSaveSlot}>
                 Save Slot
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {slotToDelete && (
+        <div className="timetable-modal-overlay" onClick={() => setSlotToDelete(null)}>
+          <div className="timetable-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="timetable-modal-header">
+              <h3 className="timetable-modal-title">Delete Timetable Slot</h3>
+              <button className="timetable-modal-close" onClick={() => setSlotToDelete(null)}>
+                &times;
+              </button>
+            </div>
+            <div className="timetable-modal-body">
+              <p style={{ color: '#cbd5e1', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                Are you sure you want to delete this slot? This action cannot be undone.
+              </p>
+            </div>
+            <div className="timetable-modal-footer">
+              <button className="timetable-modal-btn timetable-modal-btn--cancel" onClick={() => setSlotToDelete(null)}>
+                Cancel
+              </button>
+              <button className="timetable-modal-btn timetable-modal-btn--delete" onClick={confirmDelete}>
+                Delete
               </button>
             </div>
           </div>

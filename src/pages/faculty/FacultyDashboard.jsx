@@ -49,7 +49,6 @@ export default function FacultyDashboard() {
           .from('user_profiles')
           .select('*, batches(name)')
           .eq('id', user.id)
-          .eq('role', 'faculty')
           .single();
 
         if (profileError) throw profileError;
@@ -74,18 +73,23 @@ export default function FacultyDashboard() {
 
   const canViewFaculty = facultyProfile?.can_view_faculty === true;
   const canViewHod = facultyProfile?.can_view_hod === true;
-  const showRoleSwitcher = canViewFaculty && canViewHod;
+  const isDirector = facultyProfile?.role === 'director';
+  const showRoleSwitcher = (canViewFaculty && canViewHod) || (isDirector && canViewFaculty);
   const isOnHodDashboard = location.pathname.startsWith(ROUTES.HOD_DASHBOARD);
+  const isOnDirectorDashboard = location.pathname.startsWith(ROUTES.DIRECTOR_DASHBOARD);
 
   function handleSwitchRole() {
-    if (isOnHodDashboard) {
+    if (isOnHodDashboard || isOnDirectorDashboard) {
       navigate(ROUTES.FACULTY_DASHBOARD, { replace: true });
+    } else if (isDirector) {
+      navigate(ROUTES.DIRECTOR_DASHBOARD, { replace: true });
     } else {
       navigate(ROUTES.HOD_DASHBOARD, { replace: true });
     }
   }
 
   const displayName = facultyProfile?.full_name || 'Faculty';
+  const avatarUrl = facultyProfile?.avatar_url || null;
   const initials = displayName
     .split(' ')
     .filter(Boolean)
@@ -106,10 +110,12 @@ export default function FacultyDashboard() {
           <FacultyHeader
             displayName={displayName}
             initials={initials}
+            avatarUrl={avatarUrl}
             onSignOut={handleSignOut}
             showRoleSwitcher={showRoleSwitcher}
             onSwitchRole={handleSwitchRole}
             isOnHodDashboard={isOnHodDashboard}
+            isOnDirectorDashboard={isOnDirectorDashboard}
           />
           <div className="faculty-content">
             <div className="faculty-error-card">
@@ -133,10 +139,12 @@ export default function FacultyDashboard() {
         <FacultyHeader
           displayName={displayName}
           initials={initials}
+          avatarUrl={avatarUrl}
           onSignOut={handleSignOut}
           showRoleSwitcher={showRoleSwitcher}
           onSwitchRole={handleSwitchRole}
           isOnHodDashboard={isOnHodDashboard}
+          isOnDirectorDashboard={isOnDirectorDashboard}
           pageTitle={pageTitle}
         />
 
@@ -186,7 +194,10 @@ function FacultySidebar({ activeTab, onNavigate }) {
   );
 }
 
-function FacultyHeader({ displayName, initials, onSignOut, showRoleSwitcher, onSwitchRole, isOnHodDashboard, pageTitle }) {
+function FacultyHeader({ displayName, initials, avatarUrl, onSignOut, showRoleSwitcher, onSwitchRole, isOnHodDashboard, isOnDirectorDashboard, pageTitle }) {
+  const switcherLabel = isOnHodDashboard || isOnDirectorDashboard
+    ? '🔄 Switch to Faculty Portal'
+    : '🔄 Switch to Director Portal';
   return (
     <header className="faculty-header">
       <div className="faculty-header__title-wrap">
@@ -196,11 +207,21 @@ function FacultyHeader({ displayName, initials, onSignOut, showRoleSwitcher, onS
       <div className="faculty-header__right">
         {showRoleSwitcher ? (
           <button type="button" className="faculty-header__switcher" onClick={onSwitchRole}>
-            {isOnHodDashboard ? '🔄 Switch to Faculty Portal' : '🔄 Switch to HOD Portal'}
+            {switcherLabel}
           </button>
         ) : null}
         <div className="faculty-header__user">
-          <div className="faculty-header__avatar">{initials}</div>
+          <div className="faculty-header__avatar">
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={displayName || 'Profile'}
+                className="faculty-header__avatar-image"
+              />
+            ) : (
+              initials
+            )}
+          </div>
           <div className="faculty-header__meta">
             <span className="faculty-header__name">{displayName}</span>
             <span className="faculty-header__role">Faculty</span>

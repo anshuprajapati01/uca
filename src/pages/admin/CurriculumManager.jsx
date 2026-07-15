@@ -26,6 +26,9 @@ const YEAR_SEMESTERS = {
 
 const CURRENT_TERM = 'ODD';
 
+// Maximum recommended weekly teaching hours for a single faculty member.
+const MAX_HOURS = 18;
+
 const isOptionalSubjectType = (type) =>
   type === 'Skill' || type === 'Practical' || type === 'Non-Academic';
 
@@ -168,10 +171,45 @@ export default function CurriculumManager() {
       .eq('can_view_faculty', true)
       .order('full_name', { ascending: true });
 
-    if (!error && data) {
-      setDbFacultyList(data || []);
-    }
+    if (error || !data) return;
+
+    // Calculate each faculty's current weekly load (sum of assigned subject credits).
+    const { data: subjectData } = await supabase
+      .from('subjects')
+      .select('faculty_id, credits')
+      .not('faculty_id', 'is', null);
+
+    const loadMap = {};
+    (subjectData || []).forEach((subject) => {
+      const id = subject.faculty_id;
+      if (!id) return;
+      loadMap[id] = (loadMap[id] || 0) + (Number(subject.credits) || 0);
+    });
+
+    const facultyWithLoad = data.map((faculty) => ({
+      ...faculty,
+      load: loadMap[faculty.id] || 0,
+    }));
+
+    setDbFacultyList(facultyWithLoad);
   }, []);
+
+  // Sorted faculty list (ascending workload) with a "recommended" flag for the
+  // faculty carrying the lightest current load.
+  const sortedFacultyList = useMemo(() => {
+    const sorted = [...dbFacultyList].sort((a, b) => a.load - b.load);
+    return sorted.map((faculty, index) => ({
+      ...faculty,
+      isRecommended: index === 0,
+    }));
+  }, [dbFacultyList]);
+
+  // Projected load when the selected faculty is assigned this new subject.
+  const projectedLoad =
+    selectedFacultyData && selectedFacultyData.load !== undefined
+      ? selectedFacultyData.load + (Number(credits) || 0)
+      : null;
+  const isOverloaded = projectedLoad !== null && projectedLoad > MAX_HOURS;
 
 const fetchSubjects = useCallback(async () => {
     const semesterDetails = selectedSemester
@@ -355,7 +393,7 @@ const fetchSubjects = useCallback(async () => {
 
   const handleSubmitSubject = async (e) => {
     e.preventDefault();
-    if (!selectedSemesterDetails || !effectiveBranchCode || !activeSemesterLive) return;
+    if (!selectedSemesterDetails || !effectiveBranchCode) return;
 
     const isNonAcademic = subjectType === 'Non-Academic';
     const isOptionalCodeType = subjectType === 'Skill' || subjectType === 'Practical' || isNonAcademic;
@@ -413,12 +451,12 @@ const fetchSubjects = useCallback(async () => {
   };
 
   const confirmDeleteSubject = async (subjectId) => {
-    if (!selectedSemesterDetails || !activeSemesterLive) return;
+    if (!selectedSemesterDetails) return;
 
     const { error } = await supabase.from('subjects').delete().eq('id', subjectId);
 
     if (error) {
-      alert('Failed to delete subject: ' + error.message);
+      toast.error('Cannot delete subject: ' + (error.message || 'It is referenced by other records. Try "Unassign Faculty" first.'));
       return;
     }
     await fetchSubjects();
@@ -431,6 +469,25 @@ const fetchSubjects = useCallback(async () => {
       setToastMsg('');
     }, 3000);
 
+    setDeleteSubjectId(null);
+  };
+
+  // Fallback when a hard delete is blocked by foreign-key constraints:
+  // unassign the faculty so their workload is relieved without dropping the
+  // subject record itself.
+  const handleUnassignFaculty = async (subjectId) => {
+    const { error } = await supabase
+      .from('subjects')
+      .update({ faculty_id: null })
+      .eq('id', subjectId);
+
+    if (error) {
+      toast.error('Cannot unassign faculty: ' + (error.message || 'Unknown error.'));
+      return;
+    }
+
+    toast.success('Faculty unassigned — workload relieved.');
+    await fetchSubjects();
     setDeleteSubjectId(null);
   };
 
@@ -780,7 +837,6 @@ const fetchSubjects = useCallback(async () => {
                         setDeleteSubjectId(subject.id);
                       }}
                       title="Delete subject"
-                      disabled={!activeSemesterLive}
                       style={{
                         background: 'transparent',
                         border: 'none',
@@ -794,7 +850,6 @@ const fetchSubjects = useCallback(async () => {
                         transition: 'all 0.2s ease',
                       }}
                       onMouseEnter={(e) => {
-                        if (!activeSemesterLive) return;
                         e.currentTarget.style.color = '#fff';
                         e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
                       }}
@@ -926,7 +981,7 @@ const fetchSubjects = useCallback(async () => {
                 <label className="cm-label">
                   Assign Faculty Teacher {subjectType === 'Non-Academic' && <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span>}
                 </label>
-                <div className="cm-faculty-combobox" ref={facultyDropdownRef}>
+                 <div className="cm-faculty-combobox" ref={facultyDropdownRef}>
                   <input
                     className="cm-input"
                     type="text"
@@ -941,24 +996,29 @@ const fetchSubjects = useCallback(async () => {
                   />
                   {isFacultyDropdownOpen && (
                     <div className="cm-faculty-dropdown">
-                      {dbFacultyList
+                      {sortedFacultyList
                         .filter((f) =>
                           f.full_name.toLowerCase().includes(facultySearch.toLowerCase())
                         )
                         .map((fac) => (
                           <div
                             key={fac.id}
-                            className="cm-faculty-option"
+                            className={`cm-faculty-option ${fac.isRecommended ? 'cm-faculty-option--recommended' : ''}`}
                             onClick={() => {
                               setSelectedFaculty(fac.id);
-                              setFacultySearch(fac.full_name + (fac.expertise_tags?.length > 0 ? ` (${fac.expertise_tags[0]})` : ''));
+                              setFacultySearch(fac.full_name);
                               setIsFacultyDropdownOpen(false);
                             }}
                           >
-                            {fac.full_name} {fac.expertise_tags?.length > 0 ? `(${fac.expertise_tags[0]})` : ''}
+                            <span className="cm-faculty-option__name">
+                              {fac.full_name} (Load: {fac.load} hrs)
+                            </span>
+                            {fac.isRecommended && (
+                              <span className="cm-faculty-recommended">⭐ Recommended</span>
+                            )}
                           </div>
                         ))}
-                      {dbFacultyList.filter((f) =>
+                      {sortedFacultyList.filter((f) =>
                         f.full_name.toLowerCase().includes(facultySearch.toLowerCase())
                       ).length === 0 && (
                         <div className="cm-faculty-option cm-faculty-option--empty">
@@ -968,6 +1028,14 @@ const fetchSubjects = useCallback(async () => {
                     </div>
                   )}
                 </div>
+
+                {isOverloaded && (
+                  <div className="cm-overload-warning">
+                    ⚠️ Warning: Assigning this {credits}-credit subject pushes the
+                    faculty's workload to {projectedLoad} hours, exceeding the {MAX_HOURS}-hour
+                    limit.
+                  </div>
+                )}
               </div>
 
               {selectedFacultyData && (
@@ -1197,18 +1265,32 @@ const fetchSubjects = useCallback(async () => {
           </div>
         </div>
       )}
-      {deleteSubjectId && (
+      {deleteSubjectId && (() => {
+        const deletingSubject = dbSubjectsList.find((s) => s.id === deleteSubjectId);
+        const hasAssignedFaculty = !!deletingSubject?.faculty_id;
+        return (
          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(5px)' }}>
-            <div style={{ background: '#1a1c2e', padding: '24px', borderRadius: '16px', border: '1px solid #ef4444', maxWidth: '400px', width: '90%' }}>
+            <div style={{ background: '#1a1c2e', padding: '24px', borderRadius: '16px', border: '1px solid #ef4444', maxWidth: '440px', width: '90%' }}>
                <h3 style={{ color: 'white', fontSize: '18px', fontWeight: 'bold' }}>Delete Subject?</h3>
-               <p style={{ color: '#ccc', margin: '10px 0' }}>Are you sure you want to delete this subject? This action cannot be undone.</p>
-               <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                  <button onClick={() => setDeleteSubjectId(null)} style={{ flex: 1, padding: '10px', borderRadius: '8px', background: '#374151', color: 'white', fontWeight: '500', transition: '0.2s', cursor: 'pointer' }} onMouseOver={(e) => e.target.style.background = '#4b5563'} onMouseOut={(e) => e.target.style.background = '#374151'}>Cancel</button>
-                  <button onClick={() => confirmDeleteSubject(deleteSubjectId)} style={{ flex: 1, padding: '10px', borderRadius: '8px', background: '#dc2626', color: 'white', fontWeight: 'bold', transition: '0.2s', cursor: 'pointer' }} onMouseOver={(e) => e.target.style.background = '#b91c1c'} onMouseOut={(e) => e.target.style.background = '#dc2626'}>Delete</button>
+               <p style={{ color: '#ccc', margin: '10px 0' }}>
+                 Are you sure you want to delete this subject? This action cannot be undone.
+                 {hasAssignedFaculty && (
+                   <span style={{ display: 'block', marginTop: '8px', color: '#9ca3af', fontSize: '0.85rem' }}>
+                     This subject has a faculty assigned. If the delete is blocked, use "Unassign Faculty" to relieve their workload instead.
+                   </span>
+                 )}
+               </p>
+               <div style={{ display: 'flex', gap: '10px', marginTop: '20px', flexWrap: 'wrap' }}>
+                  <button onClick={() => setDeleteSubjectId(null)} style={{ flex: 1, minWidth: '110px', padding: '10px', borderRadius: '8px', background: '#374151', color: 'white', fontWeight: '500', transition: '0.2s', cursor: 'pointer' }} onMouseOver={(e) => e.target.style.background = '#4b5563'} onMouseOut={(e) => e.target.style.background = '#374151'}>Cancel</button>
+                  {hasAssignedFaculty && (
+                    <button onClick={() => handleUnassignFaculty(deleteSubjectId)} style={{ flex: 1, minWidth: '140px', padding: '10px', borderRadius: '8px', background: '#7c3aed', color: 'white', fontWeight: '600', transition: '0.2s', cursor: 'pointer' }} onMouseOver={(e) => e.target.style.background = '#6d28d9'} onMouseOut={(e) => e.target.style.background = '#7c3aed'}>Unassign Faculty</button>
+                  )}
+                  <button onClick={() => confirmDeleteSubject(deleteSubjectId)} style={{ flex: 1, minWidth: '110px', padding: '10px', borderRadius: '8px', background: '#dc2626', color: 'white', fontWeight: 'bold', transition: '0.2s', cursor: 'pointer' }} onMouseOver={(e) => e.target.style.background = '#b91c1c'} onMouseOut={(e) => e.target.style.background = '#dc2626'}>Delete</button>
                </div>
             </div>
          </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

@@ -946,6 +946,10 @@
 }
 
 .cm-faculty-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
   padding: 0.75rem 1rem;
   color: #fff;
   cursor: pointer;
@@ -955,8 +959,38 @@
   font-weight: 500;
 }
 
+.cm-faculty-option__name {
+  flex: 1;
+  min-width: 0;
+}
+
+.cm-faculty-option--recommended {
+  background: rgba(34, 197, 94, 0.12);
+}
+
+.cm-faculty-option--recommended:hover {
+  background: rgba(34, 197, 94, 0.22);
+}
+
+.cm-faculty-recommended {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #4ade80;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(74, 222, 128, 0.4);
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
 .cm-faculty-option:hover {
   background: #2a2c3e;
+}
+
+.cm-faculty-option--recommended:hover {
+  background: rgba(34, 197, 94, 0.22);
 }
 
 .cm-faculty-option--empty {
@@ -967,6 +1001,17 @@
 
 .cm-faculty-option--empty:hover {
   background: transparent;
+}
+
+.cm-overload-warning {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  border-radius: 8px;
+  color: #f87171;
+  font-size: 0.875rem;
+  line-height: 1.4;
 }
 
 .cm-subject-combobox {

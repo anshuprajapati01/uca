@@ -16,10 +16,23 @@ export default function TopNavbar({ title, onMenuClick }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const displayName = profile?.full_name || user?.email || 'User';
+  const fullName = profile?.full_name || user?.full_name || '';
+  const displayName = fullName || user?.email || 'User';
+  const avatarUrl = profile?.avatar_url || user?.avatar_url || null;
+  const initials =
+    fullName
+      .trim()
+      .split(/\s+/)
+      .map((word) => word[0])
+      .filter(Boolean)
+      .slice(0, 2)
+      .join('')
+      .toUpperCase() || (user?.email?.[0]?.toUpperCase() ?? 'U');
   const canViewFaculty = profile?.can_view_faculty === true;
   const canViewHod = profile?.can_view_hod === true;
-  const showRoleSwitcher = canViewFaculty && canViewHod;
+  const showRoleSwitcher =
+    ((role === 'hod' || role === 'director') && canViewFaculty) ||
+    (role !== 'hod' && role !== 'director' && canViewFaculty && canViewHod);
 
   const isFacultyDashboard = location.pathname.startsWith('/faculty');
   const isHodDashboard = location.pathname.startsWith('/hod-dashboard');
@@ -29,8 +42,13 @@ export default function TopNavbar({ title, onMenuClick }) {
   let switcherTarget = null;
 
   if (isFacultyDashboard) {
-    switcherLabel = '🔄 Switch to HOD Portal';
-    switcherTarget = ROUTES.HOD_DASHBOARD;
+    if (role === 'director' && canViewFaculty) {
+      switcherLabel = '🔄 Switch to Director Portal';
+      switcherTarget = ROUTES.DIRECTOR_DASHBOARD;
+    } else {
+      switcherLabel = '🔄 Switch to HOD Portal';
+      switcherTarget = ROUTES.HOD_DASHBOARD;
+    }
   } else if (isHodDashboard) {
     switcherLabel = '🔄 Switch to Faculty Portal';
     switcherTarget = ROUTES.FACULTY_DASHBOARD;
@@ -74,15 +92,30 @@ export default function TopNavbar({ title, onMenuClick }) {
             {switcherLabel}
           </button>
         ) : null}
-       <div className="dashboard-topbar__user">
-  <strong>{displayName}</strong>
-  {/* 👈 NAYA LOGIC: URL check karo, HOD portal hai toh HOD likho, varna original role */}
-  {role ? (
-    <span className="dashboard-topbar__role">
-      {location.pathname.startsWith('/hod-dashboard') ? 'HOD' : role.charAt(0).toUpperCase() + role.slice(1)}
-    </span>
-  ) : null}
-</div>
+        <div className="dashboard-topbar__profile">
+          <div className="dashboard-topbar__profile-avatar">
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={fullName || 'Profile'}
+                className="dashboard-topbar__avatar-image"
+              />
+            ) : (
+              <span className="dashboard-topbar__avatar-initials">{initials}</span>
+            )}
+          </div>
+          <div className="dashboard-topbar__user">
+            <strong>{displayName}</strong>
+            {/* URL check: HOD portal hai toh HOD likho, varna original role */}
+            {role ? (
+              <span className="dashboard-topbar__role">
+                {location.pathname.startsWith('/hod-dashboard')
+                  ? 'HOD'
+                  : role.charAt(0).toUpperCase() + role.slice(1)}
+              </span>
+            ) : null}
+          </div>
+        </div>
         <button
           type="button"
           className="dashboard-topbar__logout"

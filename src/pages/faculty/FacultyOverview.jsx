@@ -137,19 +137,40 @@ export default function FacultyOverview() {
         if (!user) return;
         const currentUser = user;
 
-        const { data: slots, error } = await supabase
+        const { data: rawSlots, error } = await supabase
           .from('timetable_slots')
-          .select('*, subjects(name, code), user_profiles(full_name)')
+          .select('*')
           .eq('faculty_id', currentUser.id)
           .eq('day_of_week', selectedDay) // Ensure 'selectedDay' matches exactly what is in DB (e.g., 'Tuesday')
           .order('start_time', { ascending: true });
 
-        if (!error && slots) {
-          console.log(`DEBUG: Raw Data for ${selectedDay}:`, JSON.stringify(slots, null, 2));
+        if (!error && rawSlots) {
+          console.log(`DEBUG: Raw Data for ${selectedDay}:`, JSON.stringify(rawSlots, null, 2));
         }
-
         if (error) throw error;
-        if (!cancelled) setMyClasses(slots || []);
+
+        const subjectIds = [...new Set((rawSlots || []).map((s) => s.subject_id).filter(Boolean))];
+        const facultyIds = [...new Set((rawSlots || []).map((s) => s.faculty_id).filter(Boolean))];
+
+        const [subjectsRes, facultiesRes] = await Promise.all([
+          subjectIds.length
+            ? supabase.from('subjects').select('id, name, code').in('id', subjectIds)
+            : Promise.resolve({ data: [] }),
+          facultyIds.length
+            ? supabase.from('user_profiles').select('id, full_name').in('id', facultyIds)
+            : Promise.resolve({ data: [] }),
+        ]);
+
+        const subjectMap = new Map((subjectsRes.data || []).map((s) => [s.id, s]));
+        const facultyMap = new Map((facultiesRes.data || []).map((f) => [f.id, f]));
+
+        const slots = (rawSlots || []).map((slot) => ({
+          ...slot,
+          subjects: subjectMap.get(slot.subject_id) || null,
+          user_profiles: facultyMap.get(slot.faculty_id) || null,
+        }));
+
+        if (!cancelled) setMyClasses(slots);
       } catch (err) {
         console.error('Failed to load schedule:', err);
         if (!cancelled) setMyClasses([]);

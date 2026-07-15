@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import Papa from 'papaparse';
 import { supabase, createTempClient } from '../../lib/supabase.js';
 import { useHodContext } from '../../context/HodContext.jsx';
 import { toast, Toaster } from 'react-hot-toast';
@@ -19,6 +20,10 @@ export default function ManageStudents() {
   const [isSplitting, setIsSplitting] = useState(false);
   const [sec1Name, setSec1Name] = useState('B1');
   const [sec2Name, setSec2Name] = useState('B2');
+  const [csvFile, setCsvFile] = useState(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importResult, setImportResult] = useState(null);
+  const fileInputRef = useRef(null);
 
   const getSection = (student) => student?.section || null;
 
@@ -176,7 +181,7 @@ export default function ManageStudents() {
 
     const success = await updateStudentSection(selectedIds, section);
     if (success) {
-      toast.success(`Moved ${selectedIds.length} student(s) to Section ${section}`);
+      toast.success(`Student(s) successfully moved to ${section}`);
       setSectionSelectedStudents(new Set());
       fetchStudents();
     }
@@ -283,6 +288,219 @@ export default function ManageStudents() {
     setStudentToDelete(null);
   };
 
+  const handleDownloadTemplate = () => {
+    const headers = ['Full Name', 'Roll Number', 'Email', 'Phone Number', 'Year', 'Branch'];
+    const sampleRow = ['John Doe', '21UCA001', 'john@example.com', '9876543210', '2', 'CSE'];
+    const csvContent = [headers, sampleRow].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n') + '\n';
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'student_registration_template.csv';
+    link.click();
+  };
+
+  const handleCsvFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setCsvFile(file);
+      setImportResult(null);
+    }
+    e.target.value = null;
+  };
+
+  const clearCsvFile = () => {
+    setCsvFile(null);
+    setImportResult(null);
+  };
+
+  const importSingleStudent = async (row, hodCollegeId) => {
+    const tempSupabase = createTempClient();
+    const fullName = (row['Full Name'] || '').trim();
+    const rollNumber = (row['Roll Number'] || '').trim();
+    const email = (row['Email'] || '').trim();
+    const phone = (row['Phone Number'] || '').trim();
+    const selectedYear = (row['Year'] || '').trim();
+    const selectedBranch = (row['Branch'] || '').trim();
+
+    if (!fullName || !rollNumber || !email || !selectedYear || !selectedBranch) {
+      return { success: false, reason: 'Missing required fields' };
+    }
+
+    const yearDescriptions = [...new Set(hodDepartmentsData.map(d => d.description).filter(Boolean))];
+    const exactYearMatch = yearDescriptions.find(y => y.toLowerCase() === selectedYear.toLowerCase());
+    let normalizedYear = exactYearMatch || selectedYear;
+    if (!exactYearMatch) {
+      const inputNum = parseInt(selectedYear, 10);
+      if (!isNaN(inputNum)) {
+        const numericMatch = yearDescriptions.find(y => {
+          const match = y.match(/^(\d+)/);
+          return match && parseInt(match[1], 10) === inputNum;
+        });
+        if (numericMatch) normalizedYear = numericMatch;
+      }
+    }
+
+    const branchValues = new Set();
+    hodDepartmentsData.forEach(d => {
+      const code = d.code || d.name;
+      const name = d.name || d.code;
+      if (code) branchValues.add(code);
+      if (name) branchValues.add(name);
+      if (AGGREGATE_DEPARTMENTS[code]) {
+        AGGREGATE_DEPARTMENTS[code].forEach(sub => branchValues.add(sub));
+      }
+    });
+    const normalizedBranch = [...branchValues].find(b => b && b.toLowerCase() === selectedBranch.toLowerCase()) || selectedBranch;
+
+    try {
+      const signUpPayload = {
+        email: email.toLowerCase(),
+        password: rollNumber,
+        options: {
+          data: {
+            full_name: fullName,
+            roll_number: rollNumber,
+            phone_number: phone || null,
+            year: normalizedYear,
+            branch: normalizedBranch,
+            role: 'student',
+            college_id: hodCollegeId,
+            branch_id: null,
+            is_active: true
+          }
+        }
+      };
+      console.log('[Bulk Import] SignUp payload:', signUpPayload);
+      const { data: authData, error: authError } = await tempSupabase.auth.signUp(signUpPayload);
+
+      if (authError) throw authError;
+      if (!authData.user) throw new Error('Could not create user. Email might already exist.');
+
+      const { data: existingProfile } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('id', authData.user.id)
+        .maybeSingle();
+
+      if (!existingProfile) {
+        const profilePayload = {
+          id: authData.user.id,
+          full_name: fullName,
+          email: email,
+          roll_number: rollNumber,
+          phone: phone || null,
+          role: 'student',
+          batch_id: null,
+          selected_year: normalizedYear,
+          selected_branch: normalizedBranch,
+          college_id: hodCollegeId,
+          branch_id: null,
+          section: null,
+          is_active: true,
+          can_view_faculty: false,
+          can_view_hod: false
+        };
+        console.log('[Bulk Import] Inserting profile payload:', profilePayload);
+        const { error: profileError } = await supabase.from('user_profiles').insert([profilePayload]);
+
+        if (profileError) throw profileError;
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('[Bulk Import Row Error]', error);
+      const message = error?.message || String(error) || '';
+      const lowerMessage = message.toLowerCase();
+      const status = error?.status || error?.code;
+      const isDuplicate = lowerMessage.includes('already registered') || lowerMessage.includes('duplicate') || status === 500;
+      if (isDuplicate) {
+        return { success: false, reason: 'Email address already exists in the system' };
+      }
+      return { success: false, reason: message || 'Unknown error' };
+    }
+  };
+
+  const handleProcessCsv = async () => {
+    if (!csvFile) {
+      toast.error('Please select a CSV file first');
+      return;
+    }
+
+    setIsImporting(true);
+    setImportResult(null);
+
+    try {
+      const parsed = await new Promise((resolve, reject) => {
+        Papa.parse(csvFile, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => resolve(results),
+          error: (error) => reject(error)
+        });
+      });
+
+      if (parsed?.errors?.length > 0) {
+        toast.error('CSV parsing error: ' + (parsed.errors[0]?.message || 'Unknown CSV error'));
+        setIsImporting(false);
+        return;
+      }
+
+      const rows = Array.isArray(parsed?.data) ? parsed.data : [];
+      if (rows.length === 0) {
+        toast.error('CSV file is empty or has no valid data rows.');
+        setIsImporting(false);
+        return;
+      }
+
+      const { data: hodProfile } = await supabase
+        .from('user_profiles')
+        .select('college_id')
+        .eq('id', (await supabase.auth.getUser()).data.user.id)
+        .maybeSingle();
+
+      const hodCollegeId = hodProfile?.college_id || '11111111-0000-0000-0000-000000000001';
+
+      const results = await Promise.allSettled(rows.map(row => importSingleStudent(row, hodCollegeId)));
+
+      let successCount = 0;
+      let failCount = 0;
+      const errors = [];
+
+      results.forEach((result, index) => {
+        if (result.status === 'fulfilled') {
+          if (result.value?.success) {
+            successCount++;
+          } else {
+            failCount++;
+            errors.push(`Row ${index + 2}: ${result.value?.reason || 'Unknown error'}`);
+          }
+        } else {
+          failCount++;
+          errors.push(`Row ${index + 2}: ${result.reason || 'Unknown error'}`);
+        }
+      });
+
+      setImportResult({ successCount, failCount, errors });
+
+      if (successCount > 0) {
+        toast.success(`Successfully imported ${successCount} student(s)!`);
+        fetchStudents();
+        setTimeout(() => {
+          clearCsvFile();
+        }, 3000);
+      }
+      if (failCount > 0) {
+        toast.error(`Failed to import ${failCount} student(s). Check details below.`);
+      }
+    } catch (error) {
+      console.error('[Bulk Import Error]', error);
+      const message = error?.message || String(error) || 'An unknown error occurred';
+      toast.error('Import failed: ' + message);
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen">
       <h2 className="broadcast-title">Manage Students 🎓</h2>
@@ -297,36 +515,79 @@ export default function ManageStudents() {
 
       {activeTab === 'register' && (
         <div className="director-semester-card">
-          <form onSubmit={handleSubmit} className="broadcast-form-container">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '1.2rem' }}>
-              <input type="text" placeholder="Full Name" required value={formData.fullName} onChange={(e) => setFormData({...formData, fullName: e.target.value})} className="broadcast-input" />
-              <input type="text" placeholder="Roll Number" required value={formData.rollNumber} onChange={(e) => setFormData({...formData, rollNumber: e.target.value})} className="broadcast-input" />
-            </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1.5rem', flexWrap: 'wrap' }}>
+            <form onSubmit={handleSubmit} className="broadcast-form-container" style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '1.2rem' }}>
+                <input type="text" placeholder="Full Name" required value={formData.fullName} onChange={(e) => setFormData({...formData, fullName: e.target.value})} className="broadcast-input" />
+                <input type="text" placeholder="Roll Number" required value={formData.rollNumber} onChange={(e) => setFormData({...formData, rollNumber: e.target.value})} className="broadcast-input" />
+              </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '1.2rem' }}>
-              <input type="email" placeholder="Email Address" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="broadcast-input" />
-              <input type="text" placeholder="Phone Number" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="broadcast-input" />
-            </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '1.2rem' }}>
+                <input type="email" placeholder="Email Address" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="broadcast-input" />
+                <input type="text" placeholder="Phone Number" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="broadcast-input" />
+              </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '1.2rem' }}>
-              <select className="broadcast-input manage-students-select" required value={formData.selectedYear} onChange={(e) => setFormData({...formData, selectedYear: e.target.value, selectedBranch: '' })}>
-                <option value="">-- Select Year --</option>
-                {availableYears.map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-              <select className="broadcast-input manage-students-select" required value={formData.selectedBranch} onChange={(e) => setFormData({...formData, selectedBranch: e.target.value })} disabled={!formData.selectedYear}>
-                <option value="">-- Select Branch --</option>
-                {availableBranches.map(branch => (
-                  <option key={branch.id} value={branch.code}>{branch.name}</option>
-                ))}
-              </select>
-            </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '1.2rem' }}>
+                <select className="broadcast-input manage-students-select" required value={formData.selectedYear} onChange={(e) => setFormData({...formData, selectedYear: e.target.value, selectedBranch: '' })}>
+                  <option value="">-- Select Year --</option>
+                  {availableYears.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+                <select className="broadcast-input manage-students-select" required value={formData.selectedBranch} onChange={(e) => setFormData({...formData, selectedBranch: e.target.value })} disabled={!formData.selectedYear}>
+                  <option value="">-- Select Branch --</option>
+                  {availableBranches.map(branch => (
+                    <option key={branch.id} value={branch.code}>{branch.name}</option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="broadcast-form-actions">
-              <button type="submit" className="broadcast-send-btn">Register Student</button>
+              <div className="broadcast-form-actions">
+                <button type="submit" className="broadcast-send-btn">Register Student</button>
+              </div>
+            </form>
+
+            <div style={{ width: '320px', flexShrink: 0, background: 'rgba(15, 23, 42, 0.4)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.06)', padding: '1.25rem' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '1rem', fontWeight: '700', margin: '0 0 0.75rem' }}>Bulk Upload via CSV</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                <button type="button" onClick={handleDownloadTemplate} style={{ width: '100%', padding: '0.6rem 1rem', borderRadius: '10px', border: '0', background: '#059669', color: '#fff', fontSize: '0.85rem', fontWeight: '700', cursor: 'pointer', transition: 'background 0.2s ease, transform 0.2s ease', boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)' }} onMouseEnter={(e) => { e.currentTarget.style.background = '#10b981'; e.currentTarget.style.transform = 'translateY(-1px)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = '#059669'; e.currentTarget.style.transform = 'translateY(0)'; }}>
+                  Download Template
+                </button>
+                <input type="file" accept=".csv" ref={fileInputRef} onChange={handleCsvFileChange} style={{ display: 'none' }} />
+                <div onClick={() => fileInputRef.current && fileInputRef.current.click()} style={{ width: '100%', padding: '0.6rem 1rem', borderRadius: '10px', border: '1px dashed rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.03)', color: '#94a3b8', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer', textAlign: 'center', transition: 'background 0.2s ease, color 0.2s ease, border-color 0.2s ease' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = '#e2e8f0'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.35)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; }}>
+                  Choose CSV File
+                </div>
+                {csvFile && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.5rem 0.75rem', borderRadius: '10px', background: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.25)' }}>
+                    <span style={{ flex: 1, color: '#e2e8f0', fontSize: '0.85rem', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{csvFile.name}</span>
+                    <button type="button" onClick={(e) => { e.stopPropagation(); clearCsvFile(); }} title="Clear selected file" style={{ flexShrink: 0, width: '28px', height: '28px', display: 'grid', placeItems: 'center', borderRadius: '8px', border: '1px solid rgba(244, 63, 94, 0.25)', background: 'rgba(244, 63, 94, 0.08)', color: '#fda4af', cursor: 'pointer', fontSize: '0.85rem', lineHeight: 1, transition: 'background 0.2s ease' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(244, 63, 94, 0.2)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(244, 63, 94, 0.08)'; }}>
+                      ✕
+                    </button>
+                  </div>
+                )}
+                <button type="button" onClick={handleProcessCsv} disabled={isImporting || !csvFile} style={{ width: '100%', padding: '0.65rem 1rem', borderRadius: '10px', border: '0', background: isImporting || !csvFile ? 'rgba(255,255,255,0.06)' : 'linear-gradient(135deg, #8b5cf6, #3b82f6)', color: isImporting || !csvFile ? '#64748b' : '#fff', fontSize: '0.9rem', fontWeight: '800', cursor: isImporting || !csvFile ? 'not-allowed' : 'pointer', boxShadow: isImporting || !csvFile ? 'none' : '0 8px 20px rgba(99, 102, 241, 0.35)', transition: 'transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease' }} onMouseEnter={(e) => { if (!isImporting && csvFile) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 26px rgba(99, 102, 241, 0.45)'; } }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isImporting || !csvFile ? 'none' : '0 8px 20px rgba(99, 102, 241, 0.35)'; }}>
+                  {isImporting ? 'Importing...' : 'Import Students'}
+                </button>
+              </div>
+              {importResult && (
+                <div style={{ padding: '0.75rem', borderRadius: '10px', background: importResult.failCount > 0 ? 'rgba(244, 63, 94, 0.08)' : 'rgba(16, 185, 129, 0.08)', border: `1px solid ${importResult.failCount > 0 ? 'rgba(244, 63, 94, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`, marginTop: '0.75rem' }}>
+                  <p style={{ color: '#f8fafc', fontSize: '0.85rem', fontWeight: '600', margin: '0 0 0.4rem' }}>
+                    {importResult.successCount} succeeded, {importResult.failCount} failed
+                  </p>
+                  {importResult.errors?.length > 0 && (
+                    <ul style={{ color: '#fda4af', fontSize: '0.8rem', margin: 0, paddingLeft: '1.1rem' }}>
+                      {importResult.errors?.slice(0, 5).map((err, idx) => (
+                        <li key={idx}>{err}</li>
+                      ))}
+                      {importResult.errors?.length > 5 && (
+                        <li>...and {importResult.errors.length - 5} more</li>
+                      )}
+                    </ul>
+                  )}
+                </div>
+              )}
             </div>
-          </form>
+          </div>
         </div>
       )}
 
@@ -475,6 +736,7 @@ export default function ManageStudents() {
                       type="button"
                       onClick={() => handleMoveToSection(sec1Name)}
                       disabled={sectionSelectedStudents.size === 0}
+                      className="move-to-section-btn"
                       style={{
                         flex: 1,
                         padding: '0.5rem',
@@ -484,8 +746,7 @@ export default function ManageStudents() {
                         color: '#c4b5fd',
                         fontSize: '0.8rem',
                         fontWeight: '700',
-                        cursor: 'pointer',
-                        opacity: sectionSelectedStudents.size === 0 ? 0.5 : 1
+                        cursor: 'pointer'
                       }}
                     >
                       Move to {sec1Name}
@@ -494,6 +755,7 @@ export default function ManageStudents() {
                       type="button"
                       onClick={() => handleMoveToSection(sec2Name)}
                       disabled={sectionSelectedStudents.size === 0}
+                      className="move-to-section-btn"
                       style={{
                         flex: 1,
                         padding: '0.5rem',
@@ -503,8 +765,7 @@ export default function ManageStudents() {
                         color: '#bfdbfe',
                         fontSize: '0.8rem',
                         fontWeight: '700',
-                        cursor: 'pointer',
-                        opacity: sectionSelectedStudents.size === 0 ? 0.5 : 1
+                        cursor: 'pointer'
                       }}
                     >
                       Move to {sec2Name}

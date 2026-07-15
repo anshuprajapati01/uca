@@ -850,18 +850,39 @@ if (!cancelled && defaultSemester !== null) {
             let currentDay = days[new Date().getDay()];
             if (currentDay === 'Sunday') currentDay = 'Tuesday';
 
-            const { data, error } = await supabase
+            const { data: rawSlots, error } = await supabase
                 .from('timetable_slots')
-                .select('*, subjects(name, code), user_profiles(full_name)')
+                .select('*')
                 .eq('branch', stuBranch)
                 .eq('semester', stuSemester)
                 .eq('day_of_week', currentDay);
 
             if (error) throw error;
-            if (!data || data.length === 0) {
+            if (!rawSlots || rawSlots.length === 0) {
                 setTodayClasses([]);
                 return;
             }
+
+            const subjectIds = [...new Set(rawSlots.map((s) => s.subject_id).filter(Boolean))];
+            const facultyIds = [...new Set(rawSlots.map((s) => s.faculty_id).filter(Boolean))];
+
+            const [subjectsRes, facultiesRes] = await Promise.all([
+                subjectIds.length
+                    ? supabase.from('subjects').select('id, name, code').in('id', subjectIds)
+                    : Promise.resolve({ data: [] }),
+                facultyIds.length
+                    ? supabase.from('user_profiles').select('id, full_name').in('id', facultyIds)
+                    : Promise.resolve({ data: [] }),
+            ]);
+
+            const subjectMap = new Map((subjectsRes.data || []).map((s) => [s.id, s]));
+            const facultyMap = new Map((facultiesRes.data || []).map((f) => [f.id, f]));
+
+            const data = rawSlots.map((slot) => ({
+                ...slot,
+                subjects: subjectMap.get(slot.subject_id) || null,
+                user_profiles: facultyMap.get(slot.faculty_id) || null,
+            }));
 
             data.push({
                 id: 'short-break-static',

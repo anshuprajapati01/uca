@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BookOpen } from 'lucide-react';
 import { supabase } from '../../lib/supabase.js';
-import { ROUTES, USER_ROLES, AGGREGATE_DEPARTMENTS } from '../../config/constants.js';
+import { ROUTES, AGGREGATE_DEPARTMENTS } from '../../config/constants.js';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './MySubjects.css';
 
@@ -27,6 +27,7 @@ export default function MySubjects() {
 
   const [, setFacultyProfile] = useState(null);
   const [subjects, setSubjects] = useState([]);
+  const [rawSubjects, setRawSubjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeBranch, setActiveBranch] = useState('All');
@@ -88,9 +89,6 @@ export default function MySubjects() {
           .single();
 
         if (profileError) throw profileError;
-        if (profileData?.role !== USER_ROLES.FACULTY) {
-          throw new Error('Faculty profile not found.');
-        }
 
         const { data: subjectsData, error: subjectsError } = await supabase
           .from('subjects')
@@ -103,8 +101,21 @@ export default function MySubjects() {
         if (subjectsError) throw subjectsError;
         if (cancelled) return;
 
+        setRawSubjects(subjectsData || []);
+
+        const uniqueSubjects = [];
+        const seen = new Set();
+
+        (subjectsData || []).forEach((item) => {
+          const uniqueKey = item.code || item.id;
+          if (!seen.has(uniqueKey)) {
+            seen.add(uniqueKey);
+            uniqueSubjects.push(item);
+          }
+        });
+
         setFacultyProfile(profileData);
-        setSubjects(subjectsData || []);
+        setSubjects(uniqueSubjects);
       } catch (err) {
         console.error('Failed to fetch faculty subjects:', err);
         if (!cancelled) {
@@ -208,6 +219,14 @@ export default function MySubjects() {
             }
             const footerText = footerParts.join('  ·  ');
 
+            const subjectBranches = Array.from(
+              new Set(
+                rawSubjects
+                  .filter((item) => (item.code || item.id) === subject.code)
+                  .map((item) => normalizeSubject(item).branch)
+              )
+            ).join(' & ');
+
             return (
               <article
                 key={subject.id}
@@ -230,7 +249,7 @@ export default function MySubjects() {
                   <h3>{subject.name}</h3>
                   <span className="my-subjects__subject-code-pill">{subject.code}</span>
 
-                  <div className="text-gray-400 text-xs mt-3 font-medium">{subject.year} • {subject.branch}</div>
+                  <div className="text-gray-400 text-xs mt-3 font-medium">{subject.year} • {subjectBranches}</div>
 
                   <div className="my-subjects__subject-card__footer">
                     {footerText}
