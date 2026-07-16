@@ -483,7 +483,7 @@ export default function Attendance({ subjects, records, loading = false }) {
       {/* ===== 3. ACTIVE SUBJECT CONTAINER (DETAILS + HISTORY TABLE) ===== */}
       {!loading && activeSub && (
         <section className="att-glass att-subject-panel">
-          {/* Compact header: name + progress bar + fraction */}
+          {/* Compact header: name + progress bar */}
           <div className="att-subject-panel__head">
             <div className="att-subject-panel__title">
               <span className="att-subject-name">
@@ -511,6 +511,25 @@ export default function Attendance({ subjects, records, loading = false }) {
                 Attended: <strong>{activeSub.present}</strong>/{activeSub.total}
               </span>
             </div>
+          </div>
+
+          <div className="att-subject-stats">
+            <span className="att-subject-stat">
+              Total Classes: <strong>{activeSub.total}</strong>
+            </span>
+            <span className="att-subject-stat">
+              Attended: <strong>{activeSub.present}</strong>
+            </span>
+            <span className="att-subject-stat">
+              Percentage:{' '}
+              <strong
+                className={`att-subject-stat--${
+                  activeSub.percentage >= 75 ? "high" : activeSub.percentage >= 60 ? "medium" : "low"
+                }`}
+              >
+                {activeSub.percentage}%
+              </strong>
+            </span>
           </div>
 
           {/* Strict HTML history table */}
