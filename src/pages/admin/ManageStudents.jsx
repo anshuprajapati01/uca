@@ -23,6 +23,9 @@ export default function ManageStudents() {
   const [csvFile, setCsvFile] = useState(null);
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState(null);
+  const [faculties, setFaculties] = useState([]);
+  const [mentorAssignments, setMentorAssignments] = useState({});
+  const [isSavingMentor, setIsSavingMentor] = useState(false);
   const fileInputRef = useRef(null);
 
   const getSection = (student) => student?.section || null;
@@ -217,6 +220,76 @@ export default function ManageStudents() {
       .select('id, full_name, roll_number, email, phone, selected_year, selected_branch, section, batch_id, role, college_id, branch_id, is_active, can_view_faculty, can_view_hod')
       .eq('role', 'student');
     if (!error && data) setStudents(data);
+  };
+
+  useEffect(() => {
+    async function loadFaculties() {
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('id, full_name')
+        .eq('role', 'faculty');
+      setFaculties(data || []);
+    }
+    loadFaculties();
+  }, []);
+
+  useEffect(() => {
+    async function loadMentors() {
+      if (activeTab !== 'sections' || filterYear === 'All' || filterBranch === 'All') {
+        return;
+      }
+      const { data } = await supabase
+        .from('section_mentors')
+        .select('section, faculty_id')
+        .eq('branch', filterBranch)
+        .eq('year', filterYear);
+      if (data) {
+        const map = {};
+        data.forEach(row => {
+          map[row.section] = row.faculty_id;
+        });
+        setMentorAssignments(map);
+      }
+    }
+    loadMentors();
+  }, [activeTab, filterYear, filterBranch, sec1Name, sec2Name]);
+
+  const handleMentorChange = async (section, facultyId) => {
+    if (isSavingMentor) return;
+    setIsSavingMentor(true);
+    const year = filterYear;
+    const branch = filterBranch;
+
+    if (facultyId === '' || facultyId === null) {
+      const { error } = await supabase
+        .from('section_mentors')
+        .delete()
+        .eq('branch', branch)
+        .eq('year', year)
+        .eq('section', section);
+      if (!error) {
+        setMentorAssignments(prev => {
+          const next = { ...prev };
+          delete next[section];
+          return next;
+        });
+        toast.success(`Mentor removed from ${section}`);
+      } else {
+        toast.error('Failed to remove mentor: ' + error.message);
+      }
+    } else {
+      const { error } = await supabase
+        .from('section_mentors')
+        .upsert({ branch, year, section, faculty_id: facultyId }, { onConflict: 'branch,year,section' });
+      if (!error) {
+        setMentorAssignments(prev => ({ ...prev, [section]: facultyId }));
+        const facultyName = faculties.find(f => f.id === facultyId)?.full_name || 'Faculty';
+        toast.success(`Mentor assigned to ${section}: ${facultyName}`);
+      } else {
+        toast.error('Failed to assign mentor: ' + error.message);
+      }
+    }
+    setIsSavingMentor(false);
   };
 
   const handleSubmit = async (e) => {
@@ -806,8 +879,31 @@ export default function ManageStudents() {
                 </div>
 
                 <div style={{ background: 'rgba(15, 23, 42, 0.4)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.06)', padding: '1rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                     <h4 style={{ margin: 0, color: '#c084fc', fontSize: '0.95rem', fontWeight: '700' }}>Section {sec1Name}</h4>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                      <h4 style={{ margin: 0, color: '#c084fc', fontSize: '0.95rem', fontWeight: '700' }}>Section {sec1Name}</h4>
+                      <select
+                        value={mentorAssignments[sec1Name] || ''}
+                        onChange={(e) => handleMentorChange(sec1Name, e.target.value)}
+                        disabled={isSavingMentor}
+                        style={{
+                          padding: '0.35rem 0.6rem',
+                          borderRadius: '8px',
+                          border: '1px solid rgba(255,255,255,0.15)',
+                          background: 'rgba(15, 23, 42, 0.6)',
+                          color: '#e2e8f0',
+                          fontSize: '0.8rem',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          outline: 'none'
+                        }}
+                      >
+                        <option value="">👤 Assign Mentor</option>
+                        {faculties.map(f => (
+                          <option key={f.id} value={f.id}>{f.full_name}</option>
+                        ))}
+                      </select>
+                    </div>
                     <span style={{ color: '#94a3b8', fontSize: '0.8rem', fontWeight: '600' }}>{b1Students.length}</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxHeight: '400px', overflowY: 'auto' }}>
@@ -858,8 +954,31 @@ export default function ManageStudents() {
                 </div>
 
                 <div style={{ background: 'rgba(15, 23, 42, 0.4)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.06)', padding: '1rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                     <h4 style={{ margin: 0, color: '#bfdbfe', fontSize: '0.95rem', fontWeight: '700' }}>Section {sec2Name}</h4>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                      <h4 style={{ margin: 0, color: '#bfdbfe', fontSize: '0.95rem', fontWeight: '700' }}>Section {sec2Name}</h4>
+                      <select
+                        value={mentorAssignments[sec2Name] || ''}
+                        onChange={(e) => handleMentorChange(sec2Name, e.target.value)}
+                        disabled={isSavingMentor}
+                        style={{
+                          padding: '0.35rem 0.6rem',
+                          borderRadius: '8px',
+                          border: '1px solid rgba(255,255,255,0.15)',
+                          background: 'rgba(15, 23, 42, 0.6)',
+                          color: '#e2e8f0',
+                          fontSize: '0.8rem',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          outline: 'none'
+                        }}
+                      >
+                        <option value="">👤 Assign Mentor</option>
+                        {faculties.map(f => (
+                          <option key={f.id} value={f.id}>{f.full_name}</option>
+                        ))}
+                      </select>
+                    </div>
                     <span style={{ color: '#94a3b8', fontSize: '0.8rem', fontWeight: '600' }}>{b2Students.length}</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxHeight: '400px', overflowY: 'auto' }}>

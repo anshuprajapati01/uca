@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from '../../lib/supabase.js';
 import "./Attendance.css";
 
@@ -32,14 +32,19 @@ const formatCleanDate = (dateStr) => {
   return `${day} ${month}, ${year}`;
 };
 
-const formatTime12h = (time) => {
-  if (!time) return "—";
-  const [h, m] = String(time).split(":");
-  const hour24 = parseInt(h, 10);
-  if (Number.isNaN(hour24)) return time;
-  const period = hour24 >= 12 ? "PM" : "AM";
-  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
-  return `${hour12}:${String(m || "00").padStart(2, "0")} ${period}`;
+const formatTime12h = (timeString) => {
+  if (!timeString) return '';
+  const [hourStr, minuteStr] = timeString.split(':');
+  let hour = parseInt(hourStr, 10);
+  
+  if (hour >= 1 && hour <= 6) {
+    hour += 12;
+  }
+  
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  hour = hour % 12;
+  hour = hour ? hour : 12;
+  return `${hour}:${minuteStr} ${ampm}`;
 };
 
 const formatTime = (time) => formatTime12h(time);
@@ -57,13 +62,6 @@ const getFullTimeRange = (record, isLab = false) => {
   }
 
   return `${formatTime(start)} - ${formatTime(end)}`;
-};
-
-const statusClass = (status) => {
-  const s = String(status || "").toLowerCase();
-  if (s === "present") return "present";
-  if (s === "late") return "late";
-  return "absent";
 };
 
 const normalizeStatus = (status) => {
@@ -120,9 +118,27 @@ const groupRecordsByWeek = (records, semesterStartDate) => {
 };
 
 const recordBelongsToSubject = (rec, sub) => {
-  if (!rec.subjectName) return false;
-  if (sub.code && rec.subjectName.includes(sub.code)) return true;
-  if (sub.name && rec.subjectName.includes(sub.name)) return true;
+  const rCode = String(rec.subjectCode || rec.subject_code || '').trim().toLowerCase();
+  const sCode = String(sub.code || sub.subject_code || sub.subjectCode || '').trim().toLowerCase();
+
+  // 1. Strict Code Match (Primary & Safest)
+  if (rCode && sCode) {
+    return rCode === sCode;
+  }
+
+  // 2. Exact Name Match Fallback
+  // (MUST be exact `===` to prevent "Operating System Lab" bleeding into
+  // "Operating System" via `.includes()`)
+  const rName = String(rec.subjectName || rec.subject_name || '').trim().toLowerCase();
+  const sName = String(sub.name || sub.subject_name || '').trim().toLowerCase();
+
+  if (rName && sName) {
+    const isSameName = rName === sName;
+    const isSameType = !sub.type || !rec.type ||
+      String(rec.type).toLowerCase() === String(sub.type).toLowerCase();
+    return isSameName && isSameType;
+  }
+
   return false;
 };
 
@@ -148,19 +164,27 @@ const GridIcon = () => (
   </svg>
 );
 
-const ActivityIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-  </svg>
-);
+const EXTRA_ACTIVITY_TYPES = [
+  'Extra Class',
+  'Extra Curricular',
+  'Sports',
+  'Research',
+  'Placement',
+  'Skill Development',
+  'Mentor Mentee Meeting',
+  'Community Development',
+  'WEC',
+];
 
-export default function Attendance({ subjects, records, loading = false }) {
+export default function Attendance({ subjects, records, loading = false, studentRoll, section, studentData, globalAcademicTotal, enrolledSubjects }) {
   const [subjectType, setSubjectType] = useState("All");
   const [activeSubject, setActiveSubject] = useState(null);
   const [activeWeek, setActiveWeek] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [semesterStartDate, setSemesterStartDate] = useState(null);
   const [isSemesterLoading, setIsSemesterLoading] = useState(true);
+  const [extraActivities, setExtraActivities] = useState([]);
+  const [extraLoading, setExtraLoading] = useState(false);
 
   useEffect(() => {
     const fetchSemesterConfig = async () => {
@@ -190,12 +214,110 @@ export default function Attendance({ subjects, records, loading = false }) {
     fetchSemesterConfig();
   }, []);
 
+  // Fetch Extra Attendance for the logged-in student. The mentor logs a row for
+  // EVERY student in the section, so querying strictly by the student's own
+  // roll number gives us the full picture. Period-based math:
+  // totalConducted = SUM of duration_periods across ALL of the student's records
+  // for an activity; totalAttended = SUM of duration_periods for the records
+  // where the student was present. Percentage = attended/total * 100.
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchExtraAttendance() {
+      const activeRollNumber = studentData?.roll_number || studentData?.roll_no || studentData?.id || studentRoll;
+
+      console.log("USING ROLL NUMBER FOR QUERY:", activeRollNumber);
+
+      if (!activeRollNumber) {
+        console.warn("Roll number is undefined. Skipping extra attendance fetch.");
+        if (!cancelled) setExtraActivities([]);
+        return;
+      }
+      setExtraLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('extra_attendance')
+          .select('*')
+          .eq('student_roll', String(activeRollNumber));
+
+        console.log("EXTRA RAW DB RESPONSE:", data, error);
+
+        if (error) throw error;
+        if (cancelled) return;
+
+        const rows = data || [];
+
+        const uniqueSessions = new Set();
+        let extraTotalPeriods = 0;
+        let extraAttendedPeriods = 0;
+        const extraSubjectMap = {};
+
+        rows.forEach((row) => {
+          const act = row.activity_type;
+          if (!act) return;
+
+          let p = parseInt(row.duration_periods, 10);
+          p = (!isNaN(p) && p > 0) ? p : (row.is_full_day ? 7 : 1);
+
+          if (!extraSubjectMap[act]) {
+            extraSubjectMap[act] = {
+              subject_name: act,
+              name: act,
+              type: 'Extra',
+              isExtra: true,
+              totalClasses: 0,
+              attendedClasses: 0,
+              history: [],
+            };
+          }
+          extraSubjectMap[act].history.push(row);
+
+          const sessionKey = `${row.date}_${act}_${row.start_time || 'fullday'}`;
+          if (!uniqueSessions.has(sessionKey)) {
+            uniqueSessions.add(sessionKey);
+            extraTotalPeriods += p;
+            extraSubjectMap[act].totalClasses += p;
+          }
+
+          const isPresent = row.status === true || row.status === 'P' || row.status === 'Present' || row.status === 'PRESENT';
+          if (isPresent) {
+            extraAttendedPeriods += p;
+            extraSubjectMap[act].attendedClasses += p;
+          }
+        });
+
+        const mappedExtra = Object.values(extraSubjectMap).map((sub) => ({
+          ...sub,
+          total: sub.totalClasses,
+          present: sub.attendedClasses,
+          percentage: sub.totalClasses > 0 ? Math.round((sub.attendedClasses / sub.totalClasses) * 100) : 0,
+        }));
+
+        console.log("FINAL MAPPED EXTRA:", mappedExtra);
+
+        if (!cancelled) setExtraActivities(mappedExtra);
+      } catch (err) {
+        console.error('Failed to fetch extra attendance:', err);
+        if (!cancelled) setExtraActivities([]);
+      } finally {
+        if (!cancelled) setExtraLoading(false);
+      }
+    }
+
+    fetchExtraAttendance();
+    return () => { cancelled = true; };
+  }, [studentRoll, studentData]);
+
   const rawData = (records && Array.isArray(records) ? records : []);
 
   const normalizedRecords = rawData
      .filter((r) => r.attendance_sessions != null && r.attendance_sessions.date != null)
      .map((r) => ({
        ...r,
+        subjectCode:
+          r.attendance_sessions?.subjects?.code ||
+          r.subject_code ||
+          r.subjectCode ||
+          null,
        subjectName:
          r.attendance_sessions?.subjects?.name || r.subjectName || r.subject || null,
        date: r.attendance_sessions.date,
@@ -224,20 +346,38 @@ export default function Attendance({ subjects, records, loading = false }) {
     { total: 0, present: 0 }
   );
 
-  const safeOverall = { total: attendanceSummary.total, present: attendanceSummary.present };
-  const safeOverallPct = computePct(attendanceSummary.present, attendanceSummary.total);
+  // Grand-total overall = academic (normalizedRecords) + Extra Attendance
+  // periods. extraActivities already carry period-weighted total/present
+  // (e.g. 9 conducted, 0 attended), so the ring, "Total Classes", and
+  // "Attended Classes" all reflect the combined figure — matching the Excel
+  // export's C = (A+B) GRAND TOTAL and OVERALL % math.
+  const extraOverall = extraActivities.reduce(
+    (acc, e) => {
+      acc.total += e.total ?? e.totalClasses ?? 0;
+      acc.present += e.present ?? e.attendedClasses ?? 0;
+      return acc;
+    },
+    { total: 0, present: 0 }
+  );
+
+  const academicTotal = typeof globalAcademicTotal === 'number' && globalAcademicTotal > 0
+    ? globalAcademicTotal
+    : attendanceSummary.total;
+
+  const safeOverall = {
+    total: academicTotal + extraOverall.total,
+    present: attendanceSummary.present + extraOverall.present,
+  };
+  const safeOverallPct = computePct(safeOverall.present, safeOverall.total);
 
   const isSafe = safeOverallPct >= THRESHOLD;
 
   const safeSubjects =
-    subjects && Array.isArray(subjects)
-      ? subjects
-      : [];
+    (enrolledSubjects && Array.isArray(enrolledSubjects) && enrolledSubjects.length > 0)
+      ? enrolledSubjects
+      : (subjects && Array.isArray(subjects) ? subjects : []);
 
   const normalizedSubjects = safeSubjects.map((s) => {
-    const present = s.present ?? 0;
-    const total = s.total ?? 0;
-    const pct = typeof s.percentage === "number" ? s.percentage : computePct(present, total);
     const history =
       normalizedRecords
         .filter((r) => recordBelongsToSubject(r, s))
@@ -251,6 +391,18 @@ export default function Attendance({ subjects, records, loading = false }) {
           status: r.status,
           is_extra_class: r.is_extra_class,
         }));
+
+    // Hydrate the pill/card totals from the ACTUAL aggregated records rather
+    // than from the (possibly empty) syllabus props. This keeps the Subject
+    // Pills and Card Header correct even when the raw `enrolledSubjects`
+    // syllabus has no precomputed present/total (0/0 fallback).
+    const present =
+      s.present != null
+        ? s.present
+        : history.filter((r) => String(r.status || "").toLowerCase() === "present").length;
+    const total = s.total != null ? s.total : history.length;
+    const pct = typeof s.percentage === "number" ? s.percentage : computePct(present, total);
+
     return {
       id: s.code || s.name || s.id,
       name: s.name,
@@ -263,20 +415,39 @@ export default function Attendance({ subjects, records, loading = false }) {
     };
   });
 
-  const filteredSubjects = normalizedSubjects.filter((sub) => {
-    const matchesTab =
-      subjectType === "All" || sub.type?.toLowerCase() === subjectType.toLowerCase();
-    const matchesSearch = !searchQuery ||
-      (sub.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        sub.code?.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesTab && matchesSearch;
-  });
+  // Merge academic subjects with Extra Activities into one card pipeline.
+  // Extra cards carry type === "Extra" so the existing filter logic (which
+  // matches sub.type against the active tab) works unchanged. When "All" is
+  // selected, Extra cards are floated to the TOP so students never have to
+  // scroll to find them.
+  const filteredSubjects = useMemo(() => {
+    const allCards = [...normalizedSubjects, ...extraActivities];
+    const filteredCards = allCards.filter((sub) => {
+      const matchesTab =
+        subjectType === "All" || sub.type?.toLowerCase() === subjectType.toLowerCase();
+      const matchesSearch = !searchQuery ||
+        (sub.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          sub.code?.toLowerCase().includes(searchQuery.toLowerCase()));
+      return matchesTab && matchesSearch;
+    });
+
+    const sortCards = (cards) =>
+      subjectType === "All"
+        ? [...cards].sort((a, b) => {
+            const aExtra = a.type === "Extra" ? 0 : 1;
+            const bExtra = b.type === "Extra" ? 0 : 1;
+            return aExtra - bExtra;
+          })
+        : cards;
+
+    return sortCards(filteredCards);
+  }, [normalizedSubjects, extraActivities, subjectType, searchQuery]);
 
   useEffect(() => {
     if (filteredSubjects.length > 0) {
-      const stillVisible = filteredSubjects.some((s) => s.id === activeSubject);
+      const stillVisible = filteredSubjects.some((s) => s.id === activeSubject || s.name === activeSubject);
       if (!stillVisible) {
-        setActiveSubject(filteredSubjects[0].id);
+        setActiveSubject(filteredSubjects[0].name);
       }
     } else {
       setActiveSubject(null);
@@ -284,15 +455,15 @@ export default function Attendance({ subjects, records, loading = false }) {
     if (activeWeek !== "All") {
       setActiveWeek("All");
     }
-  }, [subjectType, searchQuery]);
+  }, [subjects, extraActivities, subjectType, searchQuery]);
 
-  const handleSubjectChange = (id) => {
-    setActiveSubject(id);
+  const handleSubjectChange = (sub) => {
+    setActiveSubject(activeSubject === sub.name ? null : sub.name);
     setActiveWeek("All");
   };
 
   const activeSub =
-    filteredSubjects.find((s) => s.id === activeSubject) ||
+    filteredSubjects.find((s) => s.id === activeSubject || s.name === activeSubject) ||
     filteredSubjects[0];
 
   const weeksMap = activeSub?.history?.length ? groupRecordsByWeek(activeSub.history, semesterStartDate) : {};
@@ -435,6 +606,13 @@ export default function Attendance({ subjects, records, loading = false }) {
               >
                 Practical
               </button>
+              <button
+                type="button"
+                className={`att-filter-btn ${subjectType === "Extra" ? "att-filter-btn--active att-filter-btn--extra" : ""}`}
+                onClick={() => setSubjectType("Extra")}
+              >
+                ⭐ Extra
+              </button>
             </div>
           </div>
 
@@ -459,13 +637,13 @@ export default function Attendance({ subjects, records, loading = false }) {
           <div className="att-pills">
             {filteredSubjects.map((sub, index) => {
               const high = sub.percentage >= THRESHOLD;
-              const isActive = sub.id === activeSubject;
+              const isActive = activeSubject === sub.name;
               return (
                 <button
                   key={sub.id && sub.id !== 'N/A' ? sub.id : `subject-tab-${index}`}
                   type="button"
                   className={`att-pill ${isActive ? "att-pill--active" : ""} ${high ? "att-pill--safe" : "att-pill--critical"}`}
-                  onClick={() => handleSubjectChange(sub.id)}
+                  onClick={() => handleSubjectChange(sub)}
                 >
                   <span className="att-pill-dot" />
                   <span className="att-pill-name">
@@ -532,8 +710,8 @@ export default function Attendance({ subjects, records, loading = false }) {
             </span>
           </div>
 
-          {/* Strict HTML history table */}
-          {weekKeys.length > 0 && (
+          {/* Strict HTML history table — Extra activities have no week grouping */}
+          {!activeSub.isExtra && weekKeys.length > 0 && (
             <div className="att-week-selector">
               <button
                 type="button"
@@ -555,7 +733,7 @@ export default function Attendance({ subjects, records, loading = false }) {
             </div>
           )}
 
-          {weeklySummary && (
+          {!activeSub.isExtra && weeklySummary && (
             <div className="weekly-summary">
               <strong>{activeWeek} Summary:</strong> {weeklySummary.attended} / {weeklySummary.total} Classes Attended
             </div>
@@ -586,17 +764,22 @@ export default function Attendance({ subjects, records, loading = false }) {
                      const d = new Date(rec.date);
                      return d >= start && d <= end;
                    })
-                  .map((rec) => {
-                    const { day } = formatTimelineDate(rec.date);
-                    const cls = statusClass(rec.status);
-                    const isExtra = rec.is_extra_class === true || 
-                                    (rec.attendance_sessions && rec.attendance_sessions.is_extra_class === true);
-                    return (
-                      <tr key={rec.id}>
-                        <td>{formatCleanDate(rec.date)}</td>
-                        <td>{day}</td>
-                        <td>
-                          {getFullTimeRange(rec, ["lab", "practical"].includes(String(activeSub?.type).toLowerCase()))}
+                    .map((rec) => {
+                      const { day } = formatTimelineDate(rec.date);
+                      const isExtra = rec.is_extra_class === true ||
+                                      (rec.attendance_sessions && rec.attendance_sessions.is_extra_class === true);
+                     // For Extra activities with no start_time, show "Full Day"
+                     // instead of trying to format a non-existent time range.
+                     const isFullDayExtra = activeSub.isExtra && !rec.start_time;
+                     const timeLabel = isFullDayExtra
+                       ? 'Full Day'
+                       : getFullTimeRange(rec, ["lab", "practical"].includes(String(activeSub?.type).toLowerCase()));
+                     return (
+                       <tr key={rec.id}>
+                         <td>{formatCleanDate(rec.date)}</td>
+                         <td>{day}</td>
+                         <td>
+                           {timeLabel}
                           {isExtra && (
                             <span style={{ 
                               background: 'rgba(250, 204, 21, 0.15)', 
@@ -618,7 +801,25 @@ export default function Attendance({ subjects, records, loading = false }) {
                           )}
                         </td>
                         <td>
-                          <span className={`badge-${cls}`}>{String(rec.status).toUpperCase()}</span>
+                          {(() => {
+                            const isPresent = rec.status === true || rec.status === 'P' || rec.status === 'Present' || rec.status === 'PRESENT';
+                            return (
+                              <span style={{
+                                padding: '3px 10px',
+                                borderRadius: '9999px',
+                                fontSize: '0.7rem',
+                                fontWeight: '600',
+                                letterSpacing: '0.5px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                background: isPresent ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                                color: isPresent ? '#22c55e' : '#ef4444',
+                                border: `1px solid ${isPresent ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`,
+                              }}>
+                                {isPresent ? 'PRESENT' : 'ABSENT'}
+                              </span>
+                            );
+                          })()}
                         </td>
                       </tr>
                     );
@@ -631,3 +832,4 @@ export default function Attendance({ subjects, records, loading = false }) {
     </div>
   );
 }
+

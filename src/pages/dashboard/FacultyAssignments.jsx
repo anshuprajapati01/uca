@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase.js';
 import toast from 'react-hot-toast';
 import { Plus, X, Calendar, FileText, Award, Users } from 'lucide-react';
-import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx-js-style';
 
 export default function FacultyAssignments() {
   const [categories, setCategories] = useState([]);

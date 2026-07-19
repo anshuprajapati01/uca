@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { BookOpen, LayoutDashboard, LogOut, User, ClipboardList } from 'lucide-react';
+import { BookOpen, LayoutDashboard, LogOut, User, ClipboardList, Star } from 'lucide-react';
 import { supabase } from '../../lib/supabase.js';
 import { ROUTES } from '../../config/constants.js';
 import { signOut } from '../../services/authService.js';
 import FacultyAssignments from '../dashboard/FacultyAssignments.jsx';
 import './FacultyDashboard.css';
 
-const navItems = [
+const BASE_NAV_ITEMS = [
   { id: 'overview', label: '🏠 Overview', path: ROUTES.FACULTY_DASHBOARD, icon: <LayoutDashboard size={18} /> },
   { id: 'subjects', label: '📚 My Subjects', path: `${ROUTES.FACULTY_DASHBOARD}/subjects`, icon: <BookOpen size={18} /> },
   { id: 'assignments', label: '📋 Assignments', path: `${ROUTES.FACULTY_DASHBOARD}/assignments`, icon: <ClipboardList size={18} /> },
@@ -16,18 +16,29 @@ const navItems = [
 export default function FacultyDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [facultyProfile, setFacultyProfile] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isMentor, setIsMentor] = useState(false);
+
+  const navItems = useMemo(() => {
+    if (!isMentor) return BASE_NAV_ITEMS;
+    return [
+      ...BASE_NAV_ITEMS,
+      { id: 'mentor', label: '⭐ Mentor Dashboard', path: `${ROUTES.FACULTY_DASHBOARD}/mentor`, icon: <Star size={18} /> },
+    ];
+  }, [isMentor]);
+
   const activeTab = useMemo(() => {
     const pathname = location.pathname.replace(/\/+$/, '') || ROUTES.FACULTY_DASHBOARD;
 
     if (pathname === ROUTES.FACULTY_DASHBOARD) return 'overview';
     if (pathname === `${ROUTES.FACULTY_DASHBOARD}/subjects` || pathname.startsWith(`${ROUTES.FACULTY_DASHBOARD}/subjects/`) || pathname === `${ROUTES.FACULTY_DASHBOARD}/workspace` || pathname.startsWith(`${ROUTES.FACULTY_DASHBOARD}/workspace/`)) return 'subjects';
     if (pathname === `${ROUTES.FACULTY_DASHBOARD}/assignments`) return 'assignments';
+    if (pathname === `${ROUTES.FACULTY_DASHBOARD}/mentor`) return 'mentor';
 
     return 'overview';
   }, [location.pathname]);
-  const [facultyProfile, setFacultyProfile] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -55,6 +66,21 @@ export default function FacultyDashboard() {
         if (!profileData) throw new Error('Faculty profile not found.');
 
         if (!cancelled) setFacultyProfile(profileData);
+
+        const { data: mentorData, error: mentorError } = await supabase
+          .from('section_mentors')
+          .select('branch, year, section')
+          .eq('faculty_id', user.id)
+          .limit(1)
+          .maybeSingle();
+
+        if (!cancelled) {
+          if (mentorData && !mentorError) {
+            setIsMentor(true);
+          } else {
+            setIsMentor(false);
+          }
+        }
       } catch (err) {
         if (!cancelled) setError(err.message || 'Failed to load faculty dashboard.');
       } finally {
@@ -105,7 +131,7 @@ export default function FacultyDashboard() {
   if (error) {
     return (
       <div className="faculty-dashboard-layout">
-        <FacultySidebar activeTab={activeTab} onNavigate={navigate} />
+        <FacultySidebar items={navItems} activeTab={activeTab} onNavigate={navigate} />
         <main className="faculty-main">
           <FacultyHeader
             displayName={displayName}
@@ -129,11 +155,11 @@ export default function FacultyDashboard() {
     );
   }
 
-  const pageTitle = activeTab === 'subjects' ? 'My Subjects' : 'Faculty Dashboard';
+  const pageTitle = activeTab === 'subjects' ? 'My Subjects' : activeTab === 'mentor' ? 'Mentor Dashboard' : 'Faculty Dashboard';
 
   return (
     <div className="faculty-dashboard-layout">
-      <FacultySidebar activeTab={activeTab} onNavigate={navigate} />
+      <FacultySidebar items={navItems} activeTab={activeTab} onNavigate={navigate} />
 
       <main className="faculty-main">
         <FacultyHeader
@@ -154,13 +180,15 @@ export default function FacultyDashboard() {
           {activeTab === 'subjects' && <Outlet />}
 
           {activeTab === 'assignments' && <FacultyAssignments />}
+
+          {activeTab === 'mentor' && <Outlet />}
         </div>
       </main>
     </div>
   );
 }
 
-function FacultySidebar({ activeTab, onNavigate }) {
+function FacultySidebar({ items, activeTab, onNavigate }) {
   return (
     <aside className="faculty-sidebar">
       <div className="faculty-sidebar__header">
@@ -174,7 +202,7 @@ function FacultySidebar({ activeTab, onNavigate }) {
       </div>
 
       <nav className="faculty-sidebar__nav">
-        {navItems.map(({ id, path, label, icon }) => (
+        {items.map(({ id, path, label, icon }) => (
           <button
             key={id}
             type="button"
@@ -237,6 +265,7 @@ function FacultyHeader({ displayName, initials, avatarUrl, onSignOut, showRoleSw
 }
 
 function FacultyDashboardSkeleton() {
+  const itemCount = BASE_NAV_ITEMS.length + 1;
   return (
     <div className="faculty-dashboard-layout">
       <aside className="faculty-sidebar">
@@ -245,8 +274,8 @@ function FacultyDashboardSkeleton() {
           <div className="faculty-sidebar__brand skeleton" />
         </div>
         <nav className="faculty-sidebar__nav">
-          {navItems.map(({ label }) => (
-            <div key={label} className="faculty-sidebar__link skeleton" />
+          {Array.from({ length: itemCount }).map((_, idx) => (
+            <div key={idx} className="faculty-sidebar__link skeleton" />
           ))}
         </nav>
       </aside>

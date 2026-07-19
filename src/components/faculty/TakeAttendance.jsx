@@ -321,6 +321,8 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
     formattedDateDB = targetDateObj.toLocaleDateString('en-CA');
   }
 
+  const activeSlot = weeklySlots.find(slot => slot.day_of_week === DAY_NAME_MAP[activeDay]) || null;
+
   // 3. ALL USEEFFECT HOOKS HERE (above early return)
   useEffect(() => {
     if (!formattedDateDB) return;
@@ -346,6 +348,54 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
     };
     fetchCompletedSessions();
   }, [subjectId, formattedDateDB]);
+
+  // Derive the submitted session that matches the currently selected day/time.
+  const selectedSubmittedSession = (() => {
+    if (!formattedDateDB || !activeSlot || isExtraMode) return null;
+    if (!completedSessions || completedSessions.length === 0) return null;
+    return completedSessions.find(
+      s => s.start_time === (activeSlot?.start_time || '')
+    ) || completedSessions[0];
+  })();
+
+  // Hydrate the UI with the ACTUAL saved records when a submitted session is selected.
+  useEffect(() => {
+    if (!selectedSubmittedSession) return;
+    if (students.length === 0) return;
+
+    const sessionId = selectedSubmittedSession.id;
+    const hydrateFromSession = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('attendance_records')
+          .select('student_id, status')
+          .eq('session_id', sessionId);
+
+        const newAttendanceState = {};
+        students.forEach(s => {
+          newAttendanceState[s.id] = 'P';
+        });
+
+        if (!error && data && data.length > 0) {
+          data.forEach(record => {
+            const studentId = record.student_id || record.student || record.roll_number;
+            if (studentId == null) return;
+
+            const isPresent = record.status === true ||
+              record.status === 'P' ||
+              record.status === 'Present' ||
+              record.status === 'PRESENT';
+            newAttendanceState[studentId] = isPresent ? 'P' : 'A';
+          });
+        }
+
+        setAttendanceState(newAttendanceState);
+      } catch (err) {
+        console.error('Failed to hydrate attendance records:', err);
+      }
+    };
+    hydrateFromSession();
+  }, [selectedSubmittedSession, students]);
 
   // 4. EARLY RETURN (strictly after ALL hooks)
   if (!semesterStartDate) {
@@ -397,7 +447,7 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
     return sessionsThisWeek.length >= expectedSlots;
   };
 
-  const activeSlot = weeklySlots.find(slot => slot.day_of_week === DAY_NAME_MAP[activeDay]) || null;
+  const isLockedView = !!selectedSubmittedSession && !isExtraMode;
 
   const subjectName = (subjectDetails?.subject_name || subjectDetails?.name || subjectDetails?.title || '').toLowerCase();
   const subjectType = (subjectDetails?.type || '').toLowerCase();
@@ -412,11 +462,21 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
     ? calculateDynamicEndTime(sessionStartTime, isLabActive)
     : '';
 
-  const displayedStudents = students.filter(student => {
+  const filteredStudents = students.filter(student => {
     if (sectionFilter === 'All') return true;
 
     const sectionValue = student.section || student.section_name || student.batch || student.class_section || '';
     return sectionValue.toString().toUpperCase() === sectionFilter.toUpperCase();
+  });
+
+  // Create a sorted copy of the students array
+  const displayedStudents = [...filteredStudents].sort((a, b) => {
+    // Safely extract the roll number, handling potential nulls or different key names
+    const rollA = String(a.roll_number || a.roll_no || a.id || '').trim();
+    const rollB = String(b.roll_number || b.roll_no || b.id || '').trim();
+
+    // Use localeCompare with numeric: true so it handles large numeric strings perfectly
+    return rollA.localeCompare(rollB, undefined, { numeric: true });
   });
 
   const statusColors = {
@@ -432,6 +492,15 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
       updated[student.id] = status;
     });
     setAttendanceState(prev => ({ ...prev, ...updated }));
+  };
+
+  const resetAttendanceToDefault = () => {
+    if (students.length === 0) return;
+    const fresh = {};
+    students.forEach(student => {
+      fresh[student.id] = 'P';
+    });
+    setAttendanceState(fresh);
   };
 
   const setStatus = (studentId, status) => {
@@ -503,6 +572,13 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
         setAllLockedSessions(prev => prev.filter(s => s.id !== sessionIdToDelete));
       }
 
+      // Reset local UI: revert to fresh default 'P's so the faculty can re-take attendance.
+      const resetAttendance = {};
+      students.forEach(student => {
+        resetAttendance[student.id] = 'P';
+      });
+      setAttendanceState(resetAttendance);
+
     } catch (err) {
       console.error("Delete exception:", err);
       alert("An unexpected error occurred during deletion.");
@@ -567,11 +643,6 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
       if (recordsError) throw recordsError;
 
       toast.success('Attendance Locked Successfully!');
-      const resetAttendance = {};
-      students.forEach(student => {
-        resetAttendance[student.id] = 'P';
-      });
-      setAttendanceState(resetAttendance);
       setEntryMode('manual');
       setIsExtraMode(false);
       setExtraStartTime('');
@@ -588,7 +659,14 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
       setAllLockedSessions(prev => [...prev, { id: sessionData.id, date: sessionDate, is_extra_class: isExtraMode, status: 'Locked' }]);
       const currentIndex = DAYS.indexOf(activeDay);
       if (currentIndex < 5) {
-        setActiveDay(DAYS[currentIndex + 1]);
+        const nextDay = DAYS[currentIndex + 1];
+        setActiveDay(nextDay);
+        // Imperatively force a clean slate for the new day, bypassing any
+        // useEffect race with hydration. Clearing completedSessions prevents the
+        // derived selectedSubmittedSession (and thus hydration) from re-firing
+        // with the previously locked session's data.
+        setCompletedSessions([]);
+        resetAttendanceToDefault();
       }
     } catch (err) {
       console.error('Lock attendance failed:', err);
@@ -690,7 +768,7 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
           return (
             <button
               key={day}
-              onClick={() => { setActiveDay(day); setIsExtraMode(false); setExtraStartTime(''); setExtraEndTime(''); }}
+                onClick={() => { setActiveDay(day); setIsExtraMode(false); setExtraStartTime(''); setExtraEndTime(''); resetAttendanceToDefault(); }}
               style={{
                 padding: '8px 16px',
                 borderRadius: '8px',
@@ -859,9 +937,10 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', opacity: isLockedView ? 0.55 : 1 }}>
             <button
               onClick={() => setEntryMode('manual')}
+              disabled={isLockedView}
               style={{
                 flex: 1,
                 padding: '10px',
@@ -869,7 +948,7 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
                 backgroundColor: entryMode === 'manual' ? '#6366f1' : 'rgba(255,255,255,0.05)',
                 color: entryMode === 'manual' ? '#fff' : '#9ca3af',
                 border: '1px solid rgba(255,255,255,0.1)',
-                cursor: 'pointer',
+                cursor: isLockedView ? 'not-allowed' : 'pointer',
                 fontWeight: '600',
                 fontSize: '0.875rem'
               }}
@@ -878,6 +957,7 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
             </button>
             <button
               onClick={() => setEntryMode('csv')}
+              disabled={isLockedView}
               style={{
                 flex: 1,
                 padding: '10px',
@@ -885,7 +965,7 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
                 backgroundColor: entryMode === 'csv' ? '#6366f1' : 'rgba(255,255,255,0.05)',
                 color: entryMode === 'csv' ? '#fff' : '#9ca3af',
                 border: '1px solid rgba(255,255,255,0.1)',
-                cursor: 'pointer',
+                cursor: isLockedView ? 'not-allowed' : 'pointer',
                 fontWeight: '600',
                 fontSize: '0.875rem'
               }}
@@ -899,6 +979,7 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
               <input
                 type="file"
                 accept=".csv"
+                disabled={isLockedView}
                 onChange={handleCSVUpload}
                 style={{
                   padding: '10px',
@@ -907,7 +988,9 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
                   border: '1px solid #2d314d',
                   color: '#fff',
                   fontSize: '0.95rem',
-                  outline: 'none'
+                  outline: 'none',
+                  cursor: isLockedView ? 'not-allowed' : 'pointer',
+                  opacity: isLockedView ? 0.55 : 1
                 }}
               />
               <span style={{ color: '#9ca3af', fontSize: '0.8rem' }}>Expected CSV columns: roll_number, status (P, A)</span>
@@ -916,9 +999,10 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
 
           {entryMode === 'manual' && (
             <>
-              <div style={{ display: 'flex', gap: '16px' }}>
+              <div style={{ display: 'flex', gap: '16px', opacity: isLockedView ? 0.55 : 1 }}>
                 <button
                   onClick={() => markAll('P')}
+                  disabled={isLockedView}
                   onMouseEnter={() => setPresentHover(true)}
                   onMouseLeave={() => { setPresentHover(false); setPresentPress(false); }}
                   onMouseDown={() => setPresentPress(true)}
@@ -930,7 +1014,7 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
                     backgroundColor: presentPress ? 'rgba(34, 197, 94, 0.35)' : presentHover ? 'rgba(34, 197, 94, 0.3)' : 'rgba(34, 197, 94, 0.15)',
                     color: '#22c55e',
                     border: `1px solid ${presentPress ? 'rgba(34, 197, 94, 0.8)' : presentHover ? 'rgba(34, 197, 94, 0.6)' : 'rgba(34, 197, 94, 0.3)'}`,
-                    cursor: 'pointer',
+                    cursor: isLockedView ? 'not-allowed' : 'pointer',
                     fontWeight: '600',
                     fontSize: '0.875rem',
                     boxShadow: presentHover ? '0 4px 15px rgba(34, 197, 94, 0.3)' : 'none',
@@ -942,6 +1026,7 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
                 </button>
                 <button
                   onClick={() => markAll('A')}
+                  disabled={isLockedView}
                   onMouseEnter={() => setAbsentHover(true)}
                   onMouseLeave={() => { setAbsentHover(false); setAbsentPress(false); }}
                   onMouseDown={() => setAbsentPress(true)}
@@ -953,7 +1038,7 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
                     backgroundColor: absentPress ? 'rgba(239, 68, 68, 0.35)' : absentHover ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.15)',
                     color: '#ef4444',
                     border: `1px solid ${absentPress ? 'rgba(239, 68, 68, 0.8)' : absentHover ? 'rgba(239, 68, 68, 0.6)' : 'rgba(239, 68, 68, 0.3)'}`,
-                    cursor: 'pointer',
+                    cursor: isLockedView ? 'not-allowed' : 'pointer',
                     fontWeight: '600',
                     fontSize: '0.875rem',
                     boxShadow: absentHover ? '0 4px 15px rgba(239, 68, 68, 0.3)' : 'none',
@@ -1016,16 +1101,18 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
                               <button
                                 key={s}
                                 onClick={() => setStatus(student.id, s)}
+                                disabled={isLockedView}
                                 style={{
                                   padding: '6px 12px',
                                   borderRadius: '9999px',
                                   backgroundColor: status === s ? statusColors[s] : 'rgba(255,255,255,0.05)',
                                   color: status === s ? '#fff' : '#9ca3af',
                                   border: status === s ? `1px solid ${statusColors[s]}` : '1px solid transparent',
-                                  cursor: 'pointer',
+                                  cursor: isLockedView ? 'not-allowed' : 'pointer',
                                   fontSize: '0.75rem',
                                   fontWeight: '600',
-                                  transition: 'all 0.2s'
+                                  transition: 'all 0.2s',
+                                  opacity: isLockedView ? 0.55 : 1
                                 }}
                               >
                                 {s}
@@ -1037,24 +1124,40 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
                     })}
                   </div>
 
-                  <div style={{ padding: '20px', display: 'flex', justifyContent: 'flex-end' }}>
-                    <button
-                      onClick={handleLockAttendance}
-                      disabled={isLocking}
-                      style={{
-                        padding: '12px 24px',
+                  <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: isLockedView ? 'stretch' : 'flex-end' }}>
+                    {isLockedView && (
+                      <div style={{
+                        padding: '12px 16px',
                         borderRadius: '8px',
-                        backgroundColor: '#6366f1',
-                        color: '#fff',
-                        border: 'none',
-                        cursor: isLocking ? 'not-allowed' : 'pointer',
+                        backgroundColor: 'rgba(250, 204, 21, 0.1)',
+                        border: '1px solid rgba(250, 204, 21, 0.3)',
+                        color: '#facc15',
+                        fontSize: '0.85rem',
                         fontWeight: '600',
-                        fontSize: '0.95rem',
-                        opacity: isLocking ? 0.7 : 1
-                      }}
-                    >
-                      {isLocking ? 'Locking...' : 'Lock Attendance'}
-                    </button>
+                        textAlign: 'center'
+                      }}>
+                        🔒 This session is locked. Delete the session above to re-take attendance.
+                      </div>
+                    )}
+                    {!isLockedView && (
+                      <button
+                        onClick={handleLockAttendance}
+                        disabled={isLocking}
+                        style={{
+                          padding: '12px 24px',
+                          borderRadius: '8px',
+                          backgroundColor: '#6366f1',
+                          color: '#fff',
+                          border: 'none',
+                          cursor: isLocking ? 'not-allowed' : 'pointer',
+                          fontWeight: '600',
+                          fontSize: '0.95rem',
+                          opacity: isLocking ? 0.7 : 1
+                        }}
+                      >
+                        {isLocking ? 'Locking...' : 'Lock Attendance'}
+                      </button>
+                    )}
                   </div>
                 </div>
               )}

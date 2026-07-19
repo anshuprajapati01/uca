@@ -449,14 +449,19 @@ const getDynamicIcon = (item) => {
 
 const THEORY_PRACTICAL_FILTERS = ["All", "Theory", "Practical"];
 
-const formatTime12h = (time) => {
-  if (!time) return "";
-  const [h, m] = time.split(":");
-  const hour24 = parseInt(h, 10);
-  if (Number.isNaN(hour24)) return time;
-  const period = hour24 >= 12 ? "PM" : "AM";
-  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
-  return `${hour12}:${String(m || "00").padStart(2, "0")} ${period}`;
+const formatTime12h = (timeString) => {
+  if (!timeString) return '';
+  const [hourStr, minuteStr] = timeString.split(':');
+  let hour = parseInt(hourStr, 10);
+  
+  if (hour >= 1 && hour <= 6) {
+    hour += 12;
+  }
+  
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  hour = hour % 12;
+  hour = hour ? hour : 12;
+  return `${hour}:${minuteStr} ${ampm}`;
 };
 
 export default function StudentDashboard() {
@@ -487,6 +492,7 @@ const [gridSubjects, setGridSubjects] = useState([]);
     const [attendanceStats, setAttendanceStats] = useState({ total: 0, present: 0, percentage: 0 });
     const [attendanceRecords, setAttendanceRecords] = useState([]);
     const [todayClasses, setTodayClasses] = useState([]);
+    const [globalAcademicTotal, setGlobalAcademicTotal] = useState(null);
     const liveCardRef = useRef(null);
 
     const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
@@ -543,6 +549,27 @@ const [gridSubjects, setGridSubjects] = useState([]);
    useEffect(() => {
      bookmarkedIdsRef.current = bookmarkedIds;
    }, [bookmarkedIds]);
+
+   useEffect(() => {
+     if (!gridSubjects || gridSubjects.length === 0) {
+       setGlobalAcademicTotal(null);
+       return;
+     }
+     let cancelled = false;
+     async function computeGlobalAcademicTotal() {
+       const subjectIds = gridSubjects.map(s => s.id);
+       const { data: sessionsData } = await supabase
+         .from('attendance_sessions')
+         .select('id')
+         .in('subject_id', subjectIds);
+       if (!cancelled) {
+         const uniqueSessionIds = new Set((sessionsData || []).map(s => s.id));
+         setGlobalAcademicTotal(uniqueSessionIds.size);
+       }
+     }
+     computeGlobalAcademicTotal();
+     return () => { cancelled = true; };
+   }, [gridSubjects]);
 
 const [uploadLoading, setUploadLoading] = useState(false);
     const [uploadForm, setUploadForm] = useState({
@@ -664,7 +691,7 @@ const { data: profileData, error: profileError } = await supabase
                 *,
                 attendance_sessions!inner (
                   *,
-                  subjects ( name )
+                  subjects ( name, code )
                 )
               `)
               .eq('student_id', user.id)
@@ -925,9 +952,11 @@ if (!cancelled && defaultSemester !== null) {
   }, [studentProfile]);
 
    useEffect(() => {
-       if (liveCardRef.current) {
+       if (liveCardRef && liveCardRef.current) {
            setTimeout(() => {
-               liveCardRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+               if (liveCardRef && liveCardRef.current) {
+                   liveCardRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+               }
            }, 300);
        }
    }, [todayClasses]);
@@ -2069,7 +2098,7 @@ async function fetchAllMaterials() {
                       {THEORY_PRACTICAL_FILTERS.map((f) => (
                         <button
                           key={f}
-                          className={`student-filter-pill student-type-filter ${activeFilter === f ? "student-filter-pill--active student-type-filter--active" : ""}`}
+                          className={`student-filter-pill student-type-filter ${activeFilter === f ? `student-filter-pill--active ${activeFilter === 'Extra' ? 'student-type-filter--extra-active' : 'student-type-filter--active'}` : ""}`}
                           onClick={() => setActiveFilter(f)}
                         >
                           {f}
@@ -2436,14 +2465,24 @@ async function fetchAllMaterials() {
              </section>
            )}
 
-            {activeTab === "attendance" && (
-              <Attendance
-                overall={attendanceStats}
-                subjects={attendanceSubjects}
-                records={attendanceRecords}
-                loading={isLoading && attendanceRecords.length === 0}
-              />
-            )}
+             {activeTab === "attendance" && (
+               <Attendance
+                 overall={attendanceStats}
+                 subjects={attendanceSubjects}
+                 records={attendanceRecords}
+                 loading={isLoading && attendanceRecords.length === 0}
+                 studentRoll={studentProfile?.roll_number || profile?.roll_number}
+                 studentData={studentProfile}
+                 section={
+                   studentProfile?.section ||
+                   studentProfile?.batch ||
+                   studentProfile?.selected_section ||
+                   studentProfile?.batches?.section ||
+                   null
+                 }
+                 globalAcademicTotal={globalAcademicTotal}
+               />
+             )}
 
             {activeTab === "results" && <StudentResults />}
           </div>

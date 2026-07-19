@@ -238,6 +238,16 @@
   box-shadow: 0 0 14px rgba(139, 92, 246, 0.45);
 }
 
+.att-filter-btn--extra:hover {
+  color: #fbbf24;
+}
+
+.att-filter-btn--extra.att-filter-btn--active {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  color: #1c1917;
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.45);
+}
+
 /* ============================================================
    2. HORIZONTAL SUBJECT SELECTOR (PILLS)
    ============================================================ */
@@ -629,6 +639,60 @@
   to { transform: rotate(360deg); }
 }
 
+/* ---------- Extra Activities ---------- */
+.att-extra-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 1.1rem;
+}
+
+.att-extra-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.att-extra-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 22px;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.35), rgba(139, 92, 246, 0.12));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.att-extra-dates {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.att-extra-date-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  color: #cbd5e1;
+}
+
+.att-extra-date {
+  min-width: 110px;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.att-extra-date-day {
+  color: #94a3b8;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 @media (max-width: 720px) {
   .att-hero {
     flex-direction: column;
@@ -640,4 +704,5 @@
   .att-hero-stats { width: 100%; }
   .att-subject-panel__head { flex-direction: column; align-items: flex-start; }
   .att-subject-panel__meta { width: 100%; }
+  .att-extra-grid { grid-template-columns: 1fr; }
 }
