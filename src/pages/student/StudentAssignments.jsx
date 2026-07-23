@@ -359,7 +359,7 @@ export default function StudentAssignments({ user }) {
               </div>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', color: '#9ca3af', fontSize: '0.875rem', marginTop: '4px' }}>
                 <span>Submitted on: {submission ? new Date(submission.submitted_at).toLocaleString() : '—'}</span>
-                {submission && (
+                {submission && assignment.submission_mode !== 'Offline' && submission.submission_url && (
                   <a
                     href={submission.submission_url}
                     target="_blank"

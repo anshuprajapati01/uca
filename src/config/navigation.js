@@ -13,6 +13,7 @@ import {
   Calendar,
   Grid,
   ClipboardList,
+  ClipboardCheck,
 } from 'lucide-react';
 import { ROUTES } from './constants.js';
 
@@ -64,6 +65,12 @@ export const FACULTY_NAV_ITEMS = [
     label: 'Assignments',
     path: `${ROUTES.FACULTY_DASHBOARD}/assignments`,
     icon: ClipboardList,
+  },
+  {
+    id: 'sessional-marks',
+    label: 'Sessional Marks',
+    path: `${ROUTES.FACULTY_DASHBOARD}/sessional-marks`,
+    icon: ClipboardCheck,
   },
 ];
 

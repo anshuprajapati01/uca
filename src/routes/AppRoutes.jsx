@@ -17,6 +17,7 @@ import FacultyResources from '../pages/faculty/FacultyResources.jsx';
 import MySubjects from '../pages/faculty/MySubjects.jsx';
 import SubjectWorkspace from '../pages/faculty/SubjectWorkspace.jsx';
 import FacultyAssignments from '../pages/dashboard/FacultyAssignments.jsx';
+import FacultySessionalMarks from '../pages/dashboard/FacultySessionalMarks.jsx';
 import MentorDashboard from '../pages/faculty/MentorDashboard.jsx';
 import StudentDashboard from '../pages/student/StudentDashboard.jsx';
 import LandingPage from '../pages/public/LandingPage.jsx';
@@ -71,6 +72,7 @@ export default function AppRoutes() {
         <Route path="workspace/:subjectId" element={<SubjectWorkspace />} />
         <Route path="resources" element={<FacultyResources />} />
         <Route path="assignments" element={<FacultyAssignments />} />
+        <Route path="sessional-marks" element={<FacultySessionalMarks />} />
         <Route path="mentor" element={<MentorDashboard />} />
       </Route>
 

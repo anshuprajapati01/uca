@@ -1,16 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { BookOpen, LayoutDashboard, LogOut, User, ClipboardList, Star } from 'lucide-react';
+import { BookOpen, LayoutDashboard, LogOut, User, ClipboardList, Star, ClipboardCheck } from 'lucide-react';
 import { supabase } from '../../lib/supabase.js';
 import { ROUTES } from '../../config/constants.js';
 import { signOut } from '../../services/authService.js';
 import FacultyAssignments from '../dashboard/FacultyAssignments.jsx';
+import FacultySessionalMarks from '../dashboard/FacultySessionalMarks.jsx';
 import './FacultyDashboard.css';
 
 const BASE_NAV_ITEMS = [
   { id: 'overview', label: '🏠 Overview', path: ROUTES.FACULTY_DASHBOARD, icon: <LayoutDashboard size={18} /> },
   { id: 'subjects', label: '📚 My Subjects', path: `${ROUTES.FACULTY_DASHBOARD}/subjects`, icon: <BookOpen size={18} /> },
   { id: 'assignments', label: '📋 Assignments', path: `${ROUTES.FACULTY_DASHBOARD}/assignments`, icon: <ClipboardList size={18} /> },
+  { id: 'sessional-marks', label: 'Sessional Marks', path: `${ROUTES.FACULTY_DASHBOARD}/sessional-marks`, icon: <ClipboardCheck size={18} /> },
 ];
 
 export default function FacultyDashboard() {
@@ -35,6 +37,7 @@ export default function FacultyDashboard() {
     if (pathname === ROUTES.FACULTY_DASHBOARD) return 'overview';
     if (pathname === `${ROUTES.FACULTY_DASHBOARD}/subjects` || pathname.startsWith(`${ROUTES.FACULTY_DASHBOARD}/subjects/`) || pathname === `${ROUTES.FACULTY_DASHBOARD}/workspace` || pathname.startsWith(`${ROUTES.FACULTY_DASHBOARD}/workspace/`)) return 'subjects';
     if (pathname === `${ROUTES.FACULTY_DASHBOARD}/assignments`) return 'assignments';
+    if (pathname === `${ROUTES.FACULTY_DASHBOARD}/sessional-marks`) return 'sessional-marks';
     if (pathname === `${ROUTES.FACULTY_DASHBOARD}/mentor`) return 'mentor';
 
     return 'overview';
@@ -180,6 +183,8 @@ export default function FacultyDashboard() {
           {activeTab === 'subjects' && <Outlet />}
 
           {activeTab === 'assignments' && <FacultyAssignments />}
+
+          {activeTab === 'sessional-marks' && <FacultySessionalMarks />}
 
           {activeTab === 'mentor' && <Outlet />}
         </div>
