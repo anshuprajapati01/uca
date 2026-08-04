@@ -14,6 +14,7 @@ import {
   Grid,
   ClipboardList,
   ClipboardCheck,
+  Trophy,
 } from 'lucide-react';
 import { ROUTES } from './constants.js';
 
@@ -167,6 +168,12 @@ export const HOD_NAV_ITEMS = [
     label: '📝 Publish Results',
     path: `${ROUTES.HOD_DASHBOARD}/manage-results`,
     icon: FileText,
+  },
+  {
+    id: 'rank-sheets',
+    label: '🏆 Rank Sheets',
+    path: `${ROUTES.HOD_DASHBOARD}/rank-sheets`,
+    icon: Trophy,
   },
 ];
 

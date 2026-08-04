@@ -27,7 +27,6 @@ export default function FacultySessionalMarks() {
   const [theoryExamGrades, setTheoryExamGrades] = useState({});
   const [theoryExamSubject, setTheoryExamSubject] = useState('');
   const [theoryExamSection, setTheoryExamSection] = useState('All');
-  const [globalTotalClasses, setGlobalTotalClasses] = useState('');
   const [isTheoryExamLoading, setIsTheoryExamLoading] = useState(false);
   const [isSavingTheoryExam] = useState(false);
   const [activeTab, setActiveTab] = useState('tes');
@@ -67,6 +66,60 @@ export default function FacultySessionalMarks() {
     return () => { cancelled = true; };
   }, [exportSubjectId]);
 
+  const autoFetchAttendance = async (subjectId, studentsList) => {
+    try {
+      const { data: attendanceData, error } = await supabase
+        .from('attendance_records')
+        .select('student_id, status, attendance_sessions!inner(subject_id, date)')
+        .eq('attendance_sessions.subject_id', subjectId);
+
+      if (error) throw error;
+      if (!attendanceData || attendanceData.length === 0) {
+        const emptyMap = {};
+        studentsList.forEach((s) => { emptyMap[s.id] = { total_classes: 0, attended_classes: 0 }; });
+        return emptyMap;
+      }
+
+      const uniqueDates = new Set(
+        attendanceData
+          .map((record) => record.attendance_sessions?.date)
+          .filter(Boolean)
+      );
+      const calculatedTotalClasses = uniqueDates.size;
+
+      const attendanceMap = {};
+      attendanceData.forEach((record) => {
+        if (!attendanceMap[record.student_id]) {
+          attendanceMap[record.student_id] = 0;
+        }
+        if (
+          record.status === 'P' ||
+          record.status === 'present' ||
+          record.status === 'Present' ||
+          record.status === true ||
+          record.status === 'p'
+        ) {
+          attendanceMap[record.student_id] += 1;
+        }
+      });
+
+      const result = {};
+      studentsList.forEach((student) => {
+        result[student.id] = {
+          total_classes: calculatedTotalClasses,
+          attended_classes: attendanceMap[student.id] || 0,
+        };
+      });
+
+      return result;
+    } catch (err) {
+      console.error("Error auto-fetching attendance:", err);
+      const emptyMap = {};
+      studentsList.forEach((s) => { emptyMap[s.id] = { total_classes: 0, attended_classes: 0 }; });
+      return emptyMap;
+    }
+  };
+
   const loadLabData = async (subjectId) => {
     setIsLabLoading(true);
     setLabGrades({});
@@ -99,6 +152,8 @@ export default function FacultySessionalMarks() {
 
       setLabStudents(validStudents);
 
+      const studentsWithAttendance = await autoFetchAttendance(subjectId, validStudents);
+
       const { data: existing } = await supabase
         .from('lab_evaluations')
         .select('*')
@@ -106,6 +161,7 @@ export default function FacultySessionalMarks() {
 
       const gradesMap = {};
       (existing || []).forEach((row) => {
+        const existingAttendance = studentsWithAttendance[row.student_id] || {};
         gradesMap[row.student_id] = {
           l1: row.l1 ?? '',
           l2: row.l2 ?? '',
@@ -118,10 +174,23 @@ export default function FacultySessionalMarks() {
           l9: row.l9 ?? '',
           l10: row.l10 ?? '',
           lt_marks: row.lt_marks ?? '',
-          total_classes: row.total_classes ?? '',
-          attended_classes: row.attended_classes ?? '',
+          total_classes: existingAttendance.total_classes ?? '',
+          attended_classes: existingAttendance.attended_classes ?? '',
           benefit_marks: row.benefit_marks ?? '',
         };
+      });
+
+      validStudents.forEach((student) => {
+        if (!gradesMap[student.id]) {
+          const att = studentsWithAttendance[student.id] || {};
+          gradesMap[student.id] = {
+            l1: '', l2: '', l3: '', l4: '', l5: '', l6: '', l7: '', l8: '', l9: '', l10: '',
+            lt_marks: '',
+            total_classes: att.total_classes ?? '',
+            attended_classes: att.attended_classes ?? '',
+            benefit_marks: '',
+          };
+        }
       });
 
       setLabGrades(gradesMap);
@@ -464,6 +533,13 @@ export default function FacultySessionalMarks() {
         .filter((s) => s.full_name && !/(dummy|test|demo|user)/i.test(s.full_name))
         .sort((a, b) => (a.roll_number || '').localeCompare(b.roll_number || '', undefined, { numeric: true, sensitivity: 'base' }));
 
+      const studentsWithAttendance = await autoFetchAttendance(exportSubjectId, validStudents);
+      const studentsForExport = validStudents.map((student) => ({
+        ...student,
+        total_classes: studentsWithAttendance[student.id]?.total_classes || 0,
+        attended_classes: studentsWithAttendance[student.id]?.attended_classes || 0,
+      }));
+
       // Fetch theory exam marks for this subject (includes t1-t10, ct1, ct2, put, attendance, gp_marks, benefit_marks)
       const { data: theoryMarks, error: theoryError } = await supabase
         .from('theory_exam_marks')
@@ -499,7 +575,7 @@ export default function FacultySessionalMarks() {
         'Final T/A/Q Marks',
         'Evaluation Scheme', '', '', '', '', '',
         'Final Sessional Marks',
-        'Class Conduct',
+        'Total Class',
         '%',
         'Attendance Marks',
         'GP',
@@ -528,6 +604,7 @@ export default function FacultySessionalMarks() {
       ]);
 
       // Row 10: Max Marks
+      const maxTotalClass = studentsForExport.length > 0 ? (Number(studentsForExport[0].total_classes) || 0) : 0;
       wsData.push([
         '',
         '',
@@ -537,7 +614,7 @@ export default function FacultySessionalMarks() {
         5,
         30, 100, 10, 70, 100, 10,
         20,
-        130,
+        maxTotalClass,
         100,
         5,
         5,
@@ -547,7 +624,7 @@ export default function FacultySessionalMarks() {
       ]);
 
       // Step D: Map student rows
-      validStudents.forEach((student, index) => {
+      studentsForExport.forEach((student, index) => {
         const tm = theoryByStudent[student.id] || {};
 
         // ---- Part A: T1-T10 from theory_exam_marks ----
@@ -569,10 +646,10 @@ export default function FacultySessionalMarks() {
         const { ctInternal, putInternal, totalSessional } = getSessionalMarks(ct1, ct2, put);
 
         // ---- Part C: Attendance ----
-        const totalClasses = Number(tm.total_classes_conducted) || 0;
-        const attended = Number(tm.classes_attended) || 0;
-        const attendedPct = totalClasses > 0 ? Math.ceil((attended * 100) / totalClasses) : 0;
-        const attendanceMarks = calculateAttendanceMarks(attended, totalClasses);
+        const totalC = Number(student.total_classes) || 0;
+        const attC = Number(student.attended_classes) || 0;
+        const attPerc = totalC > 0 ? Math.ceil((attC * 100) / totalC) : 0;
+        const attendanceMarks = calculateAttendanceMarks(attC, totalC);
 
         // ---- Part D: GP ----
         const gpMarks = Number(tm.gp_marks) || 0;
@@ -596,8 +673,8 @@ export default function FacultySessionalMarks() {
           putPercentage.toFixed(1),
           putInternal.toFixed(1),
           totalSessional.toFixed(1),
-          '',                // Class Conduct (spacer)
-          `${attendedPct}%`, // Attendance %
+          attC,                // Column W (Index 22): Attended Classes
+          `${attPerc}%`,       // Column X (Index 23): Percentage
           attendanceMarks.toFixed(1),
           gpMarks.toFixed(1),
           partE,
@@ -799,6 +876,8 @@ export default function FacultySessionalMarks() {
 
       setTheoryExamStudents(validStudents);
 
+      const studentsWithAttendance = await autoFetchAttendance(subjectId, validStudents);
+
       const { data: existing } = await supabase
         .from('theory_exam_marks')
         .select('*')
@@ -806,6 +885,7 @@ export default function FacultySessionalMarks() {
 
       const gradesMap = {};
       (existing || []).forEach((row) => {
+        const existingAttendance = studentsWithAttendance[row.student_id] || {};
         gradesMap[row.student_id] = {
           t1: row.t1 ?? '',
           t2: row.t2 ?? '',
@@ -820,11 +900,25 @@ export default function FacultySessionalMarks() {
           ct1: row.ct1 ?? '',
           ct2: row.ct2 ?? '',
           put: row.put ?? '',
-          total_classes_conducted: row.total_classes_conducted ?? '',
-          classes_attended: row.classes_attended ?? '',
+          total_classes_conducted: existingAttendance.total_classes ?? '',
+          classes_attended: existingAttendance.attended_classes ?? '',
           gp_marks: row.gp_marks ?? '',
           benefit_marks: row.benefit_marks ?? '',
         };
+      });
+
+      validStudents.forEach((student) => {
+        if (!gradesMap[student.id]) {
+          const att = studentsWithAttendance[student.id] || {};
+          gradesMap[student.id] = {
+            t1: '', t2: '', t3: '', t4: '', t5: '', t6: '', t7: '', t8: '', t9: '', t10: '',
+            ct1: '', ct2: '', put: '',
+            total_classes_conducted: att.total_classes ?? '',
+            classes_attended: att.attended_classes ?? '',
+            gp_marks: '',
+            benefit_marks: '',
+          };
+        }
       });
 
       setTheoryExamGrades(gradesMap);
@@ -879,26 +973,6 @@ export default function FacultySessionalMarks() {
     }));
   };
 
-  const handleApplyGlobalTotal = () => {
-    const value = globalTotalClasses;
-    if (value === '' || value === null || value === undefined) {
-      toast.error('Please enter a total classes value first.');
-      return;
-    }
-    if (Number(value) < 0) {
-      toast.error('Total classes cannot be negative.');
-      return;
-    }
-    setTheoryExamGrades((prev) => {
-      const next = { ...prev };
-      Object.keys(next).forEach((studentId) => {
-        next[studentId] = { ...next[studentId], total_classes_conducted: value };
-      });
-      return next;
-    });
-    toast.success('Applied total classes to all students in the grid.');
-  };
-
   const saveTheoryExamRegister = async () => {
     if (!theoryExamSubject) return toast.error('Please select a subject first.');
 
@@ -929,59 +1003,6 @@ export default function FacultySessionalMarks() {
     } catch (err) {
       console.error('Failed to save theory exam register:', err);
       toast.error('Failed to save theory exam register. Please try again.');
-    }
-  };
-
-  const exportTheoryExamRegister = () => {
-    if (!theoryExamSubject || theoryExamStudents.length === 0) {
-      toast.error('No data to export.');
-      return;
-    }
-    try {
-      const headers = [
-        'SR. NO',
-        'Students Name',
-        'Roll Number',
-        'CT1',
-        'CT2',
-        'PUT',
-        'CT Conv. (10)',
-        'PUT Conv. (10)',
-        'Total Sessional (20)',
-      ];
-
-      const rows = theoryExamStudents.map((student, index) => {
-        const g = theoryExamGrades[student.id] || {};
-        const ct1Val = g.ct1 !== '' && g.ct1 !== undefined && g.ct1 !== null ? Number(g.ct1) : 0;
-        const ct2Val = g.ct2 !== '' && g.ct2 !== undefined && g.ct2 !== null ? Number(g.ct2) : 0;
-        const putVal = g.put !== '' && g.put !== undefined && g.put !== null ? Number(g.put) : 0;
-        const { ctInternal, putInternal, totalSessional } = getSessionalMarks(ct1Val, ct2Val, putVal);
-
-        return [
-          index + 1,
-          `${student.roll_number || ''} `,
-          student.full_name,
-          ct1Val,
-          ct2Val,
-          putVal,
-          ctInternal.toFixed(1),
-          putInternal.toFixed(1),
-          totalSessional.toFixed(1),
-        ];
-      });
-
-      const csvContent = [headers, ...rows].map((row) => row.map((cell) => `"${cell}"`).join(',')).join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.setAttribute('download', 'TheoryExam_Register.csv');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.success('Theory exam register exported successfully!');
-    } catch (err) {
-      console.error('Failed to export theory exam register:', err);
-      toast.error('Failed to export theory exam register. Please try again.');
     }
   };
 
@@ -1530,33 +1551,6 @@ export default function FacultySessionalMarks() {
                   <option value="B1">B1</option>
                   <option value="B2">B2</option>
                 </select>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#11131f', border: '1px solid #2d314d', borderRadius: '8px', padding: '4px 6px' }}>
-                  <input
-                    type="number"
-                    min="0"
-                    value={globalTotalClasses}
-                    onChange={(e) => setGlobalTotalClasses(e.target.value)}
-                    placeholder="Total Classes..."
-                    style={{ width: '110px', backgroundColor: 'transparent', border: 'none', color: 'white', padding: '6px 8px', fontSize: '0.875rem', outline: 'none', fontFamily: 'inherit' }}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleApplyGlobalTotal}
-                    style={{
-                      padding: '6px 12px',
-                      borderRadius: '6px',
-                      fontWeight: '600',
-                      fontSize: '0.8rem',
-                      border: 'none',
-                      cursor: 'pointer',
-                      backgroundColor: '#6366f1',
-                      color: 'white',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    Apply to All
-                  </button>
-                </div>
               </div>
              <div style={{ display: 'flex', gap: '10px' }}>
                <button
@@ -1580,27 +1574,27 @@ export default function FacultySessionalMarks() {
                >
                    Save Register
                </button>
-               <button
-                 type="button"
-                 onClick={exportTheoryExamRegister}
-                 disabled={!theoryExamSubject || theoryExamStudents.length === 0}
-                 style={{
-                   display: 'inline-flex',
-                   alignItems: 'center',
-                   gap: '8px',
-                   padding: '10px 20px',
-                   borderRadius: '8px',
-                   fontWeight: '600',
-                   fontSize: '0.875rem',
-                   border: 'none',
-                   cursor: theoryExamSubject && theoryExamStudents.length > 0 ? 'pointer' : 'not-allowed',
-                   backgroundColor: theoryExamSubject && theoryExamStudents.length > 0 ? '#6366f1' : '#4b5563',
-                   color: 'white',
-                   boxShadow: theoryExamSubject && theoryExamStudents.length > 0 ? '0 10px 15px -3px rgba(99, 102, 241, 0.3)' : 'none',
-                 }}
-               >
-                   Export to CSV
-               </button>
+                <button
+                  type="button"
+                  onClick={() => setIsExportModalOpen(true)}
+                  disabled={!theoryExamSubject || isExporting}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 20px',
+                    borderRadius: '8px',
+                    fontWeight: '600',
+                    fontSize: '0.875rem',
+                    border: 'none',
+                    cursor: theoryExamSubject && !isExporting ? 'pointer' : 'not-allowed',
+                    backgroundColor: theoryExamSubject && !isExporting ? '#f59e0b' : '#4b5563',
+                    color: 'white',
+                    boxShadow: theoryExamSubject && !isExporting ? '0 10px 15px -3px rgba(245, 158, 11, 0.3)' : 'none',
+                  }}
+                >
+                    Export TES Sheet
+                </button>
              </div>
            </div>
 

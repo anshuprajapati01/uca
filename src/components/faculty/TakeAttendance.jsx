@@ -125,6 +125,8 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
           .from('system_settings')
           .select('semester_start_date')
           .eq('is_active', true)
+          .order('created_at', { ascending: false })
+          .limit(1)
           .maybeSingle();
 
         if (error) {

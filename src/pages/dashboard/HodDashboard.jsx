@@ -12,6 +12,7 @@ import ManageCR from './ManageCR.jsx';
 import HODAttendance from './HODAttendance.jsx';
 import HODManageTimetable from './HODManageTimetable.jsx';
 import ManageResults from '../admin/ManageResults.jsx';
+import HODRankSheet from './HODRankSheet.jsx';
 
 const HOD_TAB_COMPONENTS = {
   overview: AdminOverview,
@@ -25,6 +26,7 @@ const HOD_TAB_COMPONENTS = {
   attendance: HODAttendance,
   'manage-timetable': HODManageTimetable,
   'manage-results': ManageResults,
+  'rank-sheets': HODRankSheet,
 };
 
 function getActiveTabId(pathname) {

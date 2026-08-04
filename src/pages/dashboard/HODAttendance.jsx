@@ -69,12 +69,12 @@ export default function HODAttendance() {
   const [filterSection, setFilterSection] = useState('All');
   const [isExporting, setIsExporting] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const [exportWeek, setExportWeek] = useState('1');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [semesterHeading, setSemesterHeading] = useState('');
   const [isHeadingLocked, setIsHeadingLocked] = useState(false);
   const [isHeadingLoading, setIsHeadingLoading] = useState(false);
+  const [semesterStartDate, setSemesterStartDate] = useState('');
   const [sectionSubjects, setSectionSubjects] = useState([]);
 
   useEffect(() => {
@@ -101,6 +101,27 @@ export default function HODAttendance() {
       }
     };
     fetchHeading();
+  }, [isExportModalOpen, filterBranch]);
+
+  useEffect(() => {
+    const fetchSemesterStartDate = async () => {
+      if (isExportModalOpen && filterBranch && filterBranch !== 'All') {
+        const { data } = await supabase
+          .from('system_settings')
+          .select('semester_start_date')
+          .eq('department', filterBranch)
+          .eq('is_active', true)
+          .maybeSingle();
+
+        if (data?.semester_start_date) {
+          setSemesterStartDate(data.semester_start_date);
+          setStartDate(data.semester_start_date);
+        } else {
+          setSemesterStartDate('');
+        }
+      }
+    };
+    fetchSemesterStartDate();
   }, [isExportModalOpen, filterBranch]);
 
   const handleLockHeading = async () => {
@@ -401,7 +422,7 @@ export default function HODAttendance() {
     return parts.map((p) => p[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  const handleExportExcel = async (weekNo = '', dateRange = '', semHeading = semesterHeading) => {
+  const handleExportExcel = async (calculatedWeek = 1, dateFrom = '', dateTo = '', semHeading = semesterHeading) => {
     if (isExporting) return;
     setIsExporting(true);
     try {
@@ -804,8 +825,8 @@ export default function HODAttendance() {
         [`MENTOR NAME: ${mentorName}`], // Row 4 — meta
         [`DEPARTMENT NAME : ${branchLabel}`], // Row 5 — meta
         [`CLASS - ${yearLabel} (4th Sem. - ${sectionLabel} )`], // Row 6 — meta
-        [`WEEK NO - ${weekNo || ''}`], // Row 7 — meta
-        [`DATE FROM - ${dateRange || ''}`], // Row 8 — meta
+        [`WEEK NO - ${calculatedWeek || ''}`], // Row 7 — meta
+        [`DATE FROM - ${formatDate(dateFrom)} to ${formatDate(dateTo)}`], // Row 8 — meta
         bannerRow, // Row 9 — main categories
         facultyRow, // Row 10 — faculty names
         subjectRow, // Row 11 — subject names
@@ -1005,11 +1026,24 @@ export default function HODAttendance() {
   };
 
   const confirmExportExcel = async () => {
-    const formattedDateRange = `${formatDate(startDate)} to ${formatDate(endDate)}`;
-    await handleExportExcel(exportWeek, formattedDateRange);
+    const exactStart = new Date(startDate);
+    const startDayOfWeek = exactStart.getDay();
+    const daysToSubtract = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1;
+
+    const snappedStart = new Date(exactStart);
+    snappedStart.setDate(exactStart.getDate() - daysToSubtract);
+    snappedStart.setHours(0, 0, 0, 0);
+
+    const end = new Date(endDate);
+    end.setHours(0, 0, 0, 0);
+
+    const diffTime = Math.abs(end - snappedStart);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const calculatedWeek = Math.ceil((diffDays + 1) / 7) || 1;
+
+    await handleExportExcel(calculatedWeek, startDate, endDate);
     setIsExportModalOpen(false);
-    setExportWeek('1');
-    setStartDate('');
+    setStartDate(semesterStartDate || '');
     setEndDate('');
   };
 
@@ -1370,33 +1404,6 @@ export default function HODAttendance() {
               Saves to the database for this department until cleared.
             </p>
 
-            <label style={{ display: 'block', color: '#9ca3af', fontSize: '0.8rem', marginBottom: '6px' }}>
-              Reporting Week
-            </label>
-            <select
-              value={exportWeek}
-              onChange={(e) => setExportWeek(e.target.value)}
-              className="glass-input"
-              style={{
-                width: '100%',
-                boxSizing: 'border-box',
-                padding: '10px 12px',
-                marginBottom: '16px',
-                background: 'rgba(255,255,255,0.05)',
-                borderRadius: '8px',
-                color: '#f8fafc',
-                fontSize: '0.9rem',
-                border: '1px solid rgba(255,255,255,0.1)',
-                outline: 'none',
-              }}
-            >
-              {Array.from({ length: 20 }, (_, i) => i + 1).map((w) => (
-                <option key={w} value={String(w)} style={{ background: '#1c1d2e', color: '#f8fafc' }}>
-                  Week {w}
-                </option>
-              ))}
-            </select>
-
             <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
               <div style={{ flex: 1 }}>
                 <label style={{ display: 'block', color: '#9ca3af', fontSize: '0.8rem', marginBottom: '6px' }}>
@@ -1405,8 +1412,8 @@ export default function HODAttendance() {
                 <input
                   type="date"
                   value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="glass-input"
+                  readOnly={true}
+                  className="glass-input bg-slate-800 text-slate-400 cursor-not-allowed"
                   style={{
                     width: '100%',
                     boxSizing: 'border-box',

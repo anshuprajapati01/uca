@@ -199,6 +199,7 @@ export default function HODManageTimetable() {
   const [selectedSemester, setSelectedSemester] = useState('');
   const [timetableMeta, setTimetableMeta] = useState({ wefDate: '', roomNo: '' });
   const [semesterStartDate, setSemesterStartDate] = useState('');
+  const [showDateWarning, setShowDateWarning] = useState(false);
   const [isSemesterSettingsLoading, setIsSemesterSettingsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeCell, setActiveCell] = useState(null);
@@ -341,6 +342,8 @@ export default function HODManageTimetable() {
         console.error('Error fetching semester settings:', error);
       } else if (data?.semester_start_date) {
         setSemesterStartDate(data.semester_start_date);
+      } else {
+        setSemesterStartDate('');
       }
     } catch (err) {
       console.error('Failed to fetch semester settings:', err);
@@ -349,33 +352,61 @@ export default function HODManageTimetable() {
     }
   }, [effectiveBranch]);
 
-  const saveSemesterSettings = useCallback(async () => {
+  const handleApplyClick = () => {
+    console.log("Apply button clicked! Current date value is:", semesterStartDate);
+    if (!semesterStartDate) {
+      toast.error("Please select a valid date first.");
+      return;
+    }
+    setShowDateWarning(true);
+  };
+
+  const executeDateSave = useCallback(async () => {
     if (!effectiveBranch || !semesterStartDate) {
       toast.error('Please select a semester start date');
+      setShowDateWarning(false);
       return;
     }
 
     try {
-      const { error } = await supabase
+      const { data: existingRecord, error: fetchError } = await supabase
         .from('system_settings')
-        .upsert(
-          {
-            department: effectiveBranch,
-            semester_start_date: semesterStartDate,
-            is_active: true,
-          },
-          { onConflict: 'department' }
-        );
+        .select('id')
+        .eq('department', effectiveBranch)
+        .eq('is_active', true)
+        .maybeSingle();
 
-      if (error) {
-        console.error('Error saving semester settings:', error);
-        toast.error('Failed to save semester settings');
+      if (fetchError) throw fetchError;
+
+      const payload = {
+        department: effectiveBranch,
+        semester_start_date: semesterStartDate,
+        is_active: true,
+      };
+
+      if (existingRecord) {
+        const { error: updateError } = await supabase
+          .from('system_settings')
+          .update(payload)
+          .eq('id', existingRecord.id);
+
+        if (updateError) throw updateError;
+        console.log('[Config Save] Successfully UPDATED existing record.');
       } else {
-        toast.success('Semester start date saved successfully!');
+        const { error: insertError } = await supabase
+          .from('system_settings')
+          .insert([payload]);
+
+        if (insertError) throw insertError;
+        console.log('[Config Save] Successfully INSERTED new record.');
       }
-    } catch (err) {
-      console.error('Failed to save semester settings:', err);
-      toast.error('Failed to save semester settings');
+
+      toast.success('Semester Start Date applied successfully!');
+      setShowDateWarning(false);
+    } catch (error) {
+      console.error('[Config Save Error]', error);
+      toast.error('Failed to save config. Check console.');
+      setShowDateWarning(false);
     }
   }, [effectiveBranch, semesterStartDate]);
 
@@ -384,6 +415,33 @@ export default function HODManageTimetable() {
     fetchSemesterSettings();
   }, [fetchSemesterSettings]);
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  useEffect(() => {
+    const fetchExistingConfig = async () => {
+      if (!effectiveBranch) return;
+
+      console.log(`[Config Fetch] Fetching start date for department: ${effectiveBranch}`);
+
+      const { data, error } = await supabase
+        .from('system_settings')
+        .select('*')
+        .eq('department', effectiveBranch)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (error) {
+        console.error('[Config Fetch Error]', error);
+      } else if (data) {
+        console.log('[Config Fetch Success]', data);
+        setSemesterStartDate(data.semester_start_date || data.start_date || '');
+      } else {
+        console.log('[Config Fetch] No active config found for this department.');
+        setSemesterStartDate('');
+      }
+    };
+
+    fetchExistingConfig();
+  }, [effectiveBranch]);
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -842,6 +900,36 @@ export default function HODManageTimetable() {
 
   return (
     <div className="timetable-container">
+      {showDateWarning && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0, 0, 0, 0.8)', backdropFilter: 'blur(4px)' }}>
+          <div style={{ backgroundColor: '#13151a', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', maxWidth: '400px', width: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', fontFamily: 'sans-serif' }}>
+            <div style={{ padding: '24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                <div style={{ padding: '12px', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg style={{ width: '32px', height: '32px', color: '#ef4444' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white', margin: 0 }}>Danger: Modify Date?</h3>
+              </div>
+              <p style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: '1.6', marginBottom: '16px', margin: 0 }}>
+                If the semester has already started and faculty have marked attendance, changing this date will <strong style={{ color: '#f87171' }}>shift and corrupt all existing attendance weeks</strong>.
+              </p>
+              <p style={{ color: '#94a3b8', fontSize: '14px', fontWeight: '500', margin: 0 }}>
+                Are you absolutely sure you want to proceed?
+              </p>
+            </div>
+            <div style={{ backgroundColor: '#0f1115', padding: '16px', display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: '1px solid #1e293b' }}>
+              <button onClick={() => setShowDateWarning(false)} style={{ padding: '10px 20px', borderRadius: '8px', fontSize: '14px', fontWeight: '500', color: '#cbd5e1', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}>
+                Cancel
+              </button>
+              <button onClick={executeDateSave} style={{ padding: '10px 20px', borderRadius: '8px', fontSize: '14px', fontWeight: '500', color: 'white', backgroundColor: '#dc2626', border: 'none', cursor: 'pointer', boxShadow: '0 0 15px rgba(220, 38, 38, 0.3)' }}>
+                Yes, Change Date
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <header className="timetable-header">
         <h1 className="timetable-title">
           <Grid size={28} />
@@ -858,18 +946,17 @@ export default function HODManageTimetable() {
           </label>
           <input
             type="date"
-            value={semesterStartDate}
+            value={semesterStartDate || ''}
             onChange={(e) => setSemesterStartDate(e.target.value)}
             style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid #3f3f46', backgroundColor: '#18181b', color: '#fff', outline: 'none', colorScheme: 'dark', fontFamily: 'inherit' }}
             disabled={isSemesterSettingsLoading}
           />
         </div>
         <button
-          onClick={saveSemesterSettings}
+          onClick={handleApplyClick}
           style={{ marginTop: '24px', padding: '10px 20px', backgroundColor: '#6366f1', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', transition: 'all 0.2s' }}
           onMouseOver={(e) => e.target.style.backgroundColor = '#4f46e5'}
           onMouseOut={(e) => e.target.style.backgroundColor = '#6366f1'}
-          disabled={isSemesterSettingsLoading || !semesterStartDate}
         >
           Apply Config to All Portals
         </button>
