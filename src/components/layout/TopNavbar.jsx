@@ -19,6 +19,7 @@ export default function TopNavbar({ title, onMenuClick }) {
   const { logout, isLoading } = useLogout();
   const navigate = useNavigate();
   const location = useLocation();
+  const isDirector = role === 'director';
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
   const [phone, setPhone] = useState('');
@@ -318,6 +319,7 @@ export default function TopNavbar({ title, onMenuClick }) {
                   type="button"
                   className={`faculty-profile-modal__tab ${activeTab === 'password' ? 'faculty-profile-modal__tab--active' : ''}`}
                   onClick={() => setActiveTab('password')}
+                  style={{ display: isDirector ? 'flex' : 'none' }}
                 >
                   Change Password
                 </button>
@@ -355,7 +357,7 @@ export default function TopNavbar({ title, onMenuClick }) {
                   </div>
                   <div className="faculty-profile-modal__field">
                     <label>Name</label>
-                    <input type="text" value={displayName} disabled />
+                    <input type="text" value={displayName} disabled={!isDirector} />
                   </div>
                   <div className="faculty-profile-modal__field">
                     <label>Email</label>
@@ -368,6 +370,7 @@ export default function TopNavbar({ title, onMenuClick }) {
                       value={phone || ''}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="Enter phone number"
+                      disabled={!isDirector}
                     />
                   </div>
                   <button

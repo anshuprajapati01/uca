@@ -450,6 +450,7 @@ function FacultyHeader({ displayName, initials, onSignOut, showRoleSwitcher, onS
                   type="button"
                   className={`faculty-profile-modal__tab ${activeTab === 'password' ? 'faculty-profile-modal__tab--active' : ''}`}
                   onClick={() => setActiveTab('password')}
+                  style={{ display: isDirector ? 'flex' : 'none' }}
                 >
                   Change Password
                 </button>
@@ -509,7 +510,7 @@ function FacultyHeader({ displayName, initials, onSignOut, showRoleSwitcher, onS
               {/* NAME INPUT (Rest of the form continues below) */}
                   <div className="faculty-profile-modal__field">
                     <label>Name</label>
-                    <input type="text" value={displayName} disabled />
+                    <input type="text" value={displayName} disabled={!isDirector} />
                   </div>
                   <div className="faculty-profile-modal__field">
                     <label>Email</label>
@@ -522,6 +523,7 @@ function FacultyHeader({ displayName, initials, onSignOut, showRoleSwitcher, onS
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="Enter phone number"
+                      disabled={!isDirector}
                     />
                   </div>
                   <button

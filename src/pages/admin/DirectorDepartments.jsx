@@ -31,79 +31,12 @@ const YEAR_ICONS = {
   '4th Year': Network,
 };
 
-const BIT_DEPARTMENTS = {
-  '1st Year': [
-    { name: 'ASH 1', hod_name: 'Dr. SN Jaisawal', branches: ['CSE A', 'CSE B', 'CSE C', 'CS', 'ECE'] },
-    { name: 'ASH 2', hod_name: 'Dr. BK Shrivastav', branches: ['AI ML', 'DS', 'IT', 'ME', 'CE', 'VLSI'] }
-  ],
-  '2nd Year': [
-    { name: 'CS & IT', hod_name: 'Dr. Ranjeet Rai', branches: ['CS', 'IT'] },
-    { name: 'CSE & ECE', hod_name: 'Dr. Abhinandan Tripathi', branches: ['CSE', 'ECE'] },
-    { name: 'AI ML & DS', hod_name: 'Dr. AI Head', branches: ['AI ML', 'DS'] },
-    { name: 'ME & CE', hod_name: 'Dr. ME Head', branches: ['ME', 'CE'] }
-  ],
-  '3rd Year': [
-    { name: 'CS & IT', hod_name: 'Dr. Ranjeet Rai', branches: ['CS', 'IT'] },
-    { name: 'CSE & ECE', hod_name: 'Dr. Abhinandan Tripathi', branches: ['CSE', 'ECE'] },
-    { name: 'AI ML & DS', hod_name: 'Dr. AI Head', branches: ['AI ML', 'DS'] },
-    { name: 'ME & CE', hod_name: 'Dr. ME Head', branches: ['ME', 'CE'] }
-  ],
-  '4th Year': [
-    { name: 'CS & IT', hod_name: 'Dr. Ranjeet Rai', branches: ['CS', 'IT'] },
-    { name: 'CSE & ECE', hod_name: 'Dr. Abhinandan Tripathi', branches: ['CSE', 'ECE'] },
-    { name: 'AI ML & DS', hod_name: 'Dr. AI Head', branches: ['AI ML', 'DS'] },
-    { name: 'ME & CE', hod_name: 'Dr. ME Head', branches: ['ME', 'CE'] }
-  ]
-};
+const BIT_DEPARTMENTS = {};
 
-const GROUP_A_SUBJECTS = { // This is ASH 2's Semester 1 & ASH 1's Semester 2
-  theory: [
-    { name: 'Engineering Mathematics-I', code: 'BAS103', faculty: 'Dr. BK Shrivastav', materials: 45, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=BKShrivastav' },
-    { name: 'Engineering Chemistry', code: 'BAS102', faculty: 'Juhi Pandey', materials: 38, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Juhi' },
-    { name: 'Fundamentals of Electrical Engg', code: 'BEE101', faculty: 'Dr. SN Jaisawal', materials: 52, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=SNJ' },
-    { name: 'Programming for Problem Solving', code: 'BCS101', faculty: 'Shayam Mohan Singh', materials: 60, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Shayam' },
-    { name: 'Environment & Ecology', code: 'BAS104', faculty: 'Ashutosh Shrivastav', materials: 20, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ashutosh' }
-  ],
-  practical: [
-    { name: 'Chemistry Lab', code: 'BAS152', faculty: 'Juhi Pandey', materials: 12, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Juhi' },
-    { name: 'Electrical Engineering Lab', code: 'BEE151', faculty: 'Dr. SN Jaisawal', materials: 15, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=SNJ' },
-    { name: 'Programming Lab', code: 'BCS151', faculty: 'Shayam Mohan Singh', materials: 22, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Shayam' },
-    { name: 'Engg Graphics & Design Lab', code: 'BCE151', faculty: 'Krishn Kumar Gaur', materials: 10, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Krishn' }
-  ]
-};
+const GROUP_A_SUBJECTS = { theory: [], practical: [] };
+const GROUP_B_SUBJECTS = { theory: [], practical: [] };
 
-const GROUP_B_SUBJECTS = { // This is ASH 2's Semester 2 & ASH 1's Semester 1
-  theory: [
-    { name: 'Engineering Mathematics-II', code: 'BAS203', faculty: 'Dr. BK Shrivastav', materials: 35, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=BKShrivastav' },
-    { name: 'Engineering Physics', code: 'BAS201', faculty: 'Prof. Yaman Khan', materials: 42, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Yaman' },
-    { name: 'Fundamentals of Electronics Engg', code: 'BEC201', faculty: 'Dr. SN Jaisawal', materials: 38, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=SNJ' },
-    { name: 'Fundamentals of Mechanical Engg', code: 'BME201', faculty: 'Maneesh Singh', materials: 40, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Maneesh' },
-    { name: 'Soft Skills', code: 'BAS204', faculty: 'Akshita Dutta', materials: 18, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Akshita' }
-  ],
-  practical: [
-    { name: 'Physics Lab', code: 'BAS251', faculty: 'Prof. Yaman Khan', materials: 14, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Yaman' },
-    { name: 'Electronics Engineering Lab', code: 'BEC251', faculty: 'Dr. SN Jaisawal', materials: 16, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=SNJ' },
-    { name: 'Workshop Practice Lab', code: 'BWS251', faculty: 'Maneesh Singh', materials: 10, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Maneesh' },
-    { name: 'English Language Lab', code: 'BAS255', faculty: 'Akshita Dutta', materials: 8, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Akshita' }
-  ]
-};
-
-const MOCK_MATERIAL_STATS = {
-  categories: [
-    { name: 'All', count: 45, icon: 'Layers' },
-    { name: 'Lectures', count: 12, icon: 'Video' },
-    { name: 'Notes', count: 18, icon: 'FileText' },
-    { name: 'Assignments', count: 5, icon: 'ClipboardList' },
-    { name: 'Tutorials', count: 4, icon: 'BookOpen' },
-    { name: 'PYQs', count: 5, icon: 'HelpCircle' },
-    { name: 'Syllabus', count: 1, icon: 'Map' }
-  ],
-  recentActivity: [
-    { action: 'uploaded Lecture Video', title: 'Unit 1: Matrices', time: '2 hours ago' },
-    { action: 'added PDF Note', title: 'Eigen Values & Vectors', time: '5 hours ago' },
-    { action: 'created Assignment', title: 'Assignment 1 (Matrices)', time: '1 day ago' }
-  ]
-};
+const MOCK_MATERIAL_STATS = { categories: [], recentActivity: [] };
 
 // The intelligent swapping logic based on department
 const getSemestersForYear = (year) => {

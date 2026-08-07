@@ -4,6 +4,7 @@ import { ROUTES, USER_ROLES } from '../config/constants.js';
 // Updated imports to include HOD and DIRECTOR roles
 import { ADMIN_ACCESS_ROLES, HOD_ACCESS_ROLES, STUDENT_ACCESS_ROLES } from '../utils/roleRouting.js';
 import LoginPage from '../pages/auth/LoginPage.jsx';
+import UpdatePassword from '../pages/auth/UpdatePassword.jsx';
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
 import AdminOverview from '../pages/admin/AdminOverview.jsx';
 import FacultyWorkload from '../pages/admin/FacultyWorkload.jsx';
@@ -46,6 +47,7 @@ export default function AppRoutes() {
     <Routes>
       <Route path={ROUTES.HOME} element={<LandingPage />} />
       <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+      <Route path={ROUTES.UPDATE_PASSWORD} element={<UpdatePassword />} />
       
       {/* STUDENT ROUTES */}
       <Route

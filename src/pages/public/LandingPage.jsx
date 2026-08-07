@@ -1,9 +1,8 @@
 import { useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { APP_NAME, ROUTES } from '../../config/constants.js';
+import { APP_NAME, ROUTES, USER_ROLES } from '../../config/constants.js';
 import { useAuth } from '../../hooks/useAuth.js';
 import { useLogout } from '../../hooks/useLogout.js';
-import { supabase } from '../../lib/supabase.js';
 
 export default function LandingPage() {
   const { user, profile, isAuthenticated, loading } = useAuth();
@@ -15,20 +14,20 @@ export default function LandingPage() {
   useEffect(() => {
     const checkAndRoute = async () => {
       if (!loading && isAuthenticated && user) {
-        const { data: dbProfile } = await supabase.from('user_profiles').select('role, can_view_hod').eq('id', user.id).single();
-        const userEmail = user.email.toLowerCase();
-        const dbRole = dbProfile?.role?.toLowerCase() || '';
-        const isHOD = dbRole === 'hod' || dbProfile?.can_view_hod === true;
-        const isDirector = dbRole === 'director';
+        // Role is sourced strictly from the profile (fetchUserProfile ->
+        // maybeSingle with a secure 'student' fallback). No email-domain
+        // inference is performed: elevated roles require an explicit row.
+        const role = profile?.role ?? USER_ROLES.STUDENT;
+        const canViewHod = profile?.can_view_hod === true;
 
-        if (isDirector) navigate('/director', { replace: true });
-        else if (isHOD) navigate('/hod-dashboard', { replace: true });
-        else if (dbRole === 'faculty' || userEmail.includes('faculty')) navigate('/faculty', { replace: true });
-        else navigate('/student', { replace: true });
+        if (role === USER_ROLES.DIRECTOR) navigate(ROUTES.DIRECTOR_DASHBOARD, { replace: true });
+        else if (role === USER_ROLES.HOD || canViewHod) navigate(ROUTES.HOD_DASHBOARD, { replace: true });
+        else if (role === USER_ROLES.FACULTY) navigate(ROUTES.FACULTY_DASHBOARD, { replace: true });
+        else navigate(ROUTES.STUDENT_DASHBOARD, { replace: true });
       }
     };
     if (!loading) checkAndRoute();
-  }, [user, loading, navigate]);
+  }, [profile, user, loading, navigate]);
 
   async function handleLogout() {
     await logout();

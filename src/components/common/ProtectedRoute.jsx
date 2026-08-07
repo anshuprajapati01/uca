@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth.js';
+import ForcePasswordChange from '../auth/ForcePasswordChange.jsx';
 
 export default function ProtectedRoute({ allowedRoles, children }) {
   const { user, loading, profile } = useAuth();
@@ -26,14 +27,23 @@ export default function ProtectedRoute({ allowedRoles, children }) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  if (profile && profile.has_changed_password !== true) {
+    return <ForcePasswordChange />;
+  }
+
   const currentPath = location.pathname;
-  const email = user.email?.toLowerCase() || '';
 
-  const dbRole = profile?.role?.toLowerCase() || user.user_metadata?.role || '';
+  // Roles are sourced strictly from the profile loaded by AuthProvider
+  // (fetchUserProfile -> maybeSingle with a secure 'student' fallback).
+  // No email-domain inference is performed: elevated roles must come from an
+  // explicit user_profiles row.
+  const role = profile?.role?.toLowerCase() || '';
+  const canViewHod = profile?.can_view_hod === true;
+  const canViewFaculty = profile?.can_view_faculty === true;
 
-  const isFaculty = email.includes('faculty') || dbRole === 'faculty';
-  const isHOD = email.includes('hod') || dbRole === 'hod' || profile?.is_hod === true;
-  const isDirector = email.includes('director') || dbRole === 'director';
+  const isFaculty = role === 'faculty' || canViewFaculty;
+  const isHOD = role === 'hod' || canViewHod;
+  const isDirector = role === 'director';
 
   const isStaff = isFaculty || isHOD || isDirector;
 

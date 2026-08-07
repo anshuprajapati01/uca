@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import FormField from '../../components/common/FormField.jsx';
-import { APP_NAME, ROUTES } from '../../config/constants.js';
+import { APP_NAME, ROUTES, USER_ROLES } from '../../config/constants.js';
 import { useAuth } from '../../hooks/useAuth.js';
 import { loginSchema } from '../../schemas/loginSchema.js';
 import { supabase } from '../../lib/supabase.js';
@@ -43,22 +43,23 @@ export default function LoginPage() {
       }
 
       if (data?.user) {
+        // Use maybeSingle so an auth user without a user_profiles row does
+        // not throw "Cannot coerce the result to a single JSON object".
         const { data: dbProfile } = await supabase
           .from('user_profiles')
           .select('role, can_view_hod')
           .eq('id', data.user.id)
-          .single();
+          .maybeSingle();
 
-        const userEmail = data.user.email.toLowerCase();
-        const dbRole = dbProfile?.role?.toLowerCase() || '';
-        
-        const isHOD = dbRole === 'hod' || dbProfile?.can_view_hod === true;
-        const isDirector = dbRole === 'director';
+        // Role is sourced strictly from the database row; no email-domain
+        // inference is performed. A missing row defaults to 'student'.
+        const dbRole = dbProfile?.role ?? USER_ROLES.STUDENT;
+        const canViewHod = dbProfile?.can_view_hod === true;
 
-        if (isDirector) navigate('/director', { replace: true });
-        else if (isHOD) navigate('/hod-dashboard', { replace: true });
-        else if (dbRole === 'faculty' || userEmail.includes('faculty')) navigate('/faculty', { replace: true });
-        else navigate('/student', { replace: true });
+        if (dbRole === USER_ROLES.DIRECTOR) navigate(ROUTES.DIRECTOR_DASHBOARD, { replace: true });
+        else if (dbRole === USER_ROLES.HOD || canViewHod) navigate(ROUTES.HOD_DASHBOARD, { replace: true });
+        else if (dbRole === USER_ROLES.FACULTY) navigate(ROUTES.FACULTY_DASHBOARD, { replace: true });
+        else navigate(ROUTES.STUDENT_DASHBOARD, { replace: true });
       }
     } catch (error) {
       setSubmitError(getAuthErrorMessage(error));

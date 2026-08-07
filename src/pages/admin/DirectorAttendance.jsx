@@ -1,13 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabase.js';
-import { useHodContext } from '../../context/HodContext.jsx';
 import { AGGREGATE_DEPARTMENTS } from '../../config/constants.js';
 import { ArrowUpRight } from 'lucide-react';
 import * as XLSX from 'xlsx-js-style';
-import StudentAttendanceDetail from './StudentAttendanceDetail.jsx';
-import './HodDashboard.css';
+import StudentAttendanceDetail from '../dashboard/StudentAttendanceDetail.jsx';
+import '../dashboard/HodDashboard.css';
 
-// 3-tier status derived from the attendance percentage.
 const getAttendanceStatus = (pct) => {
   if (pct >= 75) {
     return { label: 'Safe', bg: 'rgba(34, 197, 94, 0.2)', color: '#bbf7d0', border: 'rgba(34, 197, 94, 0.4)' };
@@ -18,53 +16,37 @@ const getAttendanceStatus = (pct) => {
   return { label: 'Defaulter', bg: 'rgba(239, 68, 68, 0.2)', color: '#fecaca', border: 'rgba(239, 68, 68, 0.4)' };
 };
 
-// Advanced faculty initials generator — strips titles (incl. combinations such
-// as Prof.Dr.) and punctuation, then takes the first letter of each remaining
-// word. Only extreme exceptions are hardcoded.
 const getFacultyInitials = (name) => {
   if (!name) return "";
-  // Keep the map ONLY for extreme exceptions, otherwise use dynamic logic
   const exceptionMap = { "Mr. Salman Khan": "SK" };
   if (exceptionMap[name]) return exceptionMap[name];
-
-  // Strip all known titles (Mr., Mrs., Ms., Dr., Prof., Er.) and combinations like Prof.Dr.
   let cleanName = name.replace(/\b(Mr\.|Mrs\.|Ms\.|Dr\.|Prof\.|Er\.)\s*/gi, '').trim();
-  // Remove any remaining punctuation like periods or commas
   cleanName = cleanName.replace(/[^a-zA-Z\s]/g, '');
-
   return cleanName.split(/\s+/).filter(Boolean).map(n => n[0]).join('').toUpperCase();
 };
 
-// Advanced subject initials generator — drops common stop-words and special
-// characters, and appends " LAB" for lab subjects. Only edge cases that don't
-// follow the acronym rules are hardcoded.
 const getSubjectInitials = (name) => {
   if (!name) return "";
-  // Keep edge cases that don't follow acronym rules
   const exceptionMap = { "Techedge": "Tech Edge", "CSEP": "CSEP" };
   if (exceptionMap[name]) return exceptionMap[name];
-
-  // Remove common stop words and special characters
   let cleanName = name.replace(/\b(of|and|with|the|in|for)\b/gi, '').replace(/&/g, '').trim();
-
-  // Specific fix for "Lab" -> we want the 'L' to be part of the acronym or appended
   if (cleanName.toLowerCase().includes('lab')) {
      cleanName = cleanName.replace(/\blab\b/gi, '');
      const initials = cleanName.split(/\s+/).filter(Boolean).map(n => n[0]).join('').toUpperCase();
      return `${initials} LAB`;
   }
-
   return cleanName.split(/\s+/).filter(Boolean).map(n => n[0]).join('').toUpperCase();
 };
 
-export default function HODAttendance() {
-  const { hodDepartmentsData } = useHodContext();
+export default function DirectorAttendance() {
   const [students, setStudents] = useState([]);
+  const [departmentsData, setDepartmentsData] = useState([]);
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [extraAttendanceRecords, setExtraAttendanceRecords] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [filterYear, setFilterYear] = useState('All');
+  const [filterDepartment, setFilterDepartment] = useState('All');
   const [filterBranch, setFilterBranch] = useState('All');
   const [filterSection, setFilterSection] = useState('All');
   const [isExporting, setIsExporting] = useState(false);
@@ -76,6 +58,127 @@ export default function HODAttendance() {
   const [isHeadingLoading, setIsHeadingLoading] = useState(false);
   const [semesterStartDate, setSemesterStartDate] = useState('');
   const [sectionSubjects, setSectionSubjects] = useState([]);
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      const { data, error } = await supabase
+        .from('branches')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Error fetching branches:", error);
+        return;
+      }
+
+      console.log("Raw Academic Data:", data);
+
+      if (data) {
+        const mapped = (data || []).map((row) => {
+          const branchName = row.name || row.code || '';
+          const year = row.description || '';
+          const trimmedName = branchName.trim();
+          const trimmedYear = year.trim();
+          const aggBranches = AGGREGATE_DEPARTMENTS[branchName];
+
+          let branches;
+          if (aggBranches) {
+            branches = [...aggBranches];
+          } else {
+            if (trimmedName.includes(' & ')) {
+              branches = trimmedName.split(' & ');
+            } else if (trimmedName.includes(',')) {
+              branches = trimmedName.split(',').map((s) => s.trim()).filter(Boolean);
+            } else {
+              branches = [trimmedName];
+            }
+          }
+
+          return {
+            id: row.id,
+            name: branchName,
+            year: year,
+            branches,
+            locked_sections: row.locked_sections || {},
+          };
+        });
+        setDepartmentsData(mapped || []);
+      }
+    };
+
+    fetchDepartments();
+  }, []);
+
+  const availableYears = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+
+  const availableDepartments = useMemo(() => {
+    const yearFiltered = departmentsData.filter((d) => {
+      const isYearMatch = String(d.year) === filterYear || String(d.year) === filterYear.charAt(0) || (filterYear !== 'All' && filterYear.includes(String(d.year)));
+      return filterYear === 'All' || isYearMatch;
+    });
+    return [...new Set(yearFiltered.map((d) => d.department_name || d.dept_name || d.name || d.title).filter(Boolean))].sort();
+  }, [departmentsData, filterYear]);
+
+  const availableBranches = useMemo(() => {
+    let source = departmentsData.filter((d) => {
+      const isYearMatch = String(d.year) === filterYear || String(d.year) === filterYear.charAt(0) || (filterYear !== 'All' && filterYear.includes(String(d.year)));
+      return filterYear === 'All' || isYearMatch;
+    });
+
+    if (filterDepartment !== 'All') {
+      const deptName = filterDepartment;
+      source = source.filter((d) => (d.department_name || d.dept_name || d.name || d.title) === deptName);
+    }
+
+    return [...new Set(
+      source.flatMap((d) => {
+        let branches = d.branches;
+        if (typeof branches === 'string') {
+          try { branches = JSON.parse(branches); } catch (e) { branches = []; }
+        }
+        if (!Array.isArray(branches)) branches = [];
+        return branches.filter(Boolean);
+      })
+    )].sort();
+  }, [departmentsData, filterYear, filterDepartment]);
+
+  const availableSections = useMemo(() => {
+    if (filterYear === 'All' || filterDepartment === 'All' || filterBranch === 'All') return [];
+    
+    const matchedDept = departmentsData.find(d => 
+      (String(d.year) === filterYear || filterYear.includes(String(d.year))) &&
+      (d.name && d.name.toLowerCase() === filterDepartment.toLowerCase())
+    );
+    
+    if (!matchedDept || !matchedDept.locked_sections) return [];
+
+    const branchKey = Object.keys(matchedDept.locked_sections).find(
+      k => k.toLowerCase() === filterBranch.toLowerCase()
+    );
+
+    return branchKey ? matchedDept.locked_sections[branchKey] : [];
+  }, [departmentsData, filterYear, filterDepartment, filterBranch]);
+
+  useEffect(() => {
+    if (filterSection !== 'All' && !availableSections.includes(filterSection)) {
+      setFilterSection('All');
+    }
+  }, [availableSections, filterSection]);
+
+  useEffect(() => {
+    setFilterDepartment('All');
+    setFilterBranch('All');
+    setFilterSection('All');
+  }, [filterYear]);
+
+  useEffect(() => {
+    setFilterBranch('All');
+    setFilterSection('All');
+  }, [filterDepartment]);
+
+  const availableYearsList = availableYears;
+  const availableDepartmentsList = availableDepartments;
+  const availableBranchesList = availableBranches;
 
   useEffect(() => {
     const fetchHeading = async () => {
@@ -160,51 +263,11 @@ export default function HODAttendance() {
     setSelectedStudent(null);
   };
 
-  const hodAuthorizedBranches = useMemo(() => {
-    const branchMap = {};
-    hodDepartmentsData.forEach((d) => {
-      const year = d.description;
-      const code = d.code || d.name;
-      const name = d.name || d.code;
-      if (!year || !code) return;
-      if (!branchMap[year]) branchMap[year] = [];
-      if (AGGREGATE_DEPARTMENTS[code]) {
-        branchMap[year].push(...AGGREGATE_DEPARTMENTS[code]);
-      } else if (AGGREGATE_DEPARTMENTS[name]) {
-        branchMap[year].push(...AGGREGATE_DEPARTMENTS[name]);
-      } else {
-        branchMap[year].push(code);
-      }
-    });
-    return branchMap;
-  }, [hodDepartmentsData]);
-
-  const availableYears = useMemo(
-    () => [...new Set(hodDepartmentsData.map((d) => d.description))].filter(Boolean).sort(),
-    [hodDepartmentsData]
-  );
-
-  const availableBranches = useMemo(() => {
-    const branchSet = new Set();
-    Object.values(hodAuthorizedBranches).forEach((list) => {
-      (list || []).forEach((b) => branchSet.add(b));
-    });
-    return [...branchSet].sort();
-  }, [hodAuthorizedBranches]);
-
-  // Fetch the section syllabus ONCE per branch/year selection (not per modal open).
-  // The syllabus is identical for every student in a section, so caching it here
-  // eliminates the per-click network latency when opening the attendance modal.
   useEffect(() => {
     let cancelled = false;
     async function fetchSectionSubjects() {
       try {
-        const branchList =
-          filterBranch === 'All'
-            ? (filterYear !== 'All' && hodAuthorizedBranches[filterYear]?.length
-                ? hodAuthorizedBranches[filterYear]
-                : availableBranches)
-            : [filterBranch];
+        const branchList = filterBranch === 'All' ? availableBranchesList : [filterBranch];
 
         if (!branchList || branchList.length === 0) {
           if (!cancelled) setSectionSubjects([]);
@@ -229,24 +292,22 @@ export default function HODAttendance() {
     return () => {
       cancelled = true;
     };
-  }, [filterBranch, filterYear, availableBranches, hodAuthorizedBranches]);
+  }, [filterBranch, filterYear, availableBranchesList]);
 
   const isFilterActive = filterYear !== 'All' || filterBranch !== 'All';
 
   const authorizedStudents = useMemo(() => {
     return students.filter((s) => {
       if (!s.selected_year) return false;
-      const authorizedBranches = hodAuthorizedBranches[s.selected_year];
-      if (!authorizedBranches) return false;
       if (!s.selected_branch) return false;
-      if (!authorizedBranches.includes(s.selected_branch)) return false;
       if (filterSection !== 'All') {
         const sec = String(s.section || '').toUpperCase().trim();
         if (sec !== filterSection) return false;
       }
       return true;
     });
-  }, [students, hodAuthorizedBranches, filterSection]);
+  }, [students, filterSection]);
+
   const sectionGlobalTotals = useMemo(() => {
     const cohortKey = (s) => `${s.selected_year}|${s.selected_branch}|${s.section || 'N/A'}`;
     const cohortInfo = {};
@@ -376,11 +437,9 @@ export default function HODAttendance() {
         };
       })
       .sort((a, b) => {
-        // Robust alphanumeric sort by roll number (ascending)
         const rollA = String(a.roll_number || a.roll_no || a.id || '').trim();
         const rollB = String(b.roll_number || b.roll_no || b.id || '').trim();
         const rollCompare = rollA.localeCompare(rollB, undefined, { numeric: true });
-        // Fall back to percentage (ascending) for stable tie-breaking
         return rollCompare !== 0 ? rollCompare : a.percentage - b.percentage;
       });
   }, [authorizedStudents, attendanceRecords, extraAttendanceRecords, sectionGlobalTotals]);
@@ -397,24 +456,12 @@ export default function HODAttendance() {
           .select('id, full_name, roll_number, selected_year, selected_branch, section')
           .eq('role', 'student');
 
-        // Scope to the HOD's authorized cohorts even when a dropdown reads
-        // "All", so the query never pulls global college-wide / unassigned rows.
         if (filterYear !== 'All') {
           studentsQuery = studentsQuery.eq('selected_year', filterYear);
-        } else if (availableYears.length > 0) {
-          studentsQuery = studentsQuery.in('selected_year', availableYears);
         }
 
         if (filterBranch !== 'All') {
           studentsQuery = studentsQuery.eq('selected_branch', filterBranch);
-        } else {
-          const branchScope =
-            filterYear !== 'All' && hodAuthorizedBranches[filterYear]?.length
-              ? hodAuthorizedBranches[filterYear]
-              : availableBranches;
-          if (branchScope && branchScope.length > 0) {
-            studentsQuery = studentsQuery.in('selected_branch', branchScope);
-          }
         }
 
         const { data: studentsData, error: studentsError } = await studentsQuery;
@@ -459,7 +506,7 @@ export default function HODAttendance() {
     };
 
     fetchData();
-  }, [filterYear, filterBranch, availableYears, availableBranches, hodAuthorizedBranches]);
+  }, [filterYear, filterBranch]);
 
   const getInitials = (name) => {
     if (!name) return '?';
@@ -475,22 +522,13 @@ export default function HODAttendance() {
       const yearLabel = filterYear === 'All' ? '' : filterYear;
       const branchLabel =
         filterBranch === 'IT' ? 'INFORMATION TECHNOLOGY' : filterBranch === 'All' ? 'All Departments' : filterBranch;
-      // Resolve the branch codes this report covers.
-      const branchList =
-        filterBranch === 'All'
-          ? filterYear !== 'All' && hodAuthorizedBranches[filterYear]?.length
-            ? hodAuthorizedBranches[filterYear]
-            : availableBranches
-          : [filterBranch];
+      const branchList = filterBranch === 'All' ? availableBranchesList : [filterBranch];
 
       if (!branchList || branchList.length === 0) {
         alert('Please select a department to export the report.');
         return;
       }
 
-      // 1. Subjects for the selected branch(es) / year -> ordered columns.
-      //    Faculty is joined in so we can render faculty initials in the
-      //    multi-tier header.
       let subjectsQuery = supabase
         .from('subjects')
         .select(
@@ -514,14 +552,11 @@ export default function HODAttendance() {
           facultyName: s.faculty?.full_name || '',
         }));
 
-      // Group subjects into the three academic categories the physical
-      // register expects: THEORY ('Theory'), SD ('Skill') and LAB ('Practical').
       const theorySubs = allSubjects.filter((s) => s.type === 'theory');
       const skillSubs = allSubjects.filter((s) => s.type === 'skill');
       const labSubs = allSubjects.filter((s) => s.type === 'practical');
       const academicSubs = [...theorySubs, ...skillSubs, ...labSubs];
 
-      // 2. Students for the selection (with section).
       let studentsQuery = supabase
         .from('user_profiles')
         .select('id, full_name, roll_number, selected_year, selected_branch, section')
@@ -547,9 +582,6 @@ export default function HODAttendance() {
         return;
       }
 
-      // Fetch the mentor name for this section (used in the sheet's meta rows).
-      // First resolve the faculty_id from section_mentors, then the full_name
-      // from user_profiles; prefix with Mr/Ms. per the standard register.
       let mentorName = '';
       if (filterSection !== 'All') {
         const mentorBranch = branchList[0];
@@ -573,7 +605,6 @@ export default function HODAttendance() {
         }
       }
 
-      // 3. Attendance records joined to their sessions (subject + type + section).
       const studentIds = reportStudents.map((s) => s.id);
       const { data: recordsData, error: recordsError } = await supabase
         .from('attendance_records')
@@ -581,7 +612,6 @@ export default function HODAttendance() {
         .in('student_id', studentIds);
       if (recordsError) throw recordsError;
 
-      // Per-student, per-subject tallies.
       const studentTally = {};
       reportStudents.forEach((s) => {
         studentTally[s.id] = {};
@@ -614,9 +644,6 @@ export default function HODAttendance() {
         if (status === 'P' || status === 'PRESENT') cell.present += 1;
       });
 
-      // Max academic sessions per subject, derived strictly from the current
-      // section's students. This prevents cross-section leakage (e.g. B1's OS
-      // Lab session leaking into B2's sheet).
       const maxAcademicPerSubject = {};
       academicSubs.forEach((sub) => {
         maxAcademicPerSubject[sub.id] = 0;
@@ -630,9 +657,6 @@ export default function HODAttendance() {
         });
       });
 
-      // 4. Build the strict college-format sheet: an 8-row title/header block
-      //    (title, dept, class, then a 5-tier academic header) that mirrors the
-      //    physical university attendance register.
       const extraCategories = [
         'Extra Class',
         'Extra Curricular',
@@ -645,8 +669,6 @@ export default function HODAttendance() {
         'WEC',
       ];
 
-      // Fixed left columns: ROLL NO., STUDENT NAME, and a row-label column that
-      // carries FACULTY NAME / SUBJECT NAME / SUBJECT CODE / TOTAL CLASS.
       const ROLL_COL = 0;
       const NAME_COL = 1;
       const LABEL_COL = 2;
@@ -659,13 +681,13 @@ export default function HODAttendance() {
       const labStart = skillEnd + 1;
       const labEnd = labStart + labSubs.length - 1;
 
-      const A_COL = labEnd + 1; // (A) — merged header, Row 13 = TOTAL
-      const A_PCT_COL = A_COL + 1; // PERCENTAGE — merged header, Row 13 = 100
+      const A_COL = labEnd + 1;
+      const A_PCT_COL = A_COL + 1;
       const EXTRA_START = A_PCT_COL + 1;
       const EXTRA_END = EXTRA_START + extraCategories.length - 1;
-      const B_COL = EXTRA_END + 1; // (B) — merged header, Row 13 = TOTAL
-      const C_COL = B_COL + 1; // C = (A+B) — merged header, Row 13 = GRAND TOTAL
-      const OVERALL_COL = C_COL + 1; // OVERALL % — merged header, Row 13 = 100
+      const B_COL = EXTRA_END + 1;
+      const C_COL = B_COL + 1;
+      const OVERALL_COL = C_COL + 1;
       const TOTAL_COLS = OVERALL_COL + 1;
 
       const emptyRow = () => new Array(TOTAL_COLS).fill('');
@@ -675,7 +697,6 @@ export default function HODAttendance() {
       const codeRow = emptyRow();
       const totalClassRow = emptyRow();
 
-      // Row 4 (main categories) — banners merged over their sub-columns.
       bannerRow[ROLL_COL] = 'ROLL NO.';
       bannerRow[NAME_COL] = 'STUDENT NAME';
       if (theorySubs.length > 0) bannerRow[theoryStart] = 'THEORY';
@@ -688,13 +709,9 @@ export default function HODAttendance() {
       bannerRow[C_COL] = 'C = (A+B)';
       bannerRow[OVERALL_COL] = 'OVERALL %';
 
-      // Row 5: FACULTY NAME label + faculty initials under each subject.
       facultyRow[LABEL_COL] = 'FACULTY NAME';
-      // Row 6: SUBJECT NAME label + subject initials for academic columns.
       subjectRow[LABEL_COL] = 'SUBJECT NAME';
-      // Row 7: SUBJECT CODE label.
       codeRow[LABEL_COL] = 'SUBJECT CODE';
-      // Row 8: TOTAL CLASS label + total sessions conducted per subject.
       totalClassRow[LABEL_COL] = 'TOTAL CLASS';
 
       academicSubs.forEach((sub, i) => {
@@ -705,17 +722,14 @@ export default function HODAttendance() {
         totalClassRow[col] = maxAcademicPerSubject[sub.id] || 0;
       });
 
-      // Row 12 (SUBJECT CODE tier) sub-labels for the split summary columns.
-      codeRow[A_COL] = 'TOTAL'; // (A) -> TOTAL
-      codeRow[B_COL] = 'TOTAL'; // (B) -> TOTAL
-      codeRow[C_COL] = 'GRAND TOTAL'; // C = (A+B) -> GRAND TOTAL
+      codeRow[A_COL] = 'TOTAL';
+      codeRow[B_COL] = 'TOTAL';
+      codeRow[C_COL] = 'GRAND TOTAL';
 
-      // Extra Attendance sub-categories listed under the banner (row 5).
       extraCategories.forEach((cat, i) => {
         facultyRow[EXTRA_START + i] = cat;
       });
 
-      // Calculate Conducted and Attended Periods Properly
       const conductedMap = {
           'Extra Class': 0, 'Extra Curricular': 0, 'Sports': 0, 'Research': 0,
           'Placement': 0, 'Skill Development': 0, 'Mentor Mentee Meeting': 0,
@@ -737,14 +751,12 @@ export default function HODAttendance() {
               p = (!isNaN(p) && p > 0) ? p : (row.is_full_day ? 7 : 1);
               const act = row.activity_type;
 
-              // Unique Conducted (For the Blue Row)
               const sessionKey = `${row.date}_${act}_${row.start_time || 'fullday'}`;
               if (!uniqueSessions.has(sessionKey)) {
                   uniqueSessions.add(sessionKey);
                   if (conductedMap[act] !== undefined) conductedMap[act] += p;
               }
 
-              // Student Attended (For the Student Rows below)
               if (!studentExtraData[roll]) studentExtraData[roll] = {};
               if (!studentExtraData[roll][act]) studentExtraData[roll][act] = 0;
 
@@ -760,19 +772,16 @@ export default function HODAttendance() {
           sectionTotalExtraConducted += conductedMap[act] || 0;
       });
 
-      // Row 8 (TOTAL CLASS) — academic conducted, the new (A) TOTAL and
-      // PERCENTAGE columns, the per-category extra conducted sessions, and the
-      // rolled up (B) EXTRA / C GRAND TOTAL denominations.
       const sectionTotalAcademicConducted = academicSubs.reduce(
         (sum, sub) => sum + (maxAcademicPerSubject[sub.id] || 0),
         0
       );
       const sectionGrandTotalConducted = sectionTotalAcademicConducted + sectionTotalExtraConducted;
 
-      totalClassRow[A_COL] = sectionTotalAcademicConducted; // (A) TOTAL
+      totalClassRow[A_COL] = sectionTotalAcademicConducted;
       totalClassRow[A_PCT_COL] = sectionTotalAcademicConducted > 0
         ? Math.round((sectionTotalAcademicConducted / sectionTotalAcademicConducted) * 100)
-        : 0; // PERCENTAGE — always 100% at class level
+        : 0;
 
       totalClassRow[EXTRA_START] = conductedMap['Extra Class'] || 0;
       totalClassRow[EXTRA_START + 1] = conductedMap['Extra Curricular'] || 0;
@@ -784,14 +793,10 @@ export default function HODAttendance() {
       totalClassRow[EXTRA_START + 7] = conductedMap['Community Development'] || 0;
       totalClassRow[EXTRA_START + 8] = conductedMap['WEC'] || 0;
 
-      totalClassRow[B_COL] = sectionTotalExtraConducted; // (B) TOTAL
-      totalClassRow[C_COL] = sectionGrandTotalConducted; // C = (A+B) GRAND TOTAL
-      totalClassRow[OVERALL_COL] = 100; // OVERALL % — strictly 100% at class level
+      totalClassRow[B_COL] = sectionTotalExtraConducted;
+      totalClassRow[C_COL] = sectionGrandTotalConducted;
+      totalClassRow[OVERALL_COL] = 100;
 
-      // Data rows: attended sessions per subject, the academic/extra/grand
-      // totals, and the overall percentage. Percentages are computed against
-      // the SECTION's total conducted classes (NOT the student's own attended
-      // count) so the math matches the physical register.
       const rows = reportStudents.map((s) => {
         const tally = studentTally[s.id];
         let academicAttended = 0;
@@ -800,11 +805,11 @@ export default function HODAttendance() {
           academicAttended += c.present;
           return c.present;
         });
-        const academicTotal = academicAttended; // (A) TOTAL
+        const academicTotal = academicAttended;
         const roll = String(s.roll_number || s.id);
         const extraCells = extraCategories.map((cat) => studentExtraData[roll]?.[cat] || 0);
-        const extraTotal = extraCells.reduce((sum, val) => sum + val, 0); // (B) EXTRA
-        const grandTotal = academicTotal + extraTotal; // C = (A+B)
+        const extraTotal = extraCells.reduce((sum, val) => sum + val, 0);
+        const grandTotal = academicTotal + extraTotal;
         const aPercentage =
           sectionTotalAcademicConducted > 0
             ? Math.round((academicTotal / sectionTotalAcademicConducted) * 100)
@@ -816,20 +821,18 @@ export default function HODAttendance() {
         return [
           s.roll_number || 'N/A',
           s.full_name || 'Unknown',
-          '', // row-label column (blank in data rows)
+          '',
           ...subjectCells,
-          academicTotal, // (A) TOTAL
-          `${aPercentage}%`, // PERCENTAGE
+          academicTotal,
+          `${aPercentage}%`,
           ...extraCells,
-          extraTotal, // (B) TOTAL
-          grandTotal, // C = (A+B) GRAND TOTAL
-          `${overallPct}%`, // OVERALL %
+          extraTotal,
+          grandTotal,
+          `${overallPct}%`,
         ];
       });
 
       const blueStyle = {
-          // patternType is required for the fill to actually render in most
-          // spreadsheet engines; without it the blue background is dropped.
           fill: { patternType: "solid", fgColor: { rgb: "FF9BC2E6" } },
           font: { bold: true, color: { rgb: "FF000000" } },
           alignment: { horizontal: "center", vertical: "center" },
@@ -864,74 +867,55 @@ export default function HODAttendance() {
       }
 
       const aoa = [
-        ['BUDDHA INSTITUTE OF TECHNOLOGY, GORAKHPUR'], // Row 1 — meta
-        [semHeading || 'Semester Heading Not Set'], // Row 2 — meta
-        ['Attendance Sheet'], // Row 3 — meta
-        [`MENTOR NAME: ${mentorName}`], // Row 4 — meta
-        [`DEPARTMENT NAME : ${branchLabel}`], // Row 5 — meta
-        [`CLASS - ${yearLabel} (4th Sem. - ${sectionLabel} )`], // Row 6 — meta
-        [`WEEK NO - ${calculatedWeek || ''}`], // Row 7 — meta
-        [`DATE FROM - ${formatDate(dateFrom)} to ${formatDate(dateTo)}`], // Row 8 — meta
-        bannerRow, // Row 9 — main categories
-        facultyRow, // Row 10 — faculty names
-        subjectRow, // Row 11 — subject names
-        codeRow, // Row 12 — subject codes
-        styledTotalRow, // Row 13 — total classes
+        ['BUDDHA INSTITUTE OF TECHNOLOGY, GORAKHPUR'],
+        [semHeading || 'Semester Heading Not Set'],
+        ['Attendance Sheet'],
+        [`MENTOR NAME: ${mentorName}`],
+        [`DEPARTMENT NAME : ${branchLabel}`],
+        [`CLASS - ${yearLabel} (4th Sem. - ${sectionLabel} )`],
+        [`WEEK NO - ${calculatedWeek || ''}`],
+        [`DATE FROM - ${formatDate(dateFrom)} to ${formatDate(dateTo)}`],
+        bannerRow,
+        facultyRow,
+        subjectRow,
+        codeRow,
+        styledTotalRow,
         ...rows,
       ];
 
-      // Index of the first header tier (the main category banner). All
-      // reference-row math below is expressed relative to HEADER_ROW so the
-      // 8 meta rows above stay decoupled from the 5-tier academic header.
-      const HEADER_ROW = 8; // 0-based index of bannerRow
-      const HEADER_END = HEADER_ROW + 4; // totalClassRow
+      const HEADER_ROW = 8;
+      const HEADER_END = HEADER_ROW + 4;
 
       const ws = XLSX.utils.aoa_to_sheet(aoa);
 
-      // Merges:
-      //  - Top meta rows 1-3 merged fully across all columns.
-      //  - Top meta rows 4-8 merged across the first few columns (labels).
-      //  - ROLL NO. / STUDENT NAME vertical spans through the 5-tier header.
-      //  - THEORY / SD / LAB group banners; single academic/extra/grand/overall
-      //    columns merged vertically; Extra Attendance sub-category columns
-      //    merged down so their names stay centered.
       const merges = [];
       const pushMerge = (r1, c1, r2, c2) => {
         if (c1 > c2 || r1 > r2) return;
         merges.push({ s: { r: r1, c: c1 }, e: { r: r2, c: c2 } });
       };
 
-      pushMerge(0, 0, 0, TOTAL_COLS - 1); // Row 1 — title (full width)
-      pushMerge(1, 0, 1, TOTAL_COLS - 1); // Row 2 — semester (full width)
-      pushMerge(2, 0, 2, TOTAL_COLS - 1); // Row 3 — sheet name (full width)
-      pushMerge(3, 0, 3, TOTAL_COLS - 1); // Row 4 — mentor (full width)
-      pushMerge(4, 0, 4, TOTAL_COLS - 1); // Row 5 — department (full width)
-      pushMerge(5, 0, 5, TOTAL_COLS - 1); // Row 6 — class (full width)
-      pushMerge(6, 0, 6, TOTAL_COLS - 1); // Row 7 — week (full width)
-      pushMerge(7, 0, 7, TOTAL_COLS - 1); // Row 8 — date (full width)
-      pushMerge(HEADER_ROW, ROLL_COL, HEADER_END, ROLL_COL); // ROLL NO.
-      pushMerge(HEADER_ROW, NAME_COL, HEADER_END, NAME_COL); // STUDENT NAME
+      pushMerge(0, 0, 0, TOTAL_COLS - 1);
+      pushMerge(1, 0, 1, TOTAL_COLS - 1);
+      pushMerge(2, 0, 2, TOTAL_COLS - 1);
+      pushMerge(3, 0, 3, TOTAL_COLS - 1);
+      pushMerge(4, 0, 4, TOTAL_COLS - 1);
+      pushMerge(5, 0, 5, TOTAL_COLS - 1);
+      pushMerge(6, 0, 6, TOTAL_COLS - 1);
+      pushMerge(7, 0, 7, TOTAL_COLS - 1);
+      pushMerge(HEADER_ROW, ROLL_COL, HEADER_END, ROLL_COL);
+      pushMerge(HEADER_ROW, NAME_COL, HEADER_END, NAME_COL);
       if (theorySubs.length > 0) pushMerge(HEADER_ROW, theoryStart, HEADER_ROW, theoryEnd);
       if (skillSubs.length > 0) pushMerge(HEADER_ROW, skillStart, HEADER_ROW, skillEnd);
       if (labSubs.length > 0) pushMerge(HEADER_ROW, labStart, HEADER_ROW, labEnd);
-      pushMerge(HEADER_ROW, A_COL, HEADER_ROW + 2, A_COL); // (A) — rows 9-11
-      pushMerge(HEADER_ROW, A_PCT_COL, HEADER_END - 1, A_PCT_COL); // PERCENTAGE — rows 9-12
+      pushMerge(HEADER_ROW, A_COL, HEADER_ROW + 2, A_COL);
+      pushMerge(HEADER_ROW, A_PCT_COL, HEADER_END - 1, A_PCT_COL);
       pushMerge(HEADER_ROW, EXTRA_START, HEADER_ROW, EXTRA_END);
-      // CRITICAL FIX: the Extra Activity header names live in row HEADER_ROW + 1
-      // and were merged all the way down to HEADER_END — which IS the blue
-      // "TOTAL CLASS" row. That merge visually swallowed the value and blue fill
-      // of the TOTAL CLASS row for these columns. Stop the merge exactly one row
-      // ABOVE HEADER_END so the TOTAL CLASS row is free to render its own cells.
       extraCategories.forEach((_, i) => pushMerge(HEADER_ROW + 1, EXTRA_START + i, HEADER_END - 1, EXTRA_START + i));
-      pushMerge(HEADER_ROW, B_COL, HEADER_ROW + 2, B_COL); // (B) — rows 9-11
-      pushMerge(HEADER_ROW, C_COL, HEADER_ROW + 2, C_COL); // C = (A+B) — rows 9-11
-      pushMerge(HEADER_ROW, OVERALL_COL, HEADER_END - 1, OVERALL_COL); // OVERALL % — rows 9-12
+      pushMerge(HEADER_ROW, B_COL, HEADER_ROW + 2, B_COL);
+      pushMerge(HEADER_ROW, C_COL, HEADER_ROW + 2, C_COL);
+      pushMerge(HEADER_ROW, OVERALL_COL, HEADER_END - 1, OVERALL_COL);
       ws['!merges'] = merges;
 
-      // ----------------------------------------------------------------------
-      // Styling: exact background colors, thin black borders, and centered
-      // alignment — matching the physical university register.
-      // ----------------------------------------------------------------------
       const thinBorder = {
         top: { style: 'thin', color: { rgb: 'FF000000' } },
         bottom: { style: 'thin', color: { rgb: 'FF000000' } },
@@ -942,48 +926,40 @@ export default function HODAttendance() {
       const bg = (rgb) => ({ rgb: `FF${rgb.replace('#', '')}` });
       const fill = (rgb) => ({ patternType: 'solid', fgColor: bg(rgb) });
 
-      // Per-column header color (the 5-tier academic block) keyed by column.
       const COLORS = {
-        PEACH: '#F8CBAD', // Row 1 meta — title
-        LIGHT_BLUE: '#B4C6E7', // Row 2 meta — semester
-        LIGHT_YELLOW: '#FFF2CC', // Row 3 meta — sheet name / (A) TOTAL etc.
-        YELLOW: '#FFD966', // ROLL NO. / STUDENT NAME
-        LIGHT_ORANGE: '#FCE4D6', // THEORY
-        LIGHT_GREEN: '#E2EFDA', // SD
-        SOLID_ORANGE: '#F4B084', // LAB
-        LAVENDER: '#E4DFEC', // Extra Attendance
-        CYAN: '#9BC2E6', // TOTAL CLASS row / (B) TOTAL denominator
-        GOLD: '#FFC000', // C = (A+B) GRAND TOTAL
-        TEAL: '#4BACC6', // OVERALL %
+        PEACH: '#F8CBAD',
+        LIGHT_BLUE: '#B4C6E7',
+        LIGHT_YELLOW: '#FFF2CC',
+        YELLOW: '#FFD966',
+        LIGHT_ORANGE: '#FCE4D6',
+        LIGHT_GREEN: '#E2EFDA',
+        SOLID_ORANGE: '#F4B084',
+        LAVENDER: '#E4DFEC',
+        CYAN: '#9BC2E6',
+        GOLD: '#FFC000',
+        TEAL: '#4BACC6',
       };
 
-      // Map every column to its assigned header color.
       const colColor = new Array(TOTAL_COLS).fill(null);
       colColor[ROLL_COL] = COLORS.YELLOW;
       colColor[NAME_COL] = COLORS.YELLOW;
-      colColor[LABEL_COL] = COLORS.YELLOW; // cell above FACULTY NAME (Row 9)
+      colColor[LABEL_COL] = COLORS.YELLOW;
       for (let i = theoryStart; i <= theoryEnd; i += 1) colColor[i] = COLORS.LIGHT_ORANGE;
       for (let i = skillStart; i <= skillEnd; i += 1) colColor[i] = COLORS.LIGHT_GREEN;
       for (let i = labStart; i <= labEnd; i += 1) colColor[i] = COLORS.SOLID_ORANGE;
-      colColor[A_COL] = COLORS.LIGHT_YELLOW; // (A) TOTAL
-      colColor[A_PCT_COL] = COLORS.LIGHT_YELLOW; // PERCENTAGE
+      colColor[A_COL] = COLORS.LIGHT_YELLOW;
+      colColor[A_PCT_COL] = COLORS.LIGHT_YELLOW;
       for (let i = EXTRA_START; i <= EXTRA_END; i += 1) colColor[i] = COLORS.LAVENDER;
-      colColor[B_COL] = COLORS.LIGHT_YELLOW; // (B) TOTAL
-      colColor[C_COL] = COLORS.GOLD; // C = (A+B) GRAND TOTAL
-      colColor[OVERALL_COL] = COLORS.TEAL; // OVERALL %
+      colColor[B_COL] = COLORS.LIGHT_YELLOW;
+      colColor[C_COL] = COLORS.GOLD;
+      colColor[OVERALL_COL] = COLORS.TEAL;
 
-      // Distinct background per top meta row (rows 1-3 get the exact spec
-      // colors; rows 4-8 are plain white label rows). All get borders.
       const metaRowFill = {
-        0: COLORS.PEACH, // Row 1 — title
-        1: COLORS.LIGHT_BLUE, // Row 2 — semester
-        2: COLORS.LIGHT_YELLOW, // Row 3 — sheet name
+        0: COLORS.PEACH,
+        1: COLORS.LIGHT_BLUE,
+        2: COLORS.LIGHT_YELLOW,
       };
 
-      // Top meta rows (1-8). Rows 1-3 are centered (with spec fills); rows
-      // 4-8 are left-aligned white label rows. All get thin black borders
-      // across the ENTIRE merged width — so we create style placeholders for
-      // every column even where aoa_to_sheet left no cell object.
       for (let r = 0; r <= 7; r += 1) {
         const fillColor = metaRowFill[r];
         const isCentered = r <= 2;
@@ -1003,8 +979,6 @@ export default function HODAttendance() {
         }
       }
 
-      // Header block (rows 9-13) and all data rows (14+): color by column,
-      // borders on every populated cell, centered alignment (wrapped headers).
       for (let r = HEADER_ROW; r < aoa.length; r += 1) {
         if (r === HEADER_END) continue;
         for (let c = 0; c < TOTAL_COLS; c += 1) {
@@ -1025,7 +999,6 @@ export default function HODAttendance() {
         }
       }
 
-      // Reasonable, auto-sized columns.
       const colWidths = [];
       for (let c = 0; c < TOTAL_COLS; c += 1) {
         let w = 8;
@@ -1128,8 +1101,22 @@ export default function HODAttendance() {
               style={filterSelectStyle}
             >
               <option value="All">All Years</option>
-              {availableYears.map((y) => (
+              {availableYearsList.map((y) => (
                 <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+            <span style={selectChevronStyle}>▼</span>
+          </div>
+          <div style={{ position: 'relative' }}>
+            <select
+              value={filterDepartment}
+              onChange={(e) => setFilterDepartment(e.target.value)}
+              style={filterSelectStyle}
+              disabled={filterYear === 'All'}
+            >
+              <option value="All">All Departments</option>
+              {availableDepartmentsList.map((dept) => (
+                <option key={dept} value={dept}>{dept}</option>
               ))}
             </select>
             <span style={selectChevronStyle}>▼</span>
@@ -1139,9 +1126,10 @@ export default function HODAttendance() {
               value={filterBranch}
               onChange={(e) => setFilterBranch(e.target.value)}
               style={filterSelectStyle}
+              disabled={filterYear === 'All' || filterDepartment === 'All'}
             >
               <option value="All">All Branches</option>
-              {availableBranches.map((b) => (
+              {availableBranchesList.map((b) => (
                 <option key={b} value={b}>{b}</option>
               ))}
             </select>
@@ -1151,11 +1139,13 @@ export default function HODAttendance() {
             <select
               value={filterSection}
               onChange={(e) => setFilterSection(e.target.value)}
-              style={filterSelectStyle}
+              style={{ ...filterSelectStyle, opacity: (filterYear === 'All' || filterBranch === 'All' || availableSections.length === 0) ? 0.5 : 1 }}
+              disabled={filterYear === 'All' || filterBranch === 'All' || availableSections.length === 0}
             >
               <option value="All">All Sections</option>
-              <option value="B1">B1</option>
-              <option value="B2">B2</option>
+              {availableSections.map((sec) => (
+                <option key={sec} value={sec}>{sec}</option>
+              ))}
             </select>
             <span style={selectChevronStyle}>▼</span>
           </div>
@@ -1184,7 +1174,7 @@ export default function HODAttendance() {
         <>
           <div className="hod-card" style={{ marginBottom: '1.25rem' }}>
         <h3 style={{ margin: '0 0 1rem', color: '#fff', fontSize: '1.25rem', fontWeight: '900', letterSpacing: '-0.03em' }}>
-          Department Attendance Analytics
+          College Attendance Analytics
         </h3>
         <div className="hod-stats-grid">
           <div className="hod-stat hod-stat--cyan">
@@ -1195,119 +1185,118 @@ export default function HODAttendance() {
                 <span>Total Defaulters (&lt; 60%)</span>
                 <strong>{totalDefaulters}</strong>
               </div>
-        </div>
-      </div>
-
-      <div className="hod-card">
-      <div className="w-full overflow-x-auto table-wrapper">
-        <table className="hod-table" style={{ minWidth: 0 }}>
-          <thead>
-              <tr>
-                <th>Student</th>
-                <th>Roll Number</th>
-                <th>Overall Attendance</th>
-                <th className="pr-8">Status</th>
-                <th className="pr-8">Details</th>
-              </tr>
-          </thead>
-          <tbody>
-            {studentStats.length === 0 ? (
-              <tr>
-                <td colSpan="5" style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '14px', border: '1px dashed rgba(148, 163, 184, 0.25)' }}>
-                  {isFilterActive
-                    ? 'No students found for this selection'
-                    : 'No attendance records found for your department.'}
-                </td>
-              </tr>
-            ) : (
-              studentStats.map((s) => {
-                const status = getAttendanceStatus(s.percentage);
-                return (
-                  <tr
-                    key={s.id}
-                    onClick={() => openStudentAttendanceDetail(s.id, s.full_name)}
-                    style={{ cursor: 'pointer' }}
-                    className="hod-attendance-row"
-                  >
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <div style={{
-                          width: '36px',
-                          height: '36px',
-                          borderRadius: '50%',
-                          background: 'linear-gradient(135deg, #818cf8, #6366f1)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontWeight: 'bold',
-                          color: '#fff',
-                          fontSize: '0.8rem',
-                          flexShrink: 0,
-                        }}>
-                          {getInitials(s.full_name)}
-                        </div>
-                        <strong>{s.full_name}</strong>
-                      </div>
-                    </td>
-                    <td style={{ color: '#cbd5e1', fontSize: '0.85rem' }}>{s.roll_number}</td>
-                    <td>
-                      <span style={{
-                        fontWeight: '900',
-                        color: status.color,
-                        fontSize: '0.95rem',
-                      }}>
-                        {s.percentage}%
-                      </span>
-                    </td>
-                    <td className="pr-8">
-                        <span style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          padding: '0.28rem 0.68rem',
-                          border: `1px solid ${status.border}`,
-                          borderRadius: '999px',
-                          color: status.color,
-                          background: status.bg,
-                          fontSize: '0.78rem',
-                          fontWeight: '900',
-                        }}>
-                          {status.label}
-                        </span>
-                      </td>
+            </div>
+          </div>
+          <div className="hod-card" style={{ marginBottom: '1.25rem' }}>
+        <div className="w-full overflow-x-auto table-wrapper">
+          <table className="hod-table" style={{ minWidth: 0 }}>
+            <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Roll Number</th>
+                  <th>Overall Attendance</th>
+                  <th className="pr-8">Status</th>
+                  <th className="pr-8">Details</th>
+                </tr>
+            </thead>
+            <tbody>
+              {studentStats.length === 0 ? (
+                <tr>
+                  <td colSpan="5" style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '14px', border: '1px dashed rgba(148, 163, 184, 0.25)' }}>
+                    {isFilterActive
+                      ? 'No students found for this selection'
+                      : 'No attendance records found.'}
+                  </td>
+                </tr>
+              ) : (
+                studentStats.map((s) => {
+                  const status = getAttendanceStatus(s.percentage);
+                  return (
+                    <tr
+                      key={s.id}
+                      onClick={() => openStudentAttendanceDetail(s.id, s.full_name)}
+                      style={{ cursor: 'pointer' }}
+                      className="hod-attendance-row"
+                    >
                       <td>
-                        <span
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openStudentAttendanceDetail(s.id, s.full_name);
-                          }}
-                          title="View attendance details"
-                          style={{
-                            display: 'inline-flex',
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <div style={{
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #818cf8, #6366f1)',
+                            display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            width: '30px',
-                            height: '30px',
-                            borderRadius: '8px',
-                            border: '1px solid rgba(99, 102, 241, 0.35)',
-                            background: 'rgba(99, 102, 241, 0.12)',
-                            color: '#c7d2fe',
-                            cursor: 'pointer',
-                            transition: 'all 0.15s ease',
-                          }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.28)'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.12)'; }}
-                        >
-                          <ArrowUpRight size={16} strokeWidth={2.4} />
+                            fontWeight: 'bold',
+                            color: '#fff',
+                            fontSize: '0.8rem',
+                            flexShrink: 0,
+                          }}>
+                            {getInitials(s.full_name)}
+                          </div>
+                          <strong>{s.full_name}</strong>
+                        </div>
+                      </td>
+                      <td style={{ color: '#cbd5e1', fontSize: '0.85rem' }}>{s.roll_number}</td>
+                      <td>
+                        <span style={{
+                          fontWeight: '900',
+                          color: status.color,
+                          fontSize: '0.95rem',
+                        }}>
+                          {s.percentage}%
                         </span>
                       </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                      <td className="pr-8">
+                          <span style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            padding: '0.28rem 0.68rem',
+                            border: `1px solid ${status.border}`,
+                            borderRadius: '999px',
+                            color: status.color,
+                            background: status.bg,
+                            fontSize: '0.78rem',
+                            fontWeight: '900',
+                          }}>
+                            {status.label}
+                          </span>
+                        </td>
+                        <td>
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openStudentAttendanceDetail(s.id, s.full_name);
+                            }}
+                            title="View attendance details"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              width: '30px',
+                              height: '30px',
+                              borderRadius: '8px',
+                              border: '1px solid rgba(99, 102, 241, 0.35)',
+                              background: 'rgba(99, 102, 241, 0.12)',
+                              color: '#c7d2fe',
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease',
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.28)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.12)'; }}
+                          >
+                            <ArrowUpRight size={16} strokeWidth={2.4} />
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
       </>
       )}
 
@@ -1343,7 +1332,7 @@ export default function HODAttendance() {
                   {selectedStudent.name}
                 </h3>
                 <p style={{ margin: '0.25rem 0 0', color: '#94a3b8', fontSize: '0.85rem' }}>
-                  Subject-wise &amp; Week-wise Attendance Breakdown
+                  Subject-wise & Week-wise Attendance Breakdown
                 </p>
               </div>
               <button
@@ -1367,8 +1356,8 @@ export default function HODAttendance() {
               </button>
             </div>
 
-            <StudentAttendanceDetail 
-              studentId={selectedStudent.id} 
+            <StudentAttendanceDetail
+              studentId={selectedStudent.id}
               studentName={selectedStudent.name}
               branch={filterBranch !== 'All' ? filterBranch : undefined}
               year={filterYear !== 'All' ? filterYear : undefined}

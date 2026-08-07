@@ -107,21 +107,33 @@ export default function CurriculumManager() {
     if (!year) return [];
     return hodDepartmentsData.filter((d) => {
       const branchCode = d.code || d.name;
-      return d.description === year && hodAuthorizedBranches.some((b) => b.code === branchCode || AGGREGATE_DEPARTMENTS[b.code]?.includes(d.code));
+      return d.description === year && hodAuthorizedBranches.some((b) => {
+        const subBranches = AGGREGATE_DEPARTMENTS[b.code] || (b.code.includes(' & ') ? b.code.split(' & ').map(s => s.trim()) : [b.code]);
+        return b.code === branchCode || subBranches.includes(d.code);
+      });
     });
   };
 
   const isAggregateHod = useMemo(() => {
-    return hodAuthorizedBranches.some((b) => AGGREGATE_DEPARTMENTS[b.code]);
+    return hodAuthorizedBranches.some((b) => AGGREGATE_DEPARTMENTS[b.code] || b.code.includes(' & '));
   }, [hodAuthorizedBranches]);
 
   const getSubBranchesForAggregate = (branchCode) => {
-    if (!AGGREGATE_DEPARTMENTS[branchCode]) return [];
-    return AGGREGATE_DEPARTMENTS[branchCode].map((sub) => ({
-      id: sub,
-      code: sub,
-      name: sub
-    }));
+    if (AGGREGATE_DEPARTMENTS[branchCode]) {
+      return AGGREGATE_DEPARTMENTS[branchCode].map((sub) => ({
+        id: sub,
+        code: sub,
+        name: sub
+      }));
+    }
+    if (branchCode.includes(' & ')) {
+      return branchCode.split(' & ').map((sub) => ({
+        id: sub.trim(),
+        code: sub.trim(),
+        name: sub.trim()
+      }));
+    }
+    return [];
   };
 
   // ── Derived Values ──
@@ -663,7 +675,7 @@ const fetchSubjects = useCallback(async () => {
 
           <div className="branch-cards-grid semester-branch-cards">
             {hodAuthorizedBranches.map((branch) => {
-              const isAggregate = AGGREGATE_DEPARTMENTS[branch.code];
+              const isAggregate = AGGREGATE_DEPARTMENTS[branch.code] || branch.code.includes(' & ');
               const branchLabel = isAggregate ? `${branch.name} Branch` : branch.name;
               return (
                 <button

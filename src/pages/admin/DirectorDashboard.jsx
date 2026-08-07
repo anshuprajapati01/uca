@@ -8,10 +8,12 @@ import DashboardLayout from '../../components/layout/DashboardLayout.jsx';
 import './DirectorDashboard-v2.css';
 import HodManagement from './HodManagement.jsx';
 import DirectorStudentDirectory from './DirectorStudentDirectory.jsx';
+import DirectorAttendance from './DirectorAttendance.jsx';
 
 const DIRECTOR_NAV = [
   { id: 'overview', label: '🏠 Overview', path: ROUTES.DIRECTOR_DASHBOARD },
   { id: 'academic', label: '🎓 Academic Hub', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=academic` },
+  { id: 'attendance', label: '📊 Attendance Analytics', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=attendance` },
   { id: 'faculty', label: '👥 Manage Faculty', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=faculty` },
   { id: 'departments', label: '🏢 Manage Departments', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=departments` },
   { id: 'hod-management', label: '👨‍🏫 HOD Management', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=hod-management` },
@@ -30,52 +32,10 @@ const YEARS = [
   { id: '4th Year', title: '4th Year', subtitle: 'Specialization', icon: Award, color: 'rose' },
 ];
 
-const BIT_DEPARTMENTS = {
-  '1st Year': [
-    { name: 'ASH 1', hod_name: 'Dr. SN Jaisawal', branches: ['CSE A', 'CSE B', 'CSE C', 'CS', 'ECE'] },
-    { name: 'ASH 2', hod_name: 'Dr. BK Shrivastav', branches: ['AI ML', 'DS', 'IT', 'ME', 'CE', 'VLSI'] }
-  ],
-  '2nd Year': [
-    { name: 'CS & IT', hod_name: 'Dr. Ranjeet Rai', branches: ['CS', 'IT'] },
-    { name: 'CSE & ECE', hod_name: 'Dr. Abhinandan Tripathi', branches: ['CSE', 'ECE'] },
-    { name: 'AI ML & DS', hod_name: 'Dr. AI Head', branches: ['AI ML', 'DS'] },
-    { name: 'ME & CE', hod_name: 'Dr. ME Head', branches: ['ME', 'CE'] }
-  ],
-  '3rd Year': [
-    { name: 'CS & IT', hod_name: 'Dr. Ranjeet Rai', branches: ['CS', 'IT'] },
-    { name: 'CSE & ECE', hod_name: 'Dr. Abhinandan Tripathi', branches: ['CSE', 'ECE'] },
-    { name: 'AI ML & DS', hod_name: 'Dr. AI Head', branches: ['AI ML', 'DS'] },
-    { name: 'ME & CE', hod_name: 'Dr. ME Head', branches: ['ME', 'CE'] }
-  ],
-  '4th Year': [
-    { name: 'CS & IT', hod_name: 'Dr. Ranjeet Rai', branches: ['CS', 'IT'] },
-    { name: 'CSE & ECE', hod_name: 'Dr. Abhinandan Tripathi', branches: ['CSE', 'ECE'] },
-    { name: 'AI ML & DS', hod_name: 'Dr. AI Head', branches: ['AI ML', 'DS'] },
-    { name: 'ME & CE', hod_name: 'Dr. ME Head', branches: ['ME', 'CE'] }
-  ]
-};
-
 const extractReferencedId = (details = '') => {
   const match = details.match(/Key \(id\)=\(([0-9a-fA-F-]{36})\)/);
   return match?.[1] || null;
 };
-
-const isDummyUuid = (id, dummyIds) => dummyIds.has(id);
-
-const DUMMY_BRANCH_IDS = new Set([
-  '33333333-0000-0000-0000-000000000001',
-  '33333333-0000-0000-0000-000000000003',
-]);
-
-const DUMMY_BATCH_IDS = new Set([
-  '44444444-0000-0000-0000-000000000001',
-  '44444444-0000-0000-0000-000000000003',
-]);
-
-const DUMMY_SUBJECT_IDS = new Set([
-  '77777777-0000-0000-0000-000000000001',
-  '77777777-0000-0000-0000-000000000003',
-]);
 
 const DIRECTOR_SUBJECT_AVATAR_FALLBACK = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Faculty';
 
@@ -170,9 +130,10 @@ const StatCard = ({ icon: Icon, label, value, gradient }) => (
 );
 
 const DepartmentCard = ({ department, onBranchClick }) => {
-  const name = department.department_name || department.name;
-  const hod = department.hod_name || 'Not Assigned';
-  const year = department.year_level || '1st Year';
+  const name = department.name;
+  const hod = department.hodName || department.hod_name || 'Not Assigned';
+  const hodAvatar = department.hodAvatar || null;
+  const year = department.year || '1st Year';
   const branches = Array.isArray(department.branches) ? department.branches : [];
 
   return (
@@ -182,7 +143,16 @@ const DepartmentCard = ({ department, onBranchClick }) => {
         <span className="director-dept-card__year">{year}</span>
       </div>
       <div className="director-dept-card__hod">
-        <Shield size={14} />
+        {hodAvatar ? (
+          <img 
+            src={hodAvatar} 
+            alt={hod} 
+            className="director-dept-card__avatar"
+            style={{ width: '20px', height: '20px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+          />
+        ) : (
+          <Shield size={14} />
+        )}
         <span>{hod}</span>
       </div>
       <div className="director-dept-card__tags">
@@ -247,6 +217,7 @@ export default function DirectorDashboard() {
   const [subjectsLoading, setSubjectsLoading] = useState(false);
   const [subjectsError, setSubjectsError] = useState(null);
   const [liveDeptRows, setLiveDeptRows] = useState([]);
+  const [academicDepts, setAcademicDepts] = useState([]);
   const [subjectViewAnnouncements, setSubjectViewAnnouncements] = useState([]);
   const [subjectViewGeneralAnnouncements, setSubjectViewGeneralAnnouncements] = useState([]);
   const [subjectViewAnnouncementsLoading, setSubjectViewAnnouncementsLoading] = useState(false);
@@ -267,6 +238,10 @@ export default function DirectorDashboard() {
   const [masterSubjectToDelete, setMasterSubjectToDelete] = useState(null);
 
   const [handoverModal, setHandoverModal] = useState({ isOpen: false, faculty: null, replacementFacultyId: '' });
+  const [selectedActionFaculty, setSelectedActionFaculty] = useState(null);
+  const [actionPhone, setActionPhone] = useState('');
+  const [isUpdatingPhone, setIsUpdatingPhone] = useState(false);
+  const [isSendingReset, setIsSendingReset] = useState(false);
 
   const toggleYear = (year) => {
     setTargetYears(prev =>
@@ -335,12 +310,13 @@ useEffect(() => {
            branchId ? baseFacultyListQuery.eq('branch_id', branchId) : baseFacultyListQuery,
          ]);
 
-         if (!cancelled) {
-           setTotalStudents(studentRes.count || 0);
-           setTotalFaculty(facultyRes.count || 0);
-           setDbFaculty(facultyListRes.data || []);
-           fetchDepartments(branchId);
-         }
+          if (!cancelled) {
+            setTotalStudents(studentRes.count || 0);
+            setTotalFaculty(facultyRes.count || 0);
+            setDbFaculty(facultyListRes.data || []);
+            fetchDepartments(branchId);
+            fetchAcademicDepartments(branchId);
+          }
        } catch (err) {
          console.error('Failed to load director dashboard data:', err);
        }
@@ -348,21 +324,20 @@ useEffect(() => {
    }, []);
 
   const getDepartmentsForYear = (yearId) => {
-    const fromDb = dbDepartments.filter((d) => isYearMatch(d, yearId));
-    if (fromDb.length > 0) return fromDb;
-    return (BIT_DEPARTMENTS[yearId] || []).map(dept => ({ ...dept, year_level: yearId }));
+    return academicDepts.filter(d => d.year === yearId);
   };
 
   const totalDepartmentsCount = useMemo(() => {
-    if (dbDepartments.length > 0) return dbDepartments.length;
-    return Object.values(BIT_DEPARTMENTS).flat().length;
-  }, [dbDepartments]);
+    return academicDepts.length;
+  }, [academicDepts]);
 
   const currentSubjects = useMemo(() => {
-    if (subjectsLoading || subjectsError) return { theory: [], practical: [] };
+    if (subjectsLoading || subjectsError) return { theory: [], practical: [], skill: [], 'non-academic': [] };
     const theory = dbSemesterSubjects.filter((s) => s.type?.toLowerCase() === 'theory');
     const practical = dbSemesterSubjects.filter((s) => s.type?.toLowerCase() === 'practical');
-    return { theory, practical };
+    const skill = dbSemesterSubjects.filter((s) => s.type?.toLowerCase() === 'skill');
+    const nonAcademic = dbSemesterSubjects.filter((s) => s.type?.toLowerCase() === 'non-academic');
+    return { theory, practical, skill, 'non-academic': nonAcademic };
   }, [dbSemesterSubjects, subjectsLoading, subjectsError]);
 
   const handleBranchClick = (branchName, departmentInfo) => {
@@ -745,7 +720,7 @@ const handleAddFaculty = async (e) => {
             avatar_url: facultyForm.avatarUrl,
             expertise_tags: expertiseTags,
             role: 'faculty',
-            college_id: '11111111-0000-0000-0000-000000000001',
+            college_id: null,
             is_active: true
         }]);
 
@@ -806,7 +781,7 @@ const handleAddFaculty = async (e) => {
       return;
     }
     if (data) {
-      setDepartments((data || []).filter((dept) => !isDummyUuid(dept.id, DUMMY_BRANCH_IDS)));
+      setDepartments(data || []);
     }
   };
 
@@ -831,9 +806,102 @@ const handleAddFaculty = async (e) => {
     }
   };
 
+  const fetchAcademicDepartments = async (branchId) => {
+    const effectiveBranchId = branchId ?? userBranchId;
+    const baseQuery = supabase
+      .from('branches')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    const { data: branchData, error: branchError } = await (effectiveBranchId ? baseQuery.eq('id', effectiveBranchId) : baseQuery);
+
+    if (branchError) {
+      console.error('Error fetching branches for academic hub:', branchError);
+      return;
+    }
+
+    if (branchData) {
+      const hodMap = new Map();
+      const { data: deptData } = await supabase
+        .from('departments')
+        .select('name, code, description, hod_id, user_profiles:user_profiles!hod_id(full_name, avatar_url)')
+        .not('hod_id', 'is', null);
+
+      (deptData || []).forEach((row) => {
+        const trimmedYear = row.description.trim();
+        const hodData = {
+          hodName: row.user_profiles?.full_name || null,
+          hodAvatar: row.user_profiles?.avatar_url || null,
+        };
+
+        const nameKey = `${row.name.trim()}|${trimmedYear}`;
+        if (!hodMap.has(nameKey)) {
+          hodMap.set(nameKey, hodData);
+        }
+
+        if (row.code) {
+          const codeKey = `${row.code.trim()}|${trimmedYear}`;
+          if (!hodMap.has(codeKey)) {
+            hodMap.set(codeKey, hodData);
+          }
+        }
+      });
+
+      const mapped = (branchData || []).map((row) => {
+        const branchName = row.name || row.code || '';
+        const year = row.description || '';
+        const trimmedName = branchName.trim();
+        const trimmedYear = year.trim();
+        const aggBranches = AGGREGATE_DEPARTMENTS[branchName];
+        
+        let branches;
+        if (aggBranches) {
+          branches = [...aggBranches];
+        } else {
+          if (trimmedName.includes(' & ')) {
+            branches = trimmedName.split(' & ');
+          } else if (trimmedName.includes(',')) {
+            branches = trimmedName.split(',').map(s => s.trim()).filter(Boolean);
+          } else {
+            branches = [trimmedName];
+          }
+        }
+
+        let hodInfo = hodMap.get(`${trimmedName}|${trimmedYear}`) || { hodName: null, hodAvatar: null };
+
+        if (!hodInfo.hodName) {
+          for (const branch of branches) {
+            const candidate = hodMap.get(`${branch.trim()}|${trimmedYear}`);
+            if (candidate) {
+              hodInfo = candidate;
+              break;
+            }
+          }
+        }
+
+        return {
+          id: row.id,
+          name: branchName,
+          year: year,
+          hodName: hodInfo.hodName,
+          hodAvatar: hodInfo.hodAvatar,
+          branches,
+        };
+      });
+
+      setAcademicDepts(mapped);
+    }
+  };
+
   useEffect(() => {
     fetchLiveDepartments();
   }, [selectedAcademicYear]);
+
+  useEffect(() => {
+    if (activeTab === 'academic') {
+      fetchAcademicDepartments();
+    }
+  }, [location.search]);
 
   useEffect(() => {
     fetchSubjectViewAnnouncements();
@@ -941,6 +1009,7 @@ const handleAddFaculty = async (e) => {
       setDeptToast('Department created successfully!');
       setTimeout(() => setDeptToast(null), 3000);
       await fetchDepartments();
+      await fetchAcademicDepartments();
     } catch (err) {
       console.error('Create Department JS Error:', err);
       alert('An unexpected error occurred.');
@@ -962,8 +1031,6 @@ const handleAddFaculty = async (e) => {
     } else if (subjectRes.error) {
       console.warn('Subject cleanup warning:', subjectRes.error);
     }
-
-    DUMMY_SUBJECT_IDS.forEach((subjectId) => subjectIds.add(subjectId));
 
     if (subjectIds.size > 0) {
       const subjectIdList = Array.from(subjectIds);
@@ -1041,14 +1108,14 @@ const handleAddFaculty = async (e) => {
         setDeptToast('Department permanently deleted!');
         setTimeout(() => setDeptToast(null), 3000);
         await fetchDepartments();
+        await fetchAcademicDepartments();
         return;
       }
 
       const referencedBatchId = extractReferencedId(branchDeleteError.details);
       const isBatchFkLock = branchDeleteError.code === '23503'
         && branchDeleteError.details?.includes('batches')
-        && referencedBatchId
-        && isDummyUuid(referencedBatchId, DUMMY_BATCH_IDS);
+        && referencedBatchId;
 
       if (!isBatchFkLock) throw branchDeleteError;
 
@@ -1066,6 +1133,7 @@ const handleAddFaculty = async (e) => {
       setDeptToast('Department permanently deleted!');
       setTimeout(() => setDeptToast(null), 3000);
       await fetchDepartments();
+      await fetchAcademicDepartments();
     } catch (err) {
       console.error('Delete Error:', err);
       alert('Failed to delete: ' + err.message);
@@ -1119,6 +1187,7 @@ const handleAddFaculty = async (e) => {
       toast.success("Handover and deletion successful!");
       setHandoverModal({ isOpen: false, faculty: null, replacementFacultyId: "" });
       setDbFaculty(prev => prev.filter(f => f.id !== oldId)); // Refresh the list
+      fetchAcademicDepartments();
 
     } catch (err) {
       console.error("Handover error:", err);
@@ -1147,6 +1216,7 @@ const handleAddFaculty = async (e) => {
       setHandoverModal({ isOpen: false, faculty: null, replacementFacultyId: "" });
       setDbFaculty(prev => prev.filter(f => f.id !== oldId));
       loadFacultyList();
+      fetchAcademicDepartments();
     } catch (err) {
       console.error("Force Delete Error:", err);
       toast.error(err.message || "Failed to force delete.");
@@ -1154,6 +1224,67 @@ const handleAddFaculty = async (e) => {
   };
 
   const otherFaculties = dbFaculty.filter(f => f.id !== handoverModal.faculty?.id);
+
+  const openActionModal = (faculty) => {
+    setSelectedActionFaculty(faculty);
+    setActionPhone(faculty.phone || '');
+  };
+
+  const closeActionModal = () => {
+    setSelectedActionFaculty(null);
+    setActionPhone('');
+    setIsUpdatingPhone(false);
+    setIsSendingReset(false);
+  };
+
+  const handleUpdatePhone = async () => {
+    if (!selectedActionFaculty) return;
+    setIsUpdatingPhone(true);
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ phone: actionPhone.trim() })
+        .eq('id', selectedActionFaculty.id);
+
+      if (error) throw error;
+
+      toast.success('Phone number updated successfully!');
+      setDbFaculty((prev) =>
+        prev.map((f) =>
+          f.id === selectedActionFaculty.id ? { ...f, phone: actionPhone.trim() } : f,
+        ),
+      );
+      setSelectedActionFaculty((prev) =>
+        prev ? { ...prev, phone: actionPhone.trim() } : prev,
+      );
+    } catch (error) {
+      toast.error('Failed to update phone: ' + error.message);
+    } finally {
+      setIsUpdatingPhone(false);
+    }
+  };
+
+  const handleSendResetLink = async () => {
+    if (!selectedActionFaculty?.email) {
+      toast.error('No email found for this faculty');
+      return;
+    }
+    setIsSendingReset(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        selectedActionFaculty.email.trim(),
+        { redirectTo: `${window.location.origin}/update-password` },
+      );
+
+      if (error) throw error;
+
+      toast.success(`Password reset link sent to ${selectedActionFaculty.email}`);
+    } catch (error) {
+      toast.error('Failed to send reset link: ' + error.message);
+    } finally {
+      setIsSendingReset(false);
+    }
+  };
 
   const filteredDepartments = departments.filter(dept => dept.description === selectedYear);
 
@@ -1510,9 +1641,14 @@ flexShrink: 0,
                                 <div className="director-subject-view__header">
                                     <div>
                                         <p className="director-subject-view__eyebrow">
-                                            {selectedBranch.name} · {selectedBranch.dept?.department_name || selectedBranch.dept?.name}
+                                            {selectedAcademicYear}
                                         </p>
-                                        <h2 className="director-subject-view__title">Subject View</h2>
+                                        <h2 className="director-subject-view__title">
+                                            Semester {selectedSemester.name.replace('Semester ', '')} • {selectedSubBranch || selectedBranch?.name}
+                                        </h2>
+                                        <p className="director-subject-view__subtitle">
+                                            Department of {selectedBranch?.dept?.name || selectedBranch?.name} • {selectedAcademicYear}
+                                        </p>
                                     </div>
                                     <span className="director-subject-view__semester">{selectedSemester.name}</span>
                                 </div>
@@ -1533,10 +1669,28 @@ flexShrink: 0,
                                         role="tab"
                                         aria-selected={subjectType === 'practical'}
                                         onClick={() => setSubjectType('practical')}
-                                    >
-                                        Practical Subjects
-                                    </button>
-                                    <button
+                                     >
+                                         Practical Subjects
+                                     </button>
+                                     <button
+                                         type="button"
+                                         className={`subject-tab-btn ${subjectType === 'skill' ? 'subject-tab-btn--active' : ''}`}
+                                         role="tab"
+                                         aria-selected={subjectType === 'skill'}
+                                         onClick={() => setSubjectType('skill')}
+                                     >
+                                         Skill
+                                     </button>
+                                     <button
+                                         type="button"
+                                         className={`subject-tab-btn ${subjectType === 'non-academic' ? 'subject-tab-btn--active' : ''}`}
+                                         role="tab"
+                                         aria-selected={subjectType === 'non-academic'}
+                                         onClick={() => setSubjectType('non-academic')}
+                                     >
+                                         Non-Academic
+                                     </button>
+                                     <button
                                         type="button"
                                         className={`subject-tab-btn ${subjectType === 'announcements' ? 'subject-tab-btn--active' : ''}`}
                                         role="tab"
@@ -1632,6 +1786,11 @@ flexShrink: 0,
             )}
              
          </section>
+         )}
+
+         {/* --- ATTENDANCE ANALYTICS --- */}
+         {activeTab === 'attendance' && (
+           <DirectorAttendance />
          )}
 
         {/* --- 3. BROADCAST COMMAND CENTER --- */}
@@ -1976,15 +2135,15 @@ flexShrink: 0,
                   const avatarUrl = faculty.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=8b5cf6&color=fff`;
                   const facultyTags = Array.isArray(faculty.expertise_tags) ? faculty.expertise_tags : [];
 
-                  return (
-                    <div key={faculty.id} className="premium-faculty-card">
-                      <div className="premium-faculty-card__glow" />
-                      <button
-                        className="premium-faculty-card__delete-btn"
-                        onClick={() => setHandoverModal({ isOpen: true, faculty: faculty, replacementFacultyId: '' })}
-                        aria-label="Delete faculty"
-                        type="button"
-                      >
+                   return (
+                     <div key={faculty.id} className="premium-faculty-card" style={{ cursor: 'pointer' }} onClick={() => openActionModal(faculty)}>
+                       <div className="premium-faculty-card__glow" />
+                       <button
+                         className="premium-faculty-card__delete-btn"
+                         onClick={(e) => { e.stopPropagation(); setHandoverModal({ isOpen: true, faculty: faculty, replacementFacultyId: '' }); }}
+                         aria-label="Delete faculty"
+                         type="button"
+                       >
                         <Trash2 size={18} />
                       </button>
                       <div className="premium-faculty-card__avatar-container">
@@ -2025,6 +2184,192 @@ flexShrink: 0,
             </div>
           </section>
         )}
+
+        {selectedActionFaculty && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.75)',
+              backdropFilter: 'blur(8px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 999999,
+            }}
+            onClick={closeActionModal}
+          >
+            <div
+              style={{
+                backgroundColor: '#1c1d2e',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '16px',
+                padding: '28px',
+                width: '100%',
+                maxWidth: '480px',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '1.25rem',
+                }}
+              >
+                <h3
+                  style={{
+                    margin: 0,
+                    fontSize: '1.15rem',
+                    fontWeight: '700',
+                    color: '#f1f5f9',
+                  }}
+                >
+                  Faculty Actions
+                </h3>
+                <button
+                  onClick={closeActionModal}
+                  style={{
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '8px',
+                    color: '#cbd5e1',
+                    cursor: 'pointer',
+                    padding: '0.35rem 0.6rem',
+                    fontSize: '0.8rem',
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  marginBottom: '1.25rem',
+                }}
+              >
+                <img
+                  src={selectedActionFaculty.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedActionFaculty.full_name || 'Faculty')}&background=6366f1&color=fff`}
+                  alt={selectedActionFaculty.full_name || 'Faculty'}
+                  style={{
+                    width: '80px',
+                    height: '80px',
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '2px solid rgba(99,102,241,0.3)',
+                  }}
+                />
+                <div style={{ textAlign: 'center' }}>
+                  <div
+                    style={{
+                      fontSize: '1.1rem',
+                      fontWeight: '700',
+                      color: '#f1f5f9',
+                    }}
+                  >
+                    {selectedActionFaculty.full_name || '—'}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '0.85rem',
+                      color: '#94a3b8',
+                      marginTop: '0.25rem',
+                    }}
+                  >
+                    {selectedActionFaculty.email || 'N/A'}
+                  </div>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.75rem',
+                }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <label
+                    style={{
+                      fontSize: '0.72rem',
+                      fontWeight: '600',
+                      color: '#6366f1',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                    }}
+                  >
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    value={actionPhone}
+                    onChange={(e) => setActionPhone(e.target.value)}
+                    placeholder="Enter phone number"
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '10px',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      background: 'rgba(20,20,40,0.5)',
+                      color: '#f1f5f9',
+                      fontSize: '0.9rem',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+                <button
+                  onClick={handleUpdatePhone}
+                  disabled={isUpdatingPhone}
+                  style={{
+                    width: '100%',
+                    padding: '0.7rem',
+                    borderRadius: '12px',
+                    border: 'none',
+                    fontSize: '0.9rem',
+                    fontWeight: '600',
+                    cursor: isUpdatingPhone ? 'not-allowed' : 'pointer',
+                    background: isUpdatingPhone
+                      ? 'rgba(99,102,241,0.4)'
+                      : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                    color: '#fff',
+                    opacity: isUpdatingPhone ? 0.7 : 1,
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  {isUpdatingPhone ? 'Updating...' : 'Update Phone'}
+                </button>
+                <button
+                  onClick={handleSendResetLink}
+                  disabled={isSendingReset}
+                  style={{
+                    width: '100%',
+                    padding: '0.7rem',
+                    borderRadius: '12px',
+                    border: 'none',
+                    fontSize: '0.9rem',
+                    fontWeight: '600',
+                    cursor: isSendingReset ? 'not-allowed' : 'pointer',
+                    background: isSendingReset
+                      ? 'rgba(16, 185, 129, 0.4)'
+                      : 'linear-gradient(135deg, #10b981, #059669)',
+                    color: '#fff',
+                    opacity: isSendingReset ? 0.7 : 1,
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  {isSendingReset ? 'Sending...' : 'Send Password Reset Link'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* --- 5. MANAGE DEPARTMENTS TAB --- */}
         {activeTab === 'departments' && (
           <section className="director-section">

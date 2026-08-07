@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import Papa from 'papaparse';
 import { supabase, createTempClient } from '../../lib/supabase.js';
+import { useAuth } from '../../hooks/useAuth.js';
 import { useHodContext } from '../../context/HodContext.jsx';
 import { toast, Toaster } from 'react-hot-toast';
 import { AGGREGATE_DEPARTMENTS } from '../../config/constants.js';
@@ -8,6 +9,7 @@ import './DirectorDashboard-v2.css';
 
 export default function ManageStudents() {
   const { hodDepartmentsData } = useHodContext();
+  const { profile } = useAuth();
   const [students, setStudents] = useState([]);
   const [formData, setFormData] = useState({ fullName: '', rollNumber: '', phone: '', email: '', batchId: '', selectedYear: '', selectedBranch: '' });
   const [activeTab, setActiveTab] = useState('register');
@@ -20,6 +22,8 @@ export default function ManageStudents() {
   const [isSplitting, setIsSplitting] = useState(false);
   const [sec1Name, setSec1Name] = useState('B1');
   const [sec2Name, setSec2Name] = useState('B2');
+  const [isLockingSections, setIsLockingSections] = useState(false);
+  const [lockSuccess, setLockSuccess] = useState(false);
   const [csvFile, setCsvFile] = useState(null);
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState(null);
@@ -198,6 +202,55 @@ export default function ManageStudents() {
     }
   };
 
+  const handleLockSections = async () => {
+    if (isLockingSections) return;
+    if (!filterYear || filterYear === 'All' || !filterBranch || filterBranch === 'All') return;
+
+    setIsLockingSections(true);
+    setLockSuccess(false);
+
+    try {
+      const { data, error: fetchErr } = await supabase
+        .from('branches')
+        .select('id, name, locked_sections')
+        .ilike('description', `%${filterYear}%`);
+
+      console.log("🕵️ Spy Log - DB Rows for", filterYear, ":", data, "Error:", fetchErr);
+
+      if (fetchErr || !data) {
+        throw new Error('Branch record not found in DB.');
+      }
+
+      const targetBranch = filterBranch.trim().toLowerCase();
+      const row = data.find(d => {
+        if (!d.name) return false;
+        const branches = d.name.split('&').map(s => s.trim().toLowerCase());
+        return branches.includes(targetBranch);
+      });
+      if (!row) {
+        throw new Error('Branch record not found in DB.');
+      }
+
+      const newLocked = { ...(row.locked_sections || {}) };
+      newLocked[filterBranch] = [sec1Name, sec2Name].filter(Boolean);
+
+      const { error: updateError } = await supabase
+        .from('branches')
+        .update({ locked_sections: newLocked })
+        .eq('id', row.id);
+
+      if (updateError) throw updateError;
+
+      setLockSuccess(true);
+      toast.success('Sections locked successfully');
+      setTimeout(() => setLockSuccess(false), 2000);
+    } catch (err) {
+      toast.error('Failed to lock sections: ' + (err?.message || String(err)));
+    } finally {
+      setIsLockingSections(false);
+    }
+  };
+
   const toggleStudentSelection = (studentId) => {
     setSectionSelectedStudents(prev => {
       const next = new Set(prev);
@@ -232,6 +285,40 @@ export default function ManageStudents() {
     }
     loadFaculties();
   }, []);
+
+  useEffect(() => {
+    async function loadLockedSections() {
+      if (filterYear === 'All' || filterBranch === 'All') {
+        setSec1Name('B1');
+        setSec2Name('B2');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('branches')
+        .select('id, name, locked_sections')
+        .ilike('description', `%${filterYear}%`);
+
+      console.log("🕵️ Spy Log - DB Rows for", filterYear, ":", data, "Error:", error);
+
+      if (error || !data) {
+        setSec1Name('B1');
+        setSec2Name('B2');
+        return;
+      }
+
+      const targetBranch = filterBranch.trim().toLowerCase();
+      const row = data.find(d => {
+        if (!d.name) return false;
+        const branches = d.name.split('&').map(s => s.trim().toLowerCase());
+        return branches.includes(targetBranch);
+      });
+      const sections = row?.locked_sections?.[filterBranch] || [];
+      setSec1Name(sections[0] || 'B1');
+      setSec2Name(sections[1] || 'B2');
+    }
+    loadLockedSections();
+  }, [filterYear, filterBranch]);
 
   useEffect(() => {
     async function loadMentors() {
@@ -302,8 +389,11 @@ export default function ManageStudents() {
         email: formData.email.toLowerCase(),
         password: formData.rollNumber,
         options: {
-          data: { role: 'student' }
-        }
+          data: {
+            role: 'student',
+            college_id: profile?.college_id || '11111111-0000-0000-0000-000000000001',
+          },
+        },
       });
 
       if (authError) throw authError;
@@ -319,7 +409,7 @@ export default function ManageStudents() {
         batch_id: formData.batchId || null,
         selected_year: formData.selectedYear,
         selected_branch: formData.selectedBranch,
-        college_id: '11111111-0000-0000-0000-000000000001',
+        college_id: profile?.college_id || '11111111-0000-0000-0000-000000000001',
         branch_id: null,
         is_active: true,
         can_view_faculty: false,
@@ -386,7 +476,7 @@ export default function ManageStudents() {
     setImportResult(null);
   };
 
-  const importSingleStudent = async (row, hodCollegeId) => {
+  const importSingleStudent = async (row) => {
     const tempSupabase = createTempClient();
     const fullName = (row['Full Name'] || '').trim();
     const rollNumber = (row['Roll Number'] || '').trim();
@@ -437,7 +527,7 @@ export default function ManageStudents() {
             year: normalizedYear,
             branch: normalizedBranch,
             role: 'student',
-            college_id: hodCollegeId,
+            college_id: profile?.college_id || '11111111-0000-0000-0000-000000000001',
             branch_id: null,
             is_active: true
           }
@@ -466,7 +556,7 @@ export default function ManageStudents() {
           batch_id: null,
           selected_year: normalizedYear,
           selected_branch: normalizedBranch,
-          college_id: hodCollegeId,
+          college_id: profile?.college_id || '11111111-0000-0000-0000-000000000001',
           branch_id: null,
           section: null,
           is_active: true,
@@ -525,15 +615,7 @@ export default function ManageStudents() {
         return;
       }
 
-      const { data: hodProfile } = await supabase
-        .from('user_profiles')
-        .select('college_id')
-        .eq('id', (await supabase.auth.getUser()).data.user.id)
-        .maybeSingle();
-
-      const hodCollegeId = hodProfile?.college_id || '11111111-0000-0000-0000-000000000001';
-
-      const results = await Promise.allSettled(rows.map(row => importSingleStudent(row, hodCollegeId)));
+      const results = await Promise.allSettled(rows.map(row => importSingleStudent(row)));
 
       let successCount = 0;
       let failCount = 0;
@@ -782,6 +864,27 @@ export default function ManageStudents() {
                     style={{ maxWidth: '120px' }}
                   />
                 </div>
+                <button
+                  type="button"
+                  onClick={handleLockSections}
+                  disabled={isLockingSections}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(244, 63, 94, 0.35)',
+                    background: lockSuccess ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.1)',
+                    color: lockSuccess ? '#6ee7b7' : '#fda4af',
+                    fontSize: '0.85rem',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {lockSuccess ? '✓ Locked' : isLockingSections ? 'Locking...' : '🔒 Lock Sections'}
+                </button>
               </div>
               <div style={{ marginBottom: '1.25rem' }}>
                 <button

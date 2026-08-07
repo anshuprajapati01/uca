@@ -30,7 +30,7 @@ export default function AuthProvider({ children }) {
     isFetchingProfile.current = true;
 
     try {
-      const userProfile = await fetchUserProfile(authUser.id, authUser.email);
+         const userProfile = await fetchUserProfile(authUser.id);
       setProfile(userProfile);
       setRole(userProfile.role);
       setProfileError(null);
@@ -137,18 +137,23 @@ export default function AuthProvider({ children }) {
     return () => clearTimeout(failsafeTimeoutId);
   }, []);
 
-  const value = useMemo(
-    () => ({
-      session,
-      user,
-      profile,
-      role,
-      loading,
-      isAuthenticated: Boolean(session),
-      profileError,
-    }),
-    [session, user, profile, role, loading, profileError],
-  );
+   const updateProfile = useCallback((updates) => {
+     setProfile((prev) => (prev ? { ...prev, ...updates } : prev));
+   }, []);
+
+   const value = useMemo(
+     () => ({
+       session,
+       user,
+       profile,
+       role,
+       loading,
+       isAuthenticated: Boolean(session),
+       profileError,
+       updateProfile,
+     }),
+     [session, user, profile, role, loading, profileError, updateProfile],
+   );
 
   if (loading) {
     return <AuthLoading />;

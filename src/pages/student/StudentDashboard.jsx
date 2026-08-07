@@ -349,45 +349,6 @@ const crNavItems = [
    { id: "my-uploads", label: "📁 My Uploads", icon: <FileText /> },
 ];
 
-const MOCK_LIBRARY_ITEMS = [
-  {
-    id: "lib1",
-    title: "Galvin - Operating Systems PDF",
-    category: "Reference Books",
-    iconType: "book",
-  },
-  {
-    id: "lib2",
-    title: "TOC Unit 1-5 Toppers Notes",
-    category: "Toppers Notes",
-    iconType: "star",
-  },
-  {
-    id: "lib3",
-    title: "Python 1-Shot Cheat Sheet",
-    category: "Exam Cheatsheets",
-    iconType: "cheatsheet",
-  },
-  {
-    id: "lib4",
-    title: "Data Structures Complete Syllabus",
-    category: "Syllabus",
-    iconType: "syllabus",
-  },
-  {
-    id: "lib5",
-    title: "DBMS Class Notes - Handwritten",
-    category: "Class Notes",
-    iconType: "notes",
-  },
-  {
-    id: "lib6",
-    title: "Software Engineering PYQs 2020-2024",
-    category: "PYQs",
-    iconType: "pyqs",
-  },
-];
-
 const getLibIcon = (type) => {
   switch (type) {
     case "book":
@@ -600,6 +561,7 @@ const [myUploads, setMyUploads] = useState([]);
     const [profileSaving, setProfileSaving] = useState(false);
     const [passwordSaving, setPasswordSaving] = useState(false);
     const editAvatarPreviewRef = useRef("");
+    const isDirector = profile?.role === 'director';
 
     const showToast = (message, type = "success") => {
       setToast({ message, type });
@@ -1311,7 +1273,7 @@ async function fetchAllMaterials() {
     const isLecture = (item.type || '').toLowerCase() === 'lecture';
     if (isLecture) {
       const matchedSubject = gridSubjects?.find(s => s.id === item.subject_id) || {};
-      const facultyFullName = item.faculty_name || matchedSubject?.faculty?.full_name || 'Susheela Verma';
+      const facultyFullName = item.faculty_name || matchedSubject?.faculty?.full_name || 'Not Assigned';
       const shortFacultyName = facultyFullName.length > 15 ? facultyFullName.split(' ')[0] : facultyFullName;
       const avatarUrl = item.faculty_avatar || matchedSubject?.faculty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(facultyFullName)}&background=1e1e2d&color=fff`;
 
@@ -1391,7 +1353,7 @@ async function fetchAllMaterials() {
         </div>
       );
     }
-    const facultyFullName = item.faculty_name || gridSubjects?.find(s => s.id === item.subject_id)?.faculty?.full_name || 'Susheela Verma';
+    const facultyFullName = item.faculty_name || gridSubjects?.find(s => s.id === item.subject_id)?.faculty?.full_name || 'Not Assigned';
     const shortFacultyName = facultyFullName.length > 15 ? facultyFullName.split(' ')[0] : facultyFullName;
     const avatarUrl = item.faculty_avatar || gridSubjects?.find(s => s.id === item.subject_id)?.faculty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(facultyFullName)}&background=1e1e2d&color=fff`;
 
@@ -1914,7 +1876,7 @@ async function fetchAllMaterials() {
     const isLecture = (material.type || '').toLowerCase() === 'lecture';
     if (isLecture) {
       // 1. Get exact faculty name or fallback
-      const facultyFullName = material.faculty_name || selectedSubject?.faculty?.full_name || 'Susheela Verma';
+      const facultyFullName = material.faculty_name || selectedSubject?.faculty?.full_name || 'Not Assigned';
       
       // 2. Truncate long names (e.g., 'Shrawan kumar pandey' -> 'Shrawan')
       const shortFacultyName = facultyFullName.length > 15 ? facultyFullName.split(' ')[0] : facultyFullName;
@@ -2002,7 +1964,7 @@ async function fetchAllMaterials() {
         </div>
       );
     }
-    const facultyFullName = material.faculty_name || selectedSubject?.faculty?.full_name || 'Susheela Verma';
+    const facultyFullName = material.faculty_name || selectedSubject?.faculty?.full_name || 'Not Assigned';
     const shortFacultyName = facultyFullName.length > 15 ? facultyFullName.split(' ')[0] : facultyFullName;
     const avatarUrl = material.faculty_avatar || selectedSubject?.faculty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(facultyFullName)}&background=1e1e2d&color=fff`;
 
@@ -2257,7 +2219,7 @@ async function fetchAllMaterials() {
                         const isLecture = (material.type || '').toLowerCase() === 'lecture';
                         if (isLecture) {
                           const matchedSubject = gridSubjects?.find(s => s.id === material.subject_id) || {};
-                          const facultyFullName = material.faculty_name || matchedSubject?.faculty?.full_name || 'Susheela Verma';
+                          const facultyFullName = material.faculty_name || matchedSubject?.faculty?.full_name || 'Not Assigned';
                           const shortFacultyName = facultyFullName.length > 15 ? facultyFullName.split(' ')[0] : facultyFullName;
                           const avatarUrl = material.faculty_avatar || matchedSubject?.faculty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(facultyFullName)}&background=1e1e2d&color=fff`;
 
@@ -2337,7 +2299,7 @@ async function fetchAllMaterials() {
                             </div>
                           );
                         }
-                        const facultyFullName = material.faculty_name || gridSubjects?.find(s => s.id === material.subject_id)?.faculty?.full_name || 'Susheela Verma';
+                        const facultyFullName = material.faculty_name || gridSubjects?.find(s => s.id === material.subject_id)?.faculty?.full_name || 'Not Assigned';
                         const shortFacultyName = facultyFullName.length > 15 ? facultyFullName.split(' ')[0] : facultyFullName;
                         const avatarUrl = material.faculty_avatar || gridSubjects?.find(s => s.id === material.subject_id)?.faculty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(facultyFullName)}&background=1e1e2d&color=fff`;
 
@@ -2601,6 +2563,7 @@ async function fetchAllMaterials() {
                   background: activeProfileTab === "security" ? "linear-gradient(135deg, #6366f1, #8b5cf6)" : "transparent",
                   color: activeProfileTab === "security" ? "#fff" : "#94a3b8",
                   transition: "all 0.2s ease",
+                  display: isDirector ? 'flex' : 'none',
                 }}
               >
                 Security
@@ -2671,6 +2634,7 @@ async function fetchAllMaterials() {
                     value={editPhone}
                     onChange={(e) => setEditPhone(e.target.value)}
                     placeholder="Enter phone number"
+                    disabled={!isDirector}
                     style={{
                       width: "100%",
                       padding: "0.65rem 0.85rem",
@@ -2707,10 +2671,10 @@ async function fetchAllMaterials() {
                     />
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.6rem 0" }}>
-                    <span style={{ fontSize: "0.75rem", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>College ID</span>
+                    <span style={{ fontSize: "0.75rem", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>College Email</span>
                     <input
                       type="text"
-                      value={studentProfile?.college_id || profile?.college_id || "—"}
+                      value={profile?.email || studentProfile?.email || "—"}
                       disabled
                       style={{
                         width: "60%",

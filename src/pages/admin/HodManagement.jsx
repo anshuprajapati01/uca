@@ -20,13 +20,6 @@ const FALLBACK_DEPARTMENTS = [
   'ME & CE',
 ];
 
-const DUMMY_BRANCH_IDS = new Set([
-  '33333333-0000-0000-0000-000000000001',
-  '33333333-0000-0000-0000-000000000003',
-]);
-
-const DEFAULT_COLLEGE_ID = '11111111-0000-0000-0000-000000000001';
-
 const getAvatarUrl = (faculty, seedText = 'Faculty') => {
   if (faculty?.avatar_url) return faculty.avatar_url;
   const seed = encodeURIComponent(faculty?.full_name || seedText);
@@ -113,7 +106,7 @@ if (error) {
     const uniqueDepartments = Array.from(
       new Map(
         data
-          .filter((department) => department.name && !DUMMY_BRANCH_IDS.has(department.id))
+          .filter((department) => department.name)
           .map((department) => [department.name, department.name])
       ).values()
     );
@@ -203,7 +196,7 @@ if (error) {
     setLoading(true);
 
     try {
-      const branches = AGGREGATE_DEPARTMENTS[selectedDepartment] || [selectedDepartment];
+      const branches = AGGREGATE_DEPARTMENTS[selectedDepartment] || (selectedDepartment.includes(' & ') ? selectedDepartment.split(' & ').map(s => s.trim()) : [selectedDepartment]);
       const skippedWarnings = [];
       const insertPayloads = [];
 
@@ -223,7 +216,7 @@ if (error) {
             code: branch,
             description: year,
             hod_id: selectedFaculty.id,
-            college_id: DEFAULT_COLLEGE_ID,
+            college_id: null,
           });
         }
       }
@@ -236,6 +229,16 @@ if (error) {
         showToast('Already assigned HOD for selected Year and Department!', 'error');
         return; // Do NOT update user profile
       }
+
+      const { data: existingDept } = await supabase
+        .from('departments')
+        .select('college_id')
+        .limit(1);
+
+      const collegeId = existingDept?.[0]?.college_id || 'BIT';
+      insertPayloads.forEach((payload) => {
+        payload.college_id = collegeId;
+      });
 
       // STEP 1: Persist the department assignment(s) FIRST
       const { error: insertError } = await supabase

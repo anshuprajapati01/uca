@@ -16,14 +16,7 @@ export default function FacultySessionalMarks() {
   const [labGrades, setLabGrades] = useState({});
   const [isLabLoading, setIsLabLoading] = useState(false);
   const [isSavingLab] = useState(false);
-  const [theoryExamStudents, setTheoryExamStudents] = useState([
-    { id: 'dummy1', full_name: 'Anshu Prajapati', roll_number: '2301CS1001' },
-    { id: 'dummy2', full_name: 'Anushka Singh', roll_number: '2301CS1002' },
-    { id: 'dummy3', full_name: 'Rahul Sharma', roll_number: '2301CS1003' },
-    { id: 'dummy4', full_name: 'Priya Patel', roll_number: '2301CS1004' },
-    { id: 'dummy5', full_name: 'Akash Gupta', roll_number: '2301CS1005' },
-    { id: 'dummy6', full_name: 'Neha Verma', roll_number: '2301CS1006' },
-  ]);
+  const [theoryExamStudents, setTheoryExamStudents] = useState([]);
   const [theoryExamGrades, setTheoryExamGrades] = useState({});
   const [theoryExamSubject, setTheoryExamSubject] = useState('');
   const [theoryExamSection, setTheoryExamSection] = useState('All');
@@ -32,6 +25,7 @@ export default function FacultySessionalMarks() {
   const [activeTab, setActiveTab] = useState('tes');
   const [exportSubjectId, setExportSubjectId] = useState('');
   const [exportSection, setExportSection] = useState('All');
+  const [availableSections, setAvailableSections] = useState(['All']);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -65,6 +59,54 @@ export default function FacultySessionalMarks() {
     load();
     return () => { cancelled = true; };
   }, [exportSubjectId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadSections() {
+      const activeSubjectId = activeTab === 'les' ? selectedLabSubject : theoryExamSubject;
+
+      if (!activeSubjectId) {
+        if (!cancelled) setAvailableSections(['All']);
+        return;
+      }
+
+      const currentSubject = mySubjects.find(s => s.id === activeSubjectId) || {};
+      const year = currentSubject?.year;
+      const branchCode = currentSubject?.department || currentSubject?.branch;
+
+      if (!year || !branchCode) {
+        if (!cancelled) setAvailableSections(['All']);
+        return;
+      }
+
+      try {
+        const { data } = await supabase
+          .from('branches')
+          .select('name, locked_sections')
+          .ilike('description', `%${year}%`);
+
+        const targetBranch = branchCode.trim().toLowerCase();
+        const matchedRow = data?.find(d => {
+          if (!d.name) return false;
+          const branches = d.name.split('&').map(s => s.trim().toLowerCase());
+          return branches.includes(targetBranch);
+        });
+        const branchKey = matchedRow?.locked_sections
+          ? Object.keys(matchedRow.locked_sections).find(k => k.toLowerCase() === branchCode.toLowerCase())
+          : null;
+
+        if (!cancelled) {
+          setAvailableSections(['All', ...(branchKey ? matchedRow.locked_sections[branchKey] : [])]);
+        }
+      } catch (err) {
+        console.error('Failed to load sections:', err);
+        if (!cancelled) setAvailableSections(['All']);
+      }
+    }
+
+    loadSections();
+    return () => { cancelled = true; };
+  }, [activeTab, selectedLabSubject, theoryExamSubject, mySubjects]);
 
   const autoFetchAttendance = async (subjectId, studentsList) => {
     try {
@@ -936,14 +978,7 @@ export default function FacultySessionalMarks() {
     if (value) {
       await loadTheoryExamData(value);
     } else {
-      setTheoryExamStudents([
-        { id: 'dummy1', full_name: 'Anshu Prajapati', roll_number: '2301CS1001' },
-        { id: 'dummy2', full_name: 'Anushka Singh', roll_number: '2301CS1002' },
-        { id: 'dummy3', full_name: 'Rahul Sharma', roll_number: '2301CS1003' },
-        { id: 'dummy4', full_name: 'Priya Patel', roll_number: '2301CS1004' },
-        { id: 'dummy5', full_name: 'Akash Gupta', roll_number: '2301CS1005' },
-        { id: 'dummy6', full_name: 'Neha Verma', roll_number: '2301CS1006' },
-      ]);
+      setTheoryExamStudents([]);
       setTheoryExamGrades({});
     }
   };
@@ -1125,9 +1160,9 @@ export default function FacultySessionalMarks() {
                   fontFamily: 'inherit',
                 }}
               >
-                <option value="All">All</option>
-                <option value="B1">B1</option>
-                <option value="B2">B2</option>
+                {availableSections.map((sec) => (
+                  <option key={sec} value={sec}>{sec}</option>
+                ))}
               </select>
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
@@ -1283,30 +1318,30 @@ export default function FacultySessionalMarks() {
                 })}
                </select>
                <label style={{ fontSize: '0.875rem', fontWeight: '600', color: '#d1d5db', whiteSpace: 'nowrap' }}>Select Section:</label>
-               <select
-                 value={labSection}
-                 onChange={(e) => setLabSection(e.target.value)}
-                 style={{
-                   backgroundColor: '#11131f',
-                   border: '1px solid #2d314d',
-                   color: 'white',
-                   padding: '10px 12px',
-                   borderRadius: '8px',
-                   fontSize: '0.875rem',
-                   outline: 'none',
-                   fontFamily: 'inherit',
-                 }}
-               >
-                 <option value="All">All</option>
-                 <option value="B1">B1</option>
-                 <option value="B2">B2</option>
-               </select>
-             </div>
-             <div style={{ display: 'flex', gap: '10px' }}>
-               <button
-                 type="button"
-                 onClick={saveLabRegister}
-                disabled={!selectedLabSubject || isSavingLab}
+                <select
+                  value={labSection}
+                  onChange={(e) => setLabSection(e.target.value)}
+                  style={{
+                    backgroundColor: '#11131f',
+                    border: '1px solid #2d314d',
+                    color: 'white',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    outline: 'none',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  {availableSections.map((sec) => (
+                    <option key={sec} value={sec}>{sec}</option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={saveLabRegister}
+                 disabled={!selectedLabSubject || isSavingLab}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -1547,16 +1582,16 @@ export default function FacultySessionalMarks() {
                     fontFamily: 'inherit',
                   }}
                 >
-                  <option value="All">All</option>
-                  <option value="B1">B1</option>
-                  <option value="B2">B2</option>
+                  {availableSections.map((sec) => (
+                    <option key={sec} value={sec}>{sec}</option>
+                  ))}
                 </select>
               </div>
              <div style={{ display: 'flex', gap: '10px' }}>
-               <button
-                 type="button"
-                 onClick={saveTheoryExamRegister}
-                 disabled={!theoryExamSubject || isSavingTheoryExam}
+                <button
+                  type="button"
+                  onClick={saveTheoryExamRegister}
+                  disabled={!theoryExamSubject || isSavingTheoryExam}
                  style={{
                    display: 'inline-flex',
                    alignItems: 'center',
@@ -1809,9 +1844,9 @@ export default function FacultySessionalMarks() {
                 onChange={(e) => setExportSection(e.target.value)}
                 style={{ width: '100%', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '10px 12px', borderRadius: '8px', fontSize: '0.875rem', outline: 'none', fontFamily: 'inherit', marginBottom: '24px' }}
               >
-                <option value="All">All</option>
-                <option value="B1">B1</option>
-                <option value="B2">B2</option>
+                {availableSections.map((sec, i) => (
+                  <option key={i} value={sec}>{sec}</option>
+                ))}
               </select>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
                 <button

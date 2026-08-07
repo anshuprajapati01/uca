@@ -23,6 +23,7 @@ import { createContext } from 'react';
  * @property {boolean} loading
  * @property {boolean} isAuthenticated
  * @property {string | null} profileError
+ * @property {(updates: Partial<UserProfile>) => void} updateProfile
  */
 
 /** @type {import('react').Context<AuthContextValue | null>} */

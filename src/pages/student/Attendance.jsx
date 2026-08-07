@@ -102,7 +102,7 @@ const getWeekNumber = (dateStr, semesterStartDate) => {
   const anchor = getAnchorMonday(semesterStartDate);
   const diff = d.getTime() - anchor.getTime();
   const weekNum = Math.floor(diff / (1000 * 60 * 60 * 24 * 7)) + 1;
-  return Math.max(1, weekNum);
+  return weekNum;
 };
 
 const groupRecordsByWeek = (records, semesterStartDate) => {
@@ -110,7 +110,7 @@ const groupRecordsByWeek = (records, semesterStartDate) => {
   records.forEach((rec) => {
     const weekNum = getWeekNumber(rec.date, semesterStartDate);
     if (weekNum == null) return;
-    const key = `Week ${weekNum}`;
+    const key = weekNum <= 0 ? 'Pre-Semester' : `Week ${weekNum}`;
     if (!map[key]) map[key] = [];
     map[key].push(rec);
   });
@@ -194,10 +194,12 @@ export default function Attendance({ subjects, records, loading = false, student
           .from('system_settings')
           .select('semester_start_date')
           .eq('is_active', true)
+          .limit(1)
           .maybeSingle();
 
         if (error) {
           console.error('Error fetching semester config:', error);
+          setSemesterStartDate(new Date(2026, 5, 29));
         } else if (data?.semester_start_date) {
           setSemesterStartDate(new Date(data.semester_start_date));
         } else {
@@ -467,9 +469,11 @@ export default function Attendance({ subjects, records, loading = false, student
     filteredSubjects[0];
 
   const weeksMap = activeSub?.history?.length ? groupRecordsByWeek(activeSub.history, semesterStartDate) : {};
-  const weekKeys = Object.keys(weeksMap).sort(
-    (a, b) => parseInt(a.replace("Week ", ""), 10) - parseInt(b.replace("Week ", ""), 10)
-  );
+  const weekKeys = Object.keys(weeksMap).sort((a, b) => {
+    const aWeek = a === 'Pre-Semester' ? 0 : parseInt(a.replace('Week ', ''), 10);
+    const bWeek = b === 'Pre-Semester' ? 0 : parseInt(b.replace('Week ', ''), 10);
+    return aWeek - bWeek;
+  });
 
   const weeklySummary = (() => {
     if (!activeWeek || activeWeek === "All" || !weeksMap[activeWeek]) return null;
@@ -757,13 +761,16 @@ export default function Attendance({ subjects, records, loading = false, student
                 </tr>
               ) : (
                  activeSub.history
-                   .filter((rec) => {
-                     if (activeWeek === "All") return true;
-                     const weekNum = parseInt(activeWeek.replace("Week ", ""), 10);
+                    .filter((rec) => {
+                      if (activeWeek === "All") return true;
+                      if (activeWeek === 'Pre-Semester') {
+                        return getWeekNumber(rec.date, semesterStartDate) <= 0;
+                      }
+                      const weekNum = parseInt(activeWeek.replace("Week ", ""), 10);
                       const { start, end } = getWeekBounds(weekNum, semesterStartDate);
-                     const d = new Date(rec.date);
-                     return d >= start && d <= end;
-                   })
+                      const d = new Date(rec.date);
+                      return d >= start && d <= end;
+                    })
                     .map((rec) => {
                       const { day } = formatTimelineDate(rec.date);
                       const isExtra = rec.is_extra_class === true ||

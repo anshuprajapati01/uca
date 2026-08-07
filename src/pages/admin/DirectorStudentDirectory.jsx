@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '../../lib/supabase.js';
 import { Users, Search, Mail } from 'lucide-react';
+import toast from 'react-hot-toast';
 import './DirectorDashboard-v2.css';
 
 const YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
@@ -12,6 +13,10 @@ export default function DirectorStudentDirectory() {
   const [filterYear, setFilterYear] = useState('All');
   const [filterBranch, setFilterBranch] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [actionPhone, setActionPhone] = useState('');
+  const [isUpdatingPhone, setIsUpdatingPhone] = useState(false);
+  const [isSendingReset, setIsSendingReset] = useState(false);
 
    
   const getStudentEmail = (student) => {
@@ -66,6 +71,58 @@ export default function DirectorStudentDirectory() {
     if (student.avatar_url) return student.avatar_url;
     const name = encodeURIComponent(student.full_name || student.name || 'Student');
     return `https://ui-avatars.com/api/?name=${name}&background=6366f1&color=fff`;
+  };
+
+  const openActionModal = (student) => {
+    setSelectedStudent(student);
+    setActionPhone(student.phone || '');
+  };
+
+  const closeActionModal = () => {
+    setSelectedStudent(null);
+    setActionPhone('');
+    setIsUpdatingPhone(false);
+    setIsSendingReset(false);
+  };
+
+  const handleUpdatePhone = async () => {
+    if (!selectedStudent) return;
+    setIsUpdatingPhone(true);
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ phone: actionPhone.trim() })
+        .eq('id', selectedStudent.id);
+
+      if (error) throw error;
+
+      toast.success('Phone number updated successfully!');
+      setStudents(prev => prev.map(s => s.id === selectedStudent.id ? { ...s, phone: actionPhone } : s));
+      setSelectedStudent(prev => prev ? { ...prev, phone: actionPhone } : prev);
+    } catch (error) {
+      toast.error('Failed to update phone: ' + error.message);
+    } finally {
+      setIsUpdatingPhone(false);
+    }
+  };
+
+  const handleSendResetLink = async () => {
+    if (!selectedStudent?.email) {
+      toast.error('No email found for this student');
+      return;
+    }
+    setIsSendingReset(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(selectedStudent.email.trim(), { redirectTo: `${window.location.origin}/update-password` });
+
+      if (error) throw error;
+
+      toast.success(`Password reset link sent to ${selectedStudent.email}`);
+    } catch (error) {
+      toast.error('Failed to send reset link: ' + error.message);
+    } finally {
+      setIsSendingReset(false);
+    }
   };
 
   return (
@@ -145,7 +202,7 @@ export default function DirectorStudentDirectory() {
             </thead>
 <tbody className="director-student-table">
               {filteredStudents.map((student) => (
-                <tr key={student.id} style={{ transition: 'background 0.2s' }}>
+                <tr key={student.id} style={{ transition: 'background 0.2s', cursor: 'pointer' }} onClick={() => openActionModal(student)}>
                   <td style={{ padding: '14px 16px' }}>
                     <img
                       src={getAvatarUrl(student)}
@@ -205,6 +262,80 @@ export default function DirectorStudentDirectory() {
           </table>
         )}
       </div>
+
+      {selectedStudent && (
+        <div style={{
+          position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999
+        }} onClick={closeActionModal}>
+          <div style={{
+            backgroundColor: '#1c1d2e', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '16px',
+            padding: '28px', width: '100%', maxWidth: '480px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+          }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '700', color: '#f1f5f9' }}>Student Actions</h3>
+              <button onClick={closeActionModal} style={{
+                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px',
+                color: '#cbd5e1', cursor: 'pointer', padding: '0.35rem 0.6rem', fontSize: '0.8rem'
+              }}>✕</button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+              <img
+                src={getAvatarUrl(selectedStudent)}
+                alt={selectedStudent.full_name || 'Student'}
+                style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(99,102,241,0.3)' }}
+              />
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '1.1rem', fontWeight: '700', color: '#f1f5f9' }}>{selectedStudent.full_name || '—'}</div>
+                <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '0.25rem' }}>{selectedStudent.email || 'N/A'}</div>
+                <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '0.25rem' }}>Roll: {selectedStudent.roll_number || 'N/A'}</div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <label style={{ fontSize: '0.72rem', fontWeight: '600', color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Phone Number</label>
+                <input
+                  type="tel"
+                  value={actionPhone}
+                  onChange={(e) => setActionPhone(e.target.value)}
+                  placeholder="Enter phone number"
+                  style={{
+                    width: '100%', padding: '0.65rem 0.85rem', borderRadius: '10px',
+                    border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(20,20,40,0.5)',
+                    color: '#f1f5f9', fontSize: '0.9rem', outline: 'none'
+                  }}
+                />
+              </div>
+              <button
+                onClick={handleUpdatePhone}
+                disabled={isUpdatingPhone}
+                style={{
+                  width: '100%', padding: '0.7rem', borderRadius: '12px', border: 'none',
+                  fontSize: '0.9rem', fontWeight: '600', cursor: isUpdatingPhone ? 'not-allowed' : 'pointer',
+                  background: isUpdatingPhone ? 'rgba(99,102,241,0.4)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                  color: '#fff', opacity: isUpdatingPhone ? 0.7 : 1, transition: 'all 0.2s ease'
+                }}
+              >
+                {isUpdatingPhone ? 'Updating...' : 'Update Phone'}
+              </button>
+              <button
+                onClick={handleSendResetLink}
+                disabled={isSendingReset}
+                style={{
+                  width: '100%', padding: '0.7rem', borderRadius: '12px', border: 'none',
+                  fontSize: '0.9rem', fontWeight: '600', cursor: isSendingReset ? 'not-allowed' : 'pointer',
+                  background: isSendingReset ? 'rgba(16, 185, 129, 0.4)' : 'linear-gradient(135deg, #10b981, #059669)',
+                  color: '#fff', opacity: isSendingReset ? 0.7 : 1, transition: 'all 0.2s ease'
+                }}
+              >
+                {isSendingReset ? 'Sending...' : 'Send Password Reset Link'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

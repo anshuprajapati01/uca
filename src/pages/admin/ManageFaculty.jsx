@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { supabase, createTempClient } from '../../lib/supabase.js';
+import { useAuth } from '../../hooks/useAuth.js';
 import toast from 'react-hot-toast';
 
 export default function ManageFaculty() {
+  const { profile } = useAuth();
   const [faculties, setFaculties] = useState([]);
   const [branches, setBranches] = useState([]);
   const [formData, setFormData] = useState({ fullName: '', email: '', phone: '', branchId: '' });
@@ -10,6 +12,10 @@ export default function ManageFaculty() {
   const [handoverModal, setHandoverModal] = useState({ isOpen: false, faculty: null });
   const [replacementId, setReplacementId] = useState('');
   const [isHandingOver, setIsHandingOver] = useState(false);
+  const [selectedActionFaculty, setSelectedActionFaculty] = useState(null);
+  const [actionPhone, setActionPhone] = useState('');
+  const [isUpdatingPhone, setIsUpdatingPhone] = useState(false);
+  const [isSendingReset, setIsSendingReset] = useState(false);
 
   const fetchBranches = async () => {
     try {
@@ -80,6 +86,11 @@ export default function ManageFaculty() {
       const { data: authData, error: authError } = await tempClient.auth.signUp({
         email: formData.email,
         password: 'Test@123',
+        options: {
+          data: {
+           college_id: '11111111-0000-0000-0000-000000000001',
+          },
+        },
       });
 
       if (authError) throw authError;
@@ -211,6 +222,107 @@ export default function ManageFaculty() {
 
   const otherFaculties = faculties.filter(f => f.id !== handoverModal.faculty?.id);
 
+  const getAvatarUrl = (faculty) => {
+    if (faculty.avatar_url) return faculty.avatar_url;
+    const name = encodeURIComponent(faculty.full_name || 'Faculty');
+    return `https://ui-avatars.com/api/?name=${name}&background=6366f1&color=fff`;
+  };
+
+  const renderExpertiseTags = (expertise) => {
+    if (!expertise) {
+      return (
+        <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>N/A</span>
+      );
+    }
+    const tags = String(expertise)
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
+    if (tags.length === 0) {
+      return (
+        <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>N/A</span>
+      );
+    }
+    return tags.map((tag) => (
+      <span
+        key={tag}
+        style={{
+          padding: '0.25rem 0.75rem',
+          borderRadius: '9999px',
+          fontSize: '0.75rem',
+          fontWeight: '500',
+          letterSpacing: '0.025em',
+          display: 'inline-block',
+          background: 'rgba(168, 85, 247, 0.2)',
+          color: '#c084fc',
+        }}
+      >
+        {tag}
+      </span>
+    ));
+  };
+
+  const openActionModal = (faculty) => {
+    setSelectedActionFaculty(faculty);
+    setActionPhone(faculty.phone || '');
+  };
+
+  const closeActionModal = () => {
+    setSelectedActionFaculty(null);
+    setActionPhone('');
+    setIsUpdatingPhone(false);
+    setIsSendingReset(false);
+  };
+
+  const handleUpdatePhone = async () => {
+    if (!selectedActionFaculty) return;
+    setIsUpdatingPhone(true);
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ phone: actionPhone.trim() })
+        .eq('id', selectedActionFaculty.id);
+
+      if (error) throw error;
+
+      toast.success('Phone number updated successfully!');
+      setFaculties((prev) =>
+        prev.map((f) =>
+          f.id === selectedActionFaculty.id ? { ...f, phone: actionPhone.trim() } : f,
+        ),
+      );
+      setSelectedActionFaculty((prev) =>
+        prev ? { ...prev, phone: actionPhone.trim() } : prev,
+      );
+    } catch (error) {
+      toast.error('Failed to update phone: ' + error.message);
+    } finally {
+      setIsUpdatingPhone(false);
+    }
+  };
+
+  const handleSendResetLink = async () => {
+    if (!selectedActionFaculty?.email) {
+      toast.error('No email found for this faculty');
+      return;
+    }
+    setIsSendingReset(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        selectedActionFaculty.email.trim(),
+        { redirectTo: `${window.location.origin}/update-password` },
+      );
+
+      if (error) throw error;
+
+      toast.success(`Password reset link sent to ${selectedActionFaculty.email}`);
+    } catch (error) {
+      toast.error('Failed to send reset link: ' + error.message);
+    } finally {
+      setIsSendingReset(false);
+    }
+  };
+
   return (
     <div style={containerStyle}>
       <h2 style={headingStyle}>Manage Faculty 👨‍🏫</h2>
@@ -257,12 +369,16 @@ export default function ManageFaculty() {
           </thead>
           <tbody>
             {faculties.map(faculty => (
-              <tr key={faculty.id} style={tableRowStyle}>
+              <tr
+                key={faculty.id}
+                style={{ ...tableRowStyle, cursor: 'pointer' }}
+                onClick={() => openActionModal(faculty)}
+              >
                 <td style={tableCellStyle}>{faculty.full_name}</td>
                 <td style={tableCellStyle}>{faculty.email || 'N/A'}</td>
                 <td style={tableCellStyle}>{faculty.phone || 'N/A'}</td>
                 <td style={tableCellStyle}>
-                  <button onClick={() => setHandoverModal({ isOpen: true, faculty })} style={deleteButtonStyle}>🗑️ Remove</button>
+                  <button onClick={(e) => { e.stopPropagation(); setHandoverModal({ isOpen: true, faculty }); }} style={deleteButtonStyle}>🗑️ Remove</button>
                 </td>
               </tr>
             ))}
@@ -382,6 +498,211 @@ export default function ManageFaculty() {
                 onMouseOut={(e) => !isHandingOver && replacementId && (e.currentTarget.style.backgroundColor = '#ef4444')}
               >
                 {isHandingOver ? 'Processing...' : 'Handover & Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedActionFaculty && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 999999,
+          }}
+          onClick={closeActionModal}
+        >
+          <div
+            style={{
+              backgroundColor: '#1c1d2e',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '16px',
+              padding: '28px',
+              width: '100%',
+              maxWidth: '480px',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '1.25rem',
+              }}
+            >
+              <h3
+                style={{
+                  margin: 0,
+                  fontSize: '1.15rem',
+                  fontWeight: '700',
+                  color: '#f1f5f9',
+                }}
+              >
+                Faculty Actions
+              </h3>
+              <button
+                onClick={closeActionModal}
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '8px',
+                  color: '#cbd5e1',
+                  cursor: 'pointer',
+                  padding: '0.35rem 0.6rem',
+                  fontSize: '0.8rem',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '0.75rem',
+                marginBottom: '1.25rem',
+              }}
+            >
+              <img
+                src={getAvatarUrl(selectedActionFaculty)}
+                alt={selectedActionFaculty.full_name || 'Faculty'}
+                style={{
+                  width: '80px',
+                  height: '80px',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: '2px solid rgba(99,102,241,0.3)',
+                }}
+              />
+              <div style={{ textAlign: 'center' }}>
+                <div
+                  style={{
+                    fontSize: '1.1rem',
+                    fontWeight: '700',
+                    color: '#f1f5f9',
+                  }}
+                >
+                  {selectedActionFaculty.full_name || '—'}
+                </div>
+                <div
+                  style={{
+                    fontSize: '0.85rem',
+                    color: '#94a3b8',
+                    marginTop: '0.25rem',
+                  }}
+                >
+                  {selectedActionFaculty.email || 'N/A'}
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.35rem',
+                marginBottom: '1.25rem',
+              }}
+            >
+              <label
+                style={{
+                  fontSize: '0.72rem',
+                  fontWeight: '600',
+                  color: '#6366f1',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                }}
+              >
+                Expertise
+              </label>
+              <div
+                style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}
+              >
+                {renderExpertiseTags(selectedActionFaculty.expertise)}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <label
+                  style={{
+                    fontSize: '0.72rem',
+                    fontWeight: '600',
+                    color: '#6366f1',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={actionPhone}
+                  onChange={(e) => setActionPhone(e.target.value)}
+                  placeholder="Enter phone number"
+                  style={{
+                    width: '100%',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '10px',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    background: 'rgba(20,20,40,0.5)',
+                    color: '#f1f5f9',
+                    fontSize: '0.9rem',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+              <button
+                onClick={handleUpdatePhone}
+                disabled={isUpdatingPhone}
+                style={{
+                  width: '100%',
+                  padding: '0.7rem',
+                  borderRadius: '12px',
+                  border: 'none',
+                  fontSize: '0.9rem',
+                  fontWeight: '600',
+                  cursor: isUpdatingPhone ? 'not-allowed' : 'pointer',
+                  background: isUpdatingPhone
+                    ? 'rgba(99,102,241,0.4)'
+                    : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                  color: '#fff',
+                  opacity: isUpdatingPhone ? 0.7 : 1,
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {isUpdatingPhone ? 'Updating...' : 'Update Phone'}
+              </button>
+              <button
+                onClick={handleSendResetLink}
+                disabled={isSendingReset}
+                style={{
+                  width: '100%',
+                  padding: '0.7rem',
+                  borderRadius: '12px',
+                  border: 'none',
+                  fontSize: '0.9rem',
+                  fontWeight: '600',
+                  cursor: isSendingReset ? 'not-allowed' : 'pointer',
+                  background: isSendingReset
+                    ? 'rgba(16, 185, 129, 0.4)'
+                    : 'linear-gradient(135deg, #10b981, #059669)',
+                  color: '#fff',
+                  opacity: isSendingReset ? 0.7 : 1,
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {isSendingReset ? 'Sending...' : 'Send Password Reset Link'}
               </button>
             </div>
           </div>

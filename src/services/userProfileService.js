@@ -15,29 +15,16 @@ import { USER_ROLES } from '../config/constants.js';
 const PROFILES_TABLE = 'user_profiles';
 
 /**
- * Returns a fallback profile inferred from the user's email domain.
- * This is a safe fallback only when no profile row exists in the database.
+ * Returns a safe fallback profile when no row exists in the user_profiles
+ * table. Elevated roles (faculty, hod, director) MUST be granted only via an
+ * explicit database row; this fallback always defaults to 'student'.
  * @param {string} userId
- * @param {string} email
  * @returns {UserProfile}
  */
-function buildFallbackProfile(userId, email) {
-  const domain = email.split('@')[1]?.toLowerCase() ?? '';
-  const lowerEmail = email.toLowerCase();
-
-  let role = USER_ROLES.STUDENT;
-
-  if (domain === 'bit.uca.com' || lowerEmail.startsWith('director@')) {
-    role = USER_ROLES.DIRECTOR;
-  } else if (lowerEmail.startsWith('hod@')) {
-    role = USER_ROLES.HOD;
-  } else if (domain === 'faculty.uca.com') {
-    role = USER_ROLES.FACULTY;
-  }
-
+function buildFallbackProfile(userId) {
   return {
     id: userId,
-    role,
+    role: USER_ROLES.STUDENT,
     full_name: null,
     avatar_url: null,
     inferred: true,
@@ -46,28 +33,27 @@ function buildFallbackProfile(userId, email) {
 
 /**
  * @param {string} userId - Auth user id (matches user_profiles.id)
- * @param {string} [email] - Used as fallback when profile row is missing
  * @returns {Promise<UserProfile>}
  */
-export async function fetchUserProfile(userId, email) {
+export async function fetchUserProfile(userId) {
   try {
     const { data, error } = await supabase
       .from(PROFILES_TABLE)
-      .select('id, role, full_name, can_view_faculty, can_view_hod, branch_id')
+       .select('*')
       .eq('id', userId)
       .maybeSingle();
 
     if (error) {
-      return buildFallbackProfile(userId, email);
+      return buildFallbackProfile(userId);
     }
 
     if (data) {
       return { ...data, inferred: false };
     }
 
-    return buildFallbackProfile(userId, email);
+    return buildFallbackProfile(userId);
   } catch {
-    return buildFallbackProfile(userId, email);
+    return buildFallbackProfile(userId);
   }
 }
 
