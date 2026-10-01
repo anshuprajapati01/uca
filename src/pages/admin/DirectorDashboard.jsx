@@ -1150,14 +1150,10 @@ const handleAddFaculty = async (e) => {
     const newId = handoverModal.replacementFacultyId;
 
     try {
-      // STEP 1: Transfer Subjects
-      const { data: subData, error: subErr } = await supabase
-        .from('subjects')
-        .update({ faculty_id: newId })
-        .eq('faculty_id', oldId)
-        .select(); // Force return of updated rows
+      // STEP 1: Transfer Subjects (Secure Bulk RPC)
+      const { error: subErr } = await supabase.rpc('bulk_transfer_faculty', { p_old_faculty_id: oldId, p_new_faculty_id: newId });
       if (subErr) throw new Error("Subjects Update Error: " + subErr.message);
-      console.log("Subjects transferred:", subData);
+      console.log("Subjects transferred via RPC");
 
       // STEP 2: Transfer HOD Roles
       const { data: deptData, error: deptErr } = await supabase
@@ -1200,7 +1196,7 @@ const handleAddFaculty = async (e) => {
     const oldId = handoverModal.faculty.id;
 
     try {
-      const { error: subErr } = await supabase.from('subjects').update({ faculty_id: null }).eq('faculty_id', oldId);
+      const { error: subErr } = await supabase.rpc('bulk_unassign_faculty', { p_old_faculty_id: oldId });
       if (subErr) throw new Error("Failed to unassign subjects: " + subErr.message);
 
       const { error: deptErr } = await supabase.from('departments').update({ hod_id: null }).eq('hod_id', oldId);
