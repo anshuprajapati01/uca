@@ -65,11 +65,14 @@ export default function AuthProvider({ children }) {
 
         if (!mounted) return;
 
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
+        const { data: { user: validatedUser }, error: userError } = await supabase.auth.getUser();
+        if (userError) throw userError;
 
-        if (currentSession?.user) {
-          await loadProfile(currentSession.user);
+        setSession(currentSession);
+        setUser(validatedUser ?? currentSession?.user ?? null);
+
+        if (validatedUser) {
+          await loadProfile(validatedUser);
         } else {
           setProfile(null);
           setRole(null);
@@ -78,11 +81,11 @@ export default function AuthProvider({ children }) {
       } catch (error) {
         console.error('Auth initialization failed:', error);
         if (mounted) {
-          setSession(null);
-          setUser(null);
-          setProfile(null);
-          setRole(null);
-          setProfileError(null);
+          localStorage.clear();
+          sessionStorage.clear();
+          if (window.location.pathname !== '/') {
+            window.location.href = '/';
+          }
         }
       } finally {
         if (mounted) {

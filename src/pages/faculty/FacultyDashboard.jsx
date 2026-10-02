@@ -99,7 +99,15 @@ export default function FacultyDashboard() {
   }, [navigate]);
 
   async function handleSignOut() {
-    await signOut();
+    try {
+      await signOut();
+    } catch (error) {
+      console.warn("Backend signout failed, forcing local cleanup:", error);
+    } finally {
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '/';
+    }
   }
 
   const canViewFaculty = facultyProfile?.can_view_faculty === true;

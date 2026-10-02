@@ -115,8 +115,15 @@ export default function TopNavbar({ title, onMenuClick }) {
   }
 
   async function handleLogout() {
-    await logout();
-    navigate(ROUTES.LOGIN, { replace: true });
+    try {
+      await logout();
+    } catch (error) {
+      console.warn("Backend signout failed, forcing local cleanup:", error);
+    } finally {
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '/';
+    }
   }
 
   function openProfileModal() {

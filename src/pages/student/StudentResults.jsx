@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Printer } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import './StudentResults.css';
@@ -142,15 +143,16 @@ const StudentResults = () => {
             
             <div className="sem-card-bottom">
               <p><span>Remarks:</span> {sem.details}</p>
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <button 
+              <div className="sem-card-bottom-actions">
+                <button
                   className="view-scorecard-btn"
                   onClick={() => toggleScorecard(sem.id)}
                 >
                   {expandedSem === sem.id ? 'Hide Scorecard ↑' : 'View Full Scorecard ↓'}
                 </button>
-                <button className="print-scorecard-btn" onClick={() => window.print()} style={{ marginLeft: '12px', background: '#3b82f6', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: '500' }}>
-                  🖨️ Save PDF / Print
+                <button className="print-scorecard-btn" onClick={() => window.print()}>
+                  <Printer size={16} aria-hidden="true" />
+                  Save PDF / Print
                 </button>
               </div>
             </div>

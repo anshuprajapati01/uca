@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase.js';
 import { USER_ROLES, ROUTES } from '../../config/constants.js';
+import { fetchCached } from '../../services/subjectCache.js';
+import FacultyAvatar from '../../components/common/FacultyAvatar.jsx';
 import './MySubjects.css'; // Isko rehne dete hain tabs/header ke liye
 
 function branchMatches(profileBranch, subjectDepartment) {
@@ -29,15 +31,26 @@ function extractSemNum(semString) {
   return match ? Number(match[0]) : null;
 }
 
-export default function MySubjects({ onSubjectClick }) {
+// `subjects` lets a parent that already holds the list (the dashboard shell)
+// hand it down and skip the query entirely. Left unset, this page fetches on
+// its own through the shared cache, so repeat visits render instantly.
+export default function MySubjects({ onSubjectClick, subjects: cachedSubjects }) {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
-  const [allSubjects, setAllSubjects] = useState([]);
+  const [allSubjects, setAllSubjects] = useState(cachedSubjects || []);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedSemester, setSelectedSemester] = useState(null);
   const [liveSemester, setLiveSemester] = useState(null);
   const [subjectTypeFilter, setSubjectTypeFilter] = useState('All');
+
+  // Read through a ref so a new array identity from the parent cannot retrigger
+  // this effect on every render.
+  const cachedSubjectsRef = useRef(cachedSubjects);
+  useEffect(() => {
+    cachedSubjectsRef.current = cachedSubjects;
+  }, [cachedSubjects]);
+  const hasCachedSubjects = Array.isArray(cachedSubjects);
 
   useEffect(() => {
     let cancelled = false;
@@ -68,13 +81,23 @@ export default function MySubjects({ onSubjectClick }) {
         const studentBranch = profileData.selected_branch || profileData.branch || profileData.branch_id || profileData.department || profileData.batches?.department || profileData.batches?.branch || 'Unknown';
         const studentYear = profileData.selected_year || profileData.year || profileData.batches?.year || profileData.batches?.academic_year || 'Unknown';
 
-        const { data: subjectsData, error: subjectsError } = await supabase
-          .from('subjects')
-          .select('*, faculty:faculty_id(id, full_name, avatar_url, profile_image_url)')
-          .order('semester', { ascending: true })
-          .order('name', { ascending: true });
+        const parentSubjects = cachedSubjectsRef.current;
+        const subjectsData = Array.isArray(parentSubjects)
+          ? parentSubjects
+          : await fetchCached(`all:${authData.user.id}`, async () => {
+              console.log("[fetcher] executing Supabase query for all subjects...");
+              const { data, error: subjectsError } = await supabase
+                .from('subjects')
+                .select('*, faculty:faculty_id(id, full_name, avatar_url, profile_image_url)')
+                .order('semester', { ascending: true })
+                .order('name', { ascending: true });
 
-        if (subjectsError) throw subjectsError;
+              console.log("[fetcher] query returned:", { data: data?.length ?? 0, error: subjectsError?.message ?? null });
+              if (subjectsError) throw new Error(subjectsError.message || 'Failed to fetch subjects');
+              if (!data) return [];
+              return data;
+            });
+
         if (cancelled) return;
 
         const { data: deptData, error: deptError } = await supabase
@@ -130,9 +153,7 @@ export default function MySubjects({ onSubjectClick }) {
           setAllSubjects([]);
         }
       } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
+        setIsLoading(false);
       }
     }
 
@@ -140,7 +161,21 @@ export default function MySubjects({ onSubjectClick }) {
     return () => {
       cancelled = true;
     };
-  }, [navigate]);
+    // `hasCachedSubjects` covers the one meaningful switch: parent-supplied
+    // data vs. this page fetching its own. Array identity is read via the ref.
+  }, [navigate, hasCachedSubjects]);
+
+  // Bounded wait. The queries above can hang on a bad network (or a profile
+  // fetch that never resolves), and a skeleton that spins forever is worse
+  // than an honest error card, so the loading state is always released.
+  useEffect(() => {
+    if (!isLoading) return undefined;
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+      setError((prev) => prev || 'Loading subjects took too long. Please try again.');
+    }, 15000);
+    return () => clearTimeout(timer);
+  }, [isLoading]);
 
   const filteredSubjects = useMemo(() => {
     if (!profile) return [];
@@ -239,7 +274,9 @@ export default function MySubjects({ onSubjectClick }) {
         )}
       </div>
 
-      {filteredSubjects.length === 0 ? (
+      {/* Gated on `!isLoading` so an in-flight query can never paint the
+          "no subjects" message that it would have to immediately replace. */}
+      {!isLoading && filteredSubjects.length === 0 ? (
         <div className="student-my-subjects__empty-state">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
             <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
@@ -287,23 +324,23 @@ export default function MySubjects({ onSubjectClick }) {
             </div>
           ) : (
             /* 🔥 YAHAN SE MAIN MAGIC START HOTA HAI 🔥 */
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8">
+            <div className="student-my-subjects__grid">
               {finalFilteredSubjects.map((subject) => (
-                <div 
+                <div
                   key={subject.id}
-                  className="group relative bg-[#1c1c27] border border-white/10 rounded-2xl p-5 cursor-pointer transition-all duration-300 hover:-translate-y-1.5 hover:border-emerald-500/60 hover:shadow-[0_8px_30px_rgba(16,185,129,0.15)] flex flex-col justify-between min-h-[160px]"
+                  className="student-my-subjects__card"
                   onClick={() => onSubjectClick && onSubjectClick(subject)}
                 >
                   <div>
-                    <h3 className="text-lg font-semibold text-white tracking-tight mb-3 line-clamp-2 leading-tight">
+                    <h3 className="student-my-subjects__card-title">
                       {subject.name || subject.subject_name || 'Unnamed Subject'}
                     </h3>
-                    <div className="flex justify-between items-center mt-3">
-                      <span className="text-xs font-mono text-gray-300 bg-white/5 border border-white/5 px-2.5 py-1.5 rounded-md">
+                    <div className="student-my-subjects__card-meta">
+                      <span className="student-my-subjects__card-code">
                         {subject.code || subject.subject_code || 'N/A'}
                       </span>
-                      <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-400/10 px-3 py-1.5 rounded-full">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <span className="student-my-subjects__card-credits">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                           <circle cx="12" cy="12" r="10"></circle>
                           <polyline points="12 6 12 12 16 14"></polyline>
                         </svg>
@@ -311,14 +348,15 @@ export default function MySubjects({ onSubjectClick }) {
                       </span>
                     </div>
                   </div>
-                  
-                  <div className="mt-5 pt-4 border-t border-white/5 flex items-center gap-3">
-                    <img 
-                      src={subject.faculty?.avatar_url || subject.faculty?.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(subject.faculty?.full_name || subject.faculty_name || 'Teacher')}&background=2d2d3f&color=8b5cf6`} 
-                      alt="Faculty" 
-                      className="w-8 h-8 rounded-full object-cover border border-white/10 group-hover:border-emerald-500/50 transition-colors"
+
+                  <div className="student-my-subjects__card-footer">
+                    <FacultyAvatar
+                      src={subject.faculty?.avatar_url || subject.faculty?.profile_image_url || ''}
+                      name={subject.faculty?.full_name || subject.faculty_name || 'Faculty'}
+                      className="student-my-subjects__card-faculty-img"
+                      size={32}
                     />
-                    <span className="text-sm font-medium text-gray-400 group-hover:text-gray-200 transition-colors">
+                    <span className="student-my-subjects__card-faculty">
                       {subject.faculty?.full_name || subject.faculty_name || 'Faculty TBA'}
                     </span>
                   </div>

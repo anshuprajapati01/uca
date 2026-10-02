@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Grid, Trash2, Download } from 'lucide-react';
 import { useHodContext } from '../../context/HodContext.jsx';
 import { supabase } from '../../lib/supabase.js';
+import { getPeriodEnd, isSpanSlotType, restoreSpanDurations } from '../../utils/timetablePeriods.js';
 import toast from 'react-hot-toast';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
@@ -550,7 +551,17 @@ export default function HODManageTimetable() {
       }
 
       if (draftSlots && draftSlots.length > 0) {
-        const slotsToInsert = draftSlots.map(({ id, created_at, updated_at, ...rest }) => rest);
+        // Repair legacy rows on the way out. Drafts saved before end_time was
+        // derived from the grid still carry a single period's end (09:10 ->
+        // 10:05 for a lab that runs to 11:00); publishing them verbatim is what
+        // kept every portal showing half-length labs.
+        const repaired = restoreSpanDurations(draftSlots);
+        const repairedCount = repaired.filter((slot, i) => slot !== draftSlots[i]).length;
+        if (repairedCount > 0) {
+          console.log(`[Publish] Widened ${repairedCount} truncated two-period slot(s) before publishing`);
+        }
+
+        const slotsToInsert = repaired.map(({ id, created_at, updated_at, ...rest }) => rest);
         console.log(`[Publish] Upserting ${slotsToInsert.length} slot(s) into timetable_slots`);
         const { error: insertError } = await supabase
           .from('timetable_slots')
@@ -599,10 +610,14 @@ export default function HODManageTimetable() {
       if (deleteError) throw deleteError;
       
       if (liveSlots && liveSlots.length > 0) {
+        // Pulling live rows back into drafts must not reintroduce the legacy
+        // truncation that made those rows wrong in the first place.
         const { error: insertError } = await supabase
           .from('timetable_drafts')
-          .upsert(liveSlots, { onConflict: 'branch, semester, section, day_of_week, start_time, batch' });
-        
+          .upsert(restoreSpanDurations(liveSlots), {
+            onConflict: 'branch, semester, section, day_of_week, start_time, batch',
+          });
+
         if (insertError) throw insertError;
       }
       
@@ -702,7 +717,7 @@ export default function HODManageTimetable() {
   const getSlotsForCell = (day, start) =>
     slots.filter((s) => s.day_of_week === day && String(s.start_time || '').slice(0, 5) === start);
 
-  const isSpanType = (slotType) => slotType === 'lab' || slotType === 'skill';
+  const isSpanType = (slotType) => isSpanSlotType({ slot_type: slotType });
 
   const openCellModal = (day, col) => {
     setActiveCell({ day, period: col.label, start: col.start, end: col.end, slotId: null });
@@ -813,14 +828,20 @@ export default function HODManageTimetable() {
     const numericSemester = parseInt(String(selectedSemester).replace(/\D/g, ''), 10);
     const numericYear = getYearNumber(effectiveYear);
 
-    const isLabSlot = slotData.slotType === 'lab' || slotData.slotType === 'skill';
-    const startDate = new Date(`2000-01-01T${slotData.startTime}:00`);
-    if (isLabSlot) {
-      startDate.setMinutes(startDate.getMinutes() + 110);
-    } else {
-      startDate.setMinutes(startDate.getMinutes() + 55);
+    const isLabSlot = isSpanSlotType({ slot_type: slotData.slotType });
+    // end_time is derived from the master grid, never from the clicked cell's
+    // own end or a fixed +110 minute offset. Deriving it from the cell truncated
+    // every two-period lab to a single period (09:10 -> 10:05), and a fixed
+    // offset overshot everywhere else (10:05 -> 12:50, straight through lunch).
+    const endTime = getPeriodEnd(slotData.startTime, { span: isLabSlot });
+
+    if (!endTime) {
+      console.warn('[handleSaveSlot] start time is not on the period grid', {
+        startTime: slotData.startTime,
+      });
+      toast.error('Slot start time does not match a timetable period');
+      return;
     }
-    const endTime = startDate.toTimeString().slice(0, 5);
 
     const newSlot = {
       branch: effectiveBranch,
@@ -829,7 +850,7 @@ export default function HODManageTimetable() {
       section: 'A',
       day_of_week: activeCell.day,
       start_time: `${slotData.startTime}:00`,
-      end_time: `${endTime}:00`,
+      end_time: endTime,
       subject_id: slotData.subject_id,
       faculty_id: isNonAcademicSlot(slotData.slotType) ? (slotData.faculty_id || null) : slotData.faculty_id,
       room_no: slotData.room || timetableMeta.roomNo || null,

@@ -2,16 +2,17 @@
   max-width: 520px;
   padding: 1.25rem;
   border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--bg, #ffffff);
-  color: var(--text, #111827);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-sm);
 }
 
 .subjects-card__title {
   margin: 0 0 1rem;
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--text-h, #0f172a);
+  color: var(--text-primary);
 }
 
 .subjects-card__list {
@@ -28,7 +29,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .subjects-card__item:last-child {
@@ -43,32 +44,32 @@
 
 .subjects-card__name {
   font-size: 0.9375rem;
-  color: var(--text-h, #0f172a);
+  color: var(--text-primary);
 }
 
 .subjects-card__code {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--text-tertiary);
 }
 
 .subjects-card__credits {
   font-size: 0.8125rem;
-  color: var(--accent, #aa3bff);
+  color: var(--brand);
   font-weight: 500;
 }
 
 .subjects-card__status {
   margin: 0;
   padding: 0.75rem 1rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 0.9375rem;
-  color: var(--text, #6b7280);
-  background: var(--bg, #ffffff);
+  color: var(--text-tertiary);
+  background: var(--bg-subtle);
   border: 1px solid var(--border);
   max-width: 520px;
 }
 
 .subjects-card__status--error {
-  color: #dc2626;
-  background: rgba(220, 38, 38, 0.08);
+  color: var(--danger-text);
+  background: var(--danger-subtle);
 }

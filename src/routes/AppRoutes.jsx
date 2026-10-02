@@ -15,7 +15,8 @@ import UploadMaterials from '../pages/admin/UploadMaterials.jsx';
 import FacultyDashboard from '../pages/faculty/FacultyDashboard.jsx';
 import FacultyOverview from '../pages/faculty/FacultyOverview.jsx';
 import FacultyResources from '../pages/faculty/FacultyResources.jsx';
-import MySubjects from '../pages/faculty/MySubjects.jsx';
+import FacultyMySubjects from '../pages/faculty/MySubjects.jsx';
+import StudentMySubjects from '../pages/student/MySubjects.jsx';
 import SubjectWorkspace from '../pages/faculty/SubjectWorkspace.jsx';
 import FacultyAssignments from '../pages/dashboard/FacultyAssignments.jsx';
 import FacultySessionalMarks from '../pages/dashboard/FacultySessionalMarks.jsx';
@@ -49,12 +50,20 @@ export default function AppRoutes() {
       <Route path={ROUTES.LOGIN} element={<LoginPage />} />
       <Route path={ROUTES.UPDATE_PASSWORD} element={<UpdatePassword />} />
       
-      {/* STUDENT ROUTES */}
+       {/* STUDENT ROUTES */}
       <Route
         path={ROUTES.STUDENT_DASHBOARD}
         element={
           <ProtectedRoute allowedRoles={STUDENT_ACCESS_ROLES}>
             <StudentDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${ROUTES.STUDENT_DASHBOARD}/subjects`}
+        element={
+          <ProtectedRoute allowedRoles={STUDENT_ACCESS_ROLES}>
+            <StudentMySubjects />
           </ProtectedRoute>
         }
       />
@@ -69,8 +78,8 @@ export default function AppRoutes() {
         }
       >
         <Route index element={<FacultyOverview />} />
-        <Route path="subjects" element={<MySubjects />} />
-        <Route path="subjects/:subjectId" element={<MySubjects />} />
+        <Route path="subjects" element={<FacultyMySubjects />} />
+        <Route path="subjects/:subjectId" element={<FacultyMySubjects />} />
         <Route path="workspace/:subjectId" element={<SubjectWorkspace />} />
         <Route path="resources" element={<FacultyResources />} />
         <Route path="assignments" element={<FacultyAssignments />} />

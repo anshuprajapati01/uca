@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase.js';
 import toast from 'react-hot-toast';
-import { X, Calendar, Award, FileText, Upload } from 'lucide-react';
+import {
+  X, Calendar, Award, FileText, Upload,
+  ClipboardList, FlaskConical, Hourglass, SquareCheck,
+  Paperclip, TriangleAlert,
+} from 'lucide-react';
+import './StudentAssignments.css';
 
 export default function StudentAssignments({ user }) {
   const [assignments, setAssignments] = useState([]);
@@ -141,261 +146,164 @@ export default function StudentAssignments({ user }) {
   };
 
  const AssignmentCard = ({ assignment, isPending }) => (
-    <div style={{
-      background: 'rgba(255, 255, 255, 0.03)',
-      backdropFilter: 'blur(16px)',
-      WebkitBackdropFilter: 'blur(16px)',
-      border: '1px solid rgba(255, 255, 255, 0.08)',
-      borderRadius: '16px',
-      padding: '24px',
-      boxShadow: '0 10px 30px -10px rgba(0, 0, 0, 0.5)',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '16px'
-    }}>
+    <div className="sa-card">
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+      <div className="sa-card__head">
         <div>
-          <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'white', margin: '0 0 4px 0' }}>{assignment.title}</h3>
-          <span style={{ fontSize: '0.8rem', fontWeight: '600', color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <h3 className="sa-card__title">{assignment.title}</h3>
+          <span className="sa-card__cat">
             {assignment.assignment_categories?.name || 'Assignment'}
           </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#9ca3af', fontSize: '0.875rem' }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Calendar size={14} /> {formatDate(assignment.due_date)}</span>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Award size={14} /> {assignment.max_marks} marks</span>
+        <div className="sa-card__meta">
+          <span><Calendar size={14} aria-hidden="true" /> {formatDate(assignment.due_date)}</span>
+          <span><Award size={14} aria-hidden="true" /> {assignment.max_marks} marks</span>
         </div>
       </div>
 
       {/* Description */}
-      <p style={{ color: '#d1d5db', fontSize: '0.95rem', lineHeight: '1.6', margin: 0, whiteSpace: 'pre-wrap' }}>
+      <p className="sa-card__desc">
         {assignment.description}
       </p>
 
       {/* Subject & Download Link */}
-      <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap', color: '#9ca3af', fontSize: '0.875rem' }}>
+      <div className="sa-card__row">
         <span>Subject: {assignment.subjects?.name || '—'}</span>
         {assignment.attachment_url && (
           <a
-            href={assignment.attachment_url} target="_blank" rel="noopener noreferrer"
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(96, 165, 250, 0.2)'; e.currentTarget.style.borderColor = 'rgba(96, 165, 250, 0.4)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(96, 165, 250, 0.1)'; e.currentTarget.style.borderColor = 'rgba(96, 165, 250, 0.2)'; }}
-            style={{
-              color: '#60a5fa', textDecoration: 'none', fontWeight: '500', display: 'inline-flex', alignItems: 'center', gap: '6px',
-              background: 'rgba(96, 165, 250, 0.1)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(96, 165, 250, 0.2)', transition: 'all 0.2s ease'
-            }}
+            className="sa-link sa-link--chip"
+            href={assignment.attachment_url}
+            target="_blank"
+            rel="noopener noreferrer"
           >
-            📎 Download Question Paper
+            <Paperclip size={14} aria-hidden="true" />
+            Download Question Paper
           </a>
         )}
       </div>
 
       {/* Actions */}
       {isPending && (
-        <div style={{ marginTop: '8px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '16px' }}>
+        <div className="sa-card__actions">
           {assignment.submission_mode === 'Online' ? (
-            <button
-              onClick={() => openSubmitModal(assignment)}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.9)'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(99, 102, 241, 0.4)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.7)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)'; }}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 24px',
-                background: 'rgba(99, 102, 241, 0.7)', border: '1px solid rgba(99, 102, 241, 0.5)', color: 'white',
-                borderRadius: '12px', fontSize: '0.95rem', fontWeight: '600', cursor: 'pointer', transition: 'all 0.3s ease',
-              }}
-            >
-              <Upload size={18} /> Submit Work
+            <button className="sa-btn-primary" onClick={() => openSubmitModal(assignment)}>
+              <Upload size={18} aria-hidden="true" /> Submit Work
             </button>
           ) : (
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)', borderRadius: '12px', color: '#fde68a', fontSize: '0.9rem', fontWeight: '500' }}>
-              ⚠️ Submit physical copy in class
+            <div className="sa-btn-offline">
+              <TriangleAlert size={16} aria-hidden="true" />
+              Submit physical copy in class
             </div>
           )}
         </div>
       )}
     </div>
   );
+
   if (isLoading) {
-    return (
-      <div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af' }}>
-        Loading assignments…
-      </div>
-    );
+    return <div className="sa-loading">Loading assignments…</div>;
   }
 
   return (
     <>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}>
-        📋 My Assignments
+      <h2 className="sa-title">
+        <ClipboardList size={20} aria-hidden="true" />
+        My Assignments
       </h2>
 
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+      <div className="sa-tabs">
         <button
+          type="button"
           onClick={() => setActiveTab('pending')}
-          style={{
-            flex: 1,
-            padding: '12px 20px',
-            borderRadius: '12px',
-            backgroundColor: activeTab === 'pending' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(255,255,255,0.05)',
-            border: '1px solid ' + (activeTab === 'pending' ? 'rgba(99, 102, 241, 0.4)' : 'rgba(255,255,255,0.1)'),
-            color: '#e2e8f0',
-            fontWeight: '600',
-            fontSize: '0.95rem',
-            cursor: 'pointer',
-          }}
+          className={`sa-tab ${activeTab === 'pending' ? 'sa-tab--active' : ''}`}
         >
-          ⏳ Pending ({pendingAssignments.length})
+          <Hourglass size={16} aria-hidden="true" />
+          Pending ({pendingAssignments.length})
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab('submitted')}
-          style={{
-            flex: 1,
-            padding: '12px 20px',
-            borderRadius: '12px',
-            backgroundColor: activeTab === 'submitted' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(255,255,255,0.05)',
-            border: '1px solid ' + (activeTab === 'submitted' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(255,255,255,0.1)'),
-            color: '#e2e8f0',
-            fontWeight: '600',
-            fontSize: '0.95rem',
-            cursor: 'pointer',
-          }}
+          className={`sa-tab ${activeTab === 'submitted' ? 'sa-tab--active' : ''}`}
         >
-          ✅ Submitted ({completedAssignments.length})
+          <SquareCheck size={16} aria-hidden="true" />
+          Submitted ({completedAssignments.length})
         </button>
       </div>
 
       {activeTab === 'pending' && pendingAssignments.length === 0 && (
-        <div style={{
-          textAlign: 'center',
-          padding: '48px',
-          backgroundColor: '#151623',
-          borderRadius: '16px',
-          border: '1px dashed rgba(255,255,255,0.1)',
-          color: '#9ca3af',
-        }}>
-          <FileText size={48} strokeWidth={1} style={{ marginBottom: '12px', opacity: 0.5 }} />
-          <p style={{ margin: 0 }}>No pending assignments.</p>
+        <div className="sa-empty">
+          <FileText size={48} strokeWidth={1} className="sa-empty__icon" aria-hidden="true" />
+          <p>No pending assignments.</p>
         </div>
       )}
 
       {activeTab === 'submitted' && completedAssignments.length === 0 && (
-        <div style={{
-          textAlign: 'center',
-          padding: '48px',
-          backgroundColor: '#151623',
-          borderRadius: '16px',
-          border: '1px dashed rgba(255,255,255,0.1)',
-          color: '#9ca3af',
-        }}>
-          <FileText size={48} strokeWidth={1} style={{ marginBottom: '12px', opacity: 0.5 }} />
-          <p style={{ margin: 0 }}>No submitted assignments yet.</p>
+        <div className="sa-empty">
+          <FileText size={48} strokeWidth={1} className="sa-empty__icon" aria-hidden="true" />
+          <p>No submitted assignments yet.</p>
         </div>
       )}
 
-<div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div className="sa-list">
         {activeTab === 'pending' && pendingAssignments.map((assignment) => (
           <AssignmentCard key={assignment.id} assignment={assignment} isPending />
         ))}
         {activeTab === 'submitted' && completedAssignments.map((assignment) => {
           const submission = submissions.find((s) => s.assignment_id === assignment.id);
           return (
-            <div
-              key={assignment.id}
-              style={{
-                background: 'rgba(255, 255, 255, 0.03)',
-                backdropFilter: 'blur(16px)',
-                WebkitBackdropFilter: 'blur(16px)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '16px',
-                padding: '24px',
-                boxShadow: '0 10px 30px -10px rgba(0, 0, 0, 0.5)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+            <div key={assignment.id} className="sa-card">
+              <div className="sa-card__head">
                 <div>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'white', margin: '0 0 4px 0' }}>
-                    {assignment.title}
-                  </h3>
-                  <span style={{ fontSize: '0.8rem', fontWeight: '600', color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <h3 className="sa-card__title">{assignment.title}</h3>
+                  <span className="sa-card__cat">
                     {assignment.assignment_categories?.name || 'Assignment'}
                   </span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#9ca3af', fontSize: '0.875rem' }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    <Calendar size={14} /> {formatDate(assignment.due_date)}
+                <div className="sa-card__meta">
+                  <span>
+                    <Calendar size={14} aria-hidden="true" /> {formatDate(assignment.due_date)}
                   </span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    <Award size={14} /> {assignment.max_marks} marks
+                  <span>
+                    <Award size={14} aria-hidden="true" /> {assignment.max_marks} marks
                   </span>
                 </div>
               </div>
-              <p style={{ color: '#d1d5db', fontSize: '0.95rem', lineHeight: '1.6', margin: 0, whiteSpace: 'pre-wrap' }}>
-                {assignment.description}
-              </p>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', color: '#9ca3af', fontSize: '0.875rem' }}>
+              <p className="sa-card__desc">{assignment.description}</p>
+              <div className="sa-card__row">
                 <span>Subject: {assignment.subjects?.name || '—'}</span>
                 {assignment.attachment_url && (
                   <a
+                    className="sa-link sa-link--underline"
                     href={assignment.attachment_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{
-                      color: '#60a5fa',
-                      textDecoration: 'underline',
-                      textUnderlineOffset: '4px',
-                      fontWeight: '500',
-                      fontSize: '0.875rem',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                    }}
                   >
-                    📎 Download Question Paper
+                    <Paperclip size={14} aria-hidden="true" />
+                    Download Question Paper
                   </a>
                 )}
               </div>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', color: '#9ca3af', fontSize: '0.875rem', marginTop: '4px' }}>
+              <div className="sa-card__row">
                 <span>Submitted on: {submission ? new Date(submission.submitted_at).toLocaleString() : '—'}</span>
                 {submission && assignment.submission_mode !== 'Offline' && submission.submission_url && (
                   <a
+                    className="sa-link sa-link--underline"
                     href={submission.submission_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{
-                      color: '#60a5fa',
-                      textDecoration: 'underline',
-                      textUnderlineOffset: '4px',
-                      fontWeight: '500',
-                      fontSize: '0.875rem',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                    }}
                   >
-                    📄 View My Submission
+                    <FileText size={14} aria-hidden="true" />
+                    View My Submission
                   </a>
                 )}
               </div>
               {submission?.status === 'Graded' && (
-                <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap', marginTop: '4px' }}>
-                  <span style={{
-                    padding: '4px 12px',
-                    borderRadius: '9999px',
-                    backgroundColor: 'rgba(34, 197, 94, 0.15)',
-                    color: '#4ade80',
-                    border: '1px solid rgba(34, 197, 94, 0.4)',
-                    fontSize: '0.85rem',
-                    fontWeight: '600',
-                  }}>
+                <div className="sa-marks">
+                  <span className="sa-marks__pill">
                     Marks: {submission.marks} / {assignment.max_marks}
                   </span>
                   {submission.feedback && (
-                    <span style={{ color: '#d1d5db', fontSize: '0.85rem' }}>
-                      Feedback: {submission.feedback}
-                    </span>
+                    <span className="sa-marks__feedback">Feedback: {submission.feedback}</span>
                   )}
                 </div>
               )}
@@ -404,18 +312,14 @@ export default function StudentAssignments({ user }) {
         })}
       </div>
 
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white', marginTop: '32px', marginBottom: '24px' }}>🧪 Lab Performance (LES)</h2>
+      <h2 className="sa-title sa-title--spaced">
+        <FlaskConical size={20} aria-hidden="true" />
+        Lab Performance (LES)
+      </h2>
 
       {labResults.length === 0 ? (
-        <div style={{
-          textAlign: 'center',
-          padding: '48px',
-          backgroundColor: '#151623',
-          borderRadius: '16px',
-          border: '1px dashed rgba(255,255,255,0.1)',
-          color: '#9ca3af',
-        }}>
-          <p style={{ margin: 0 }}>No lab evaluations published yet.</p>
+        <div className="sa-empty">
+          <p>No lab evaluations published yet.</p>
         </div>
       ) : (
         labResults.map((result) => {
@@ -425,115 +329,69 @@ export default function StudentAssignments({ user }) {
           const compC = parseFloat(result.conduct) || 0;
           const finalMarks = (compA + compB + compC).toFixed(1);
           return (
-            <div key={result.id} style={{ backgroundColor: '#1c1d2e', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '16px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white', margin: 0 }}>{result.subjects?.name || 'Unknown Subject'}</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '16px' }}>
+            <div key={result.id} className="sa-lab">
+              <h3 className="sa-lab__title">{result.subjects?.name || 'Unknown Subject'}</h3>
+              <div className="sa-lab__stats">
                 <div>
-                  <span style={{ color: '#9ca3af', fontSize: '0.875rem', display: 'block', marginBottom: '4px' }}>Labs Total: {lSum} / 200</span>
-                  <span style={{ color: '#60a5fa', fontSize: '0.875rem' }}>({compA.toFixed(1)} / 10)</span>
+                  <span className="sa-lab__label">Labs Total: {lSum} / 200</span>
+                  <span className="sa-lab__sub">({compA.toFixed(1)} / 10)</span>
                 </div>
                 <div>
-                  <span style={{ color: '#9ca3af', fontSize: '0.875rem', display: 'block', marginBottom: '4px' }}>Lab Test (LT): {result.lt || 0} / 30</span>
-                  <span style={{ color: '#60a5fa', fontSize: '0.875rem' }}>({compB.toFixed(1)} / 10)</span>
+                  <span className="sa-lab__label">Lab Test (LT): {result.lt || 0} / 30</span>
+                  <span className="sa-lab__sub">({compB.toFixed(1)} / 10)</span>
                 </div>
                 <div>
-                  <span style={{ color: '#9ca3af', fontSize: '0.875rem' }}>Conduct: {compC} / 5</span>
+                  <span className="sa-lab__label">Conduct: {compC} / 5</span>
                 </div>
               </div>
-              <div style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#10b981', padding: '12px 20px', borderRadius: '12px', fontWeight: 'bold', fontSize: '1.25rem', display: 'inline-block', width: 'fit-content' }}>
-                Final Score: {finalMarks} / 25
-              </div>
+              <div className="sa-lab__final">Final Score: {finalMarks} / 25</div>
             </div>
           );
         })
       )}
 
       {isModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999 }}>
-          <div style={{ backgroundColor: '#1c1d2e', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '16px', padding: '24px', width: '100%', maxWidth: '520px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white', margin: 0 }}>Submit Assignment</h3>
-              <button type="button" onClick={closeModal} style={{ background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', display: 'flex' }}>
-                <X size={20} />
+        <div className="sa-modal-overlay">
+          <div className="sa-modal">
+            <div className="sa-modal__head">
+              <h3 className="sa-modal__title">Submit Assignment</h3>
+              <button type="button" onClick={closeModal} className="sa-close" aria-label="Close">
+                <X size={20} aria-hidden="true" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmission} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form onSubmit={handleSubmission} className="sa-form">
               <div>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#d1d5db', marginBottom: '6px' }}>Assignment</label>
-                <div style={{
-                  width: '100%',
-                  backgroundColor: '#11131f',
-                  border: '1px solid #2d314d',
-                  color: 'white',
-                  padding: '10px 12px',
-                  borderRadius: '8px',
-                  fontSize: '0.875rem',
-                }}>
+                <label className="sa-label">Assignment</label>
+                <div className="sa-readonly">
                   {selectedAssignment?.title || '—'}
                 </div>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#d1d5db', marginBottom: '6px' }}>Upload Your Work</label>
+                <label className="sa-label">Upload Your Work</label>
                 <input
                   type="file"
+                  className="sa-file"
                   accept=".pdf,.doc,.docx,.zip"
                   onChange={(e) => setSubmissionFile(e.target.files[0])}
                   disabled={isUploading}
-                  style={{
-                    width: '100%',
-                    backgroundColor: '#11131f',
-                    border: '1px solid #2d314d',
-                    color: 'white',
-                    padding: '10px 12px',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem',
-                    fontFamily: 'inherit',
-                    outline: 'none',
-                  }}
                 />
                 {submissionFile && (
-                  <p style={{ margin: '8px 0 0', fontSize: '0.8rem', color: '#9ca3af' }}>
-                    Selected: {submissionFile.name}
-                  </p>
+                  <p className="sa-selected">Selected: {submissionFile.name}</p>
                 )}
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
+              <div className="sa-form__actions">
                 <button
                   type="button"
                   onClick={closeModal}
                   disabled={isSubmitting}
-                  style={{
-                    padding: '10px 16px',
-                    borderRadius: '8px',
-                    fontWeight: '600',
-                    color: '#d1d5db',
-                    backgroundColor: '#2d314d',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: '0.875rem',
-                  }}
+                  className="sa-btn-ghost"
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting || isUploading}
-                  style={{
-                    padding: '10px 16px',
-                    borderRadius: '8px',
-                    fontWeight: '600',
-                    color: 'white',
-                    backgroundColor: '#6366f1',
-                    border: 'none',
-                    cursor: (isSubmitting || isUploading) ? 'not-allowed' : 'pointer',
-                    opacity: (isSubmitting || isUploading) ? 0.7 : 1,
-                    fontSize: '0.875rem',
-                    boxShadow: '0 10px 15px -3px rgba(99, 102, 241, 0.3)',
-                  }}
-                >
+                <button type="submit" disabled={isSubmitting || isUploading} className="sa-btn-submit">
                   {isUploading ? 'Uploading...' : 'Submit Assignment'}
                 </button>
               </div>

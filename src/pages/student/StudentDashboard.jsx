@@ -1,62 +1,51 @@
-﻿import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from 'react-router-dom';
+import Cropper from 'react-easy-crop';
 import { useAuth } from "../../hooks/useAuth.js";
-import { Upload, FileText, Eye, Trash2, Pencil } from "lucide-react";
+import {
+  Upload,
+  FileText,
+  Eye,
+  Trash2,
+  Pencil,
+  ExternalLink,
+  LayoutDashboard,
+  BookOpen,
+  Library,
+  ClipboardList,
+  Bookmark,
+  Megaphone,
+  CalendarDays,
+  Trophy,
+  Calendar,
+  CircleDot,
+  Star,
+  Download,
+  Coffee,
+  Utensils,
+  PartyPopper,
+  CheckCircle2,
+  AlertTriangle,
+  User,
+  Play,
+  Menu,
+  ChevronDown,
+  CalendarCheck,
+  ArrowRight,
+  Clock,
+} from "lucide-react";
 import { supabase } from "../../lib/supabase.js";
+import { fetchCached, invalidateSubjectCache } from "../../services/subjectCache.js";
+import FacultyAvatar from "../../components/common/FacultyAvatar.jsx";
 import { uploadNewResource, deleteResource } from "../../services/resourceService.js";
 import { signOut } from "../../services/authService.js";
+import { restoreSpanDurations } from "../../utils/timetablePeriods.js";
 import StudentAssignments from "./StudentAssignments.jsx";
 import StudentResults from "./StudentResults.jsx";
 import UploadResourceModal from "./UploadResourceModal.jsx";
 import Attendance from "./Attendance.jsx";
 import "./StudentDashboard.css";
 
-const IconOverview = () => (
-  <svg
-    width="18"
-    height="18"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <rect x="3" y="3" width="7" height="7" />
-    <rect x="14" y="3" width="7" height="7" />
-    <rect x="14" y="14" width="7" height="7" />
-    <rect x="3" y="14" width="7" height="7" />
-  </svg>
-);
-const IconSubjects = () => (
-  <svg
-    width="18"
-    height="18"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-  </svg>
-);
-const IconLibrary = () => (
-  <svg
-    width="18"
-    height="18"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-  </svg>
-);
 const IconSyllabus = () => (
   <svg
     width="28"
@@ -121,86 +110,6 @@ const IconPYQs = () => (
     </defs>
     <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
     <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-  </svg>
-);
-const IconBookmark = ({ filled }) => (
-  <svg
-    width="18"
-    height="18"
-    viewBox="0 0 24 24"
-    fill={filled ? "currentColor" : "none"}
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M19 21l-7-7-7 7V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-  </svg>
-);
-const IconAnnouncement = () => (
-  <svg
-    width="18"
-    height="18"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-  </svg>
-);
-const IconCalendar = () => (
-  <svg
-    width="18"
-    height="18"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-    <line x1="16" y1="2" x2="16" y2="6" />
-    <line x1="8" y1="2" x2="8" y2="6" />
-    <line x1="3" y1="10" x2="21" y2="10" />
-  </svg>
-);
-const IconAssignments = () => (
-  <svg
-    width="18"
-    height="18"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-    <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
-  </svg>
-);
-const IconResults = () => (
-  <svg
-    width="18"
-    height="18"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-    <path d="M4 22h16" />
-    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
   </svg>
 );
 const IconPDF = () => (
@@ -315,38 +224,18 @@ const IconBook = () => (
 );
 
 const navItems = [
-   { id: "overview", label: "🏠 Overview", icon: <IconOverview /> },
-   { id: "subjects", label: "📚 My Subjects", icon: <IconSubjects /> },
-   { id: "library", label: "📂 Mega Library", icon: <IconLibrary /> },
-   {
-     id: "assignments",
-     label: "📋 Assignments",
-     icon: <IconAssignments />,
-   },
-   {
-     id: "bookmarks",
-     label: "🔖 Bookmarks",
-     icon: <IconBookmark filled={false} />,
-   },
-   {
-     id: "announcements",
-     label: "📢 Announcements",
-     icon: <IconAnnouncement />,
-   },
-   {
-     id: "attendance",
-     label: "📅 Attendance",
-     icon: <IconCalendar />,
-    },
-   {
-     id: "results",
-     label: "🏆 Results",
-     icon: <IconResults />,
-   },
- ];
+  { id: "overview", label: "Overview", icon: <LayoutDashboard size={18} /> },
+  { id: "subjects", label: "My Subjects", icon: <BookOpen size={18} /> },
+  { id: "library", label: "Mega Library", icon: <Library size={18} /> },
+  { id: "assignments", label: "Assignments", icon: <ClipboardList size={18} /> },
+  { id: "bookmarks", label: "Bookmarks", icon: <Bookmark size={18} /> },
+  { id: "announcements", label: "Announcements", icon: <Megaphone size={18} /> },
+  { id: "attendance", label: "Attendance", icon: <CalendarDays size={18} /> },
+  { id: "results", label: "Results", icon: <Trophy size={18} /> },
+];
 
 const crNavItems = [
-   { id: "my-uploads", label: "📁 My Uploads", icon: <FileText /> },
+  { id: "my-uploads", label: "My Uploads", icon: <FileText size={18} /> },
 ];
 
 const getLibIcon = (type) => {
@@ -425,16 +314,227 @@ const formatTime12h = (timeString) => {
   return `${hour}:${minuteStr} ${ampm}`;
 };
 
+// HOD-authored rows use `slot_type`; the client-side break rows use `type`.
+const slotTypeOf = (slot) =>
+  String(slot?.slot_type || slot?.type || 'theory').toLowerCase();
+
+const isBreakSlot = (slot) => {
+  const type = slotTypeOf(slot);
+  return type === 'break' || type === 'non-academic' || Boolean(slot?.break_kind);
+};
+
+// "09:10:00" / "09:10" -> 550. Returns null for anything unparseable so callers
+// can treat a missing time as "untimed" instead of sorting it to the top.
+const toMinutes = (timeString) => {
+  const match = String(timeString ?? '')
+    .trim()
+    .match(/^(\d{1,2}):(\d{2})/);
+  if (!match) return null;
+  return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
+};
+
+// Strict chronological order. Sorts on numeric minutes (not a lexicographic
+// string compare) and falls back to the original index, so rows sharing a start
+// time or carrying no time at all keep a stable, predictable position.
+const sortChronologically = (slots) =>
+  slots
+    .map((slot, index) => ({ slot, index }))
+    .sort((a, b) => {
+      const left = toMinutes(a.slot.start_time);
+      const right = toMinutes(b.slot.start_time);
+      if (left === null && right === null) return a.index - b.index;
+      if (left === null) return 1;
+      if (right === null) return -1;
+      return left - right || a.index - b.index;
+    })
+    .map((entry) => entry.slot);
+
+// "Lab" / "Workshop" blocks run across two consecutive 55-minute periods in the
+// HOD master grid.
+const LAB_LIKE_PATTERN = /\b(lab|workshop)\b/i;
+
+const isLabLikeSlot = (slot) =>
+  LAB_LIKE_PATTERN.test(
+    String(slot?.subjects?.name || slot?.subject_name || slot?.name || '')
+  );
+
+// Identity used to decide whether two back-to-back rows are really one class.
+// Subject id alone is not reliable: split halves of a lab can arrive with
+// differing ids, and one half may carry a subject code the other lacks. So
+// match on name first, then code, and fall back to faculty for whatever the
+// name/code comparison cannot decide. Returning false outright whenever only
+// one side could be identified is what stranded the 10:05 half of a lab
+// beside its own 09:10 half.
+const isSameClassAs = (left, right) => {
+  const nameOf = (slot) =>
+    String(slot?.subjects?.name || slot?.subject_name || '').trim().toLowerCase();
+  const codeOf = (slot) =>
+    String(slot?.subjects?.code || slot?.code || '').trim().toLowerCase();
+  const facultyOf = (slot) =>
+    String(slot?.user_profiles?.full_name || slot?.faculty?.full_name || '').trim().toLowerCase();
+  const typeOf = (slot) => String(slot?.slot_type ?? slot?.type ?? '').trim().toLowerCase();
+
+  // A lab half must never be swallowed by an adjacent lecture, and vice versa.
+  const leftType = typeOf(left);
+  const rightType = typeOf(right);
+  if (leftType && rightType && leftType !== rightType) return false;
+
+  const leftName = nameOf(left);
+  const rightName = nameOf(right);
+  if (leftName && rightName) return leftName === rightName;
+
+  const leftCode = codeOf(left);
+  const rightCode = codeOf(right);
+  if (leftCode && rightCode) return leftCode === rightCode;
+
+  // At most one side carries a code, so the comparison above cannot decide.
+  // Faculty is the last signal available before giving up on the join.
+  const leftFaculty = facultyOf(left);
+  const rightFaculty = facultyOf(right);
+  return Boolean(leftFaculty) && leftFaculty === rightFaculty;
+};
+
+// The HOD master stores a 2-hour lab as consecutive 55-minute rows. Rendering
+// one card per row truncates the lab, so back-to-back rows of the same class
+// collapse into a single block spanning the full duration.
+//
+// This runs on the batch-filtered list, where only this student's rows remain,
+// so adjacency is safe here and no batch comparison is needed — requiring
+// identical batch tags was what made split labs fail to join.
+const groupConsecutiveClasses = (slots) =>
+  sortChronologically(slots).reduce((grouped, slot) => {
+    const previous = grouped[grouped.length - 1];
+    const previousEnd = previous ? toMinutes(previous.end_time) : null;
+
+    const isContinuation =
+      previous &&
+      !isBreakSlot(previous) &&
+      !isBreakSlot(slot) &&
+      isSameClassAs(previous, slot) &&
+      previousEnd !== null &&
+      previousEnd === toMinutes(slot.start_time);
+
+    if (isContinuation) {
+      grouped[grouped.length - 1] = { ...previous, end_time: slot.end_time };
+      return grouped;
+    }
+
+    grouped.push(slot);
+    return grouped;
+  }, []);
+
+// The HOD grid's own break windows, so the student view lines up with the master
+// schedule instead of guessing at break times.
+const STATIC_BREAKS = [
+  {
+    id: 'short-break-static',
+    type: 'break',
+    break_kind: 'coffee',
+    start_time: '11:00:00',
+    end_time: '11:15:00',
+    subject_name: 'Short Break',
+    faculty_name: 'Relax & Recharge',
+    room_no: 'Campus',
+  },
+  {
+    id: 'lunch-break-static',
+    type: 'break',
+    break_kind: 'food',
+    start_time: '13:05:00',
+    end_time: '13:45:00',
+    subject_name: 'Lunch Break',
+    faculty_name: 'Enjoy your meal!',
+    room_no: 'Cafeteria',
+  },
+];
+
+const overlapsWindow = (slot, start, end) => {
+  const slotStart = toMinutes(slot.start_time);
+  const slotEnd = toMinutes(slot.end_time);
+  if (slotStart === null || slotEnd === null) return false;
+  return slotStart < end && start < slotEnd;
+};
+
+const injectStaticBreaks = (slots) => {
+  const result = [...slots];
+
+  STATIC_BREAKS.forEach((breakSlot) => {
+    const start = toMinutes(breakSlot.start_time);
+    const end = toMinutes(breakSlot.end_time);
+    const alreadyCovered = result.some((slot) => overlapsWindow(slot, start, end));
+    if (!alreadyCovered) result.push(breakSlot);
+  });
+
+  return result;
+};
+
+// Re-draws only the cropped square of the source image onto a fresh canvas and
+// hands back a PNG blob. The raw picker file is never uploaded, so the stored
+// avatar is already circular-cropped and needs no client-side re-processing on
+// the way back out.
+const getCroppedImg = (imageSrc, pixelCrop) =>
+  new Promise((resolve, reject) => {
+    if (!imageSrc || !pixelCrop) {
+      reject(new Error("Nothing to crop"));
+      return;
+    }
+
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.src = imageSrc;
+
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = pixelCrop.width;
+      canvas.height = pixelCrop.height;
+      const ctx = canvas.getContext("2d");
+
+      if (!ctx) {
+        reject(new Error("Canvas is unavailable in this browser"));
+        return;
+      }
+
+      ctx.drawImage(
+        image,
+        pixelCrop.x,
+        pixelCrop.y,
+        pixelCrop.width,
+        pixelCrop.height,
+        0,
+        0,
+        pixelCrop.width,
+        pixelCrop.height
+      );
+
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error("Could not process the cropped image"));
+          return;
+        }
+        resolve(blob);
+      }, "image/png");
+    };
+
+    image.onerror = () => reject(new Error("Could not read the selected image"));
+  });
+
 export default function StudentDashboard() {
-   const navigate = useNavigate();
-    const { user } = useAuth();
+    const navigate = useNavigate();
+    const { user, loading } = useAuth();
    const [profile, setProfile] = useState(null);
    const [studentProfile, setStudentProfile] = useState(null);
    const [announcements, setAnnouncements] = useState([]);
    const [allMaterials, setAllMaterials] = useState([]);
    const [semester, setSemester] = useState(null);
-const [gridSubjects, setGridSubjects] = useState([]);
+ const [gridSubjects, setGridSubjects] = useState([]);
+   // Distinguishes "still fetching" from "genuinely no subjects", which is what
+   // caused the tab to flash its empty state on every visit.
+   const [subjectsLoading, setSubjectsLoading] = useState(true);
+   // Set only when the query itself failed, so the UI can say "we could not
+   // load this" instead of implying the student genuinely has no subjects.
+   const [subjectsError, setSubjectsError] = useState(null);
     const [activeTab, setActiveTab] = useState("overview");
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [selectedSubject, setSelectedSubject] = useState(null);
     const [activeFilter, setActiveFilter] = useState("All");
     const [bookmarkedIds, setBookmarkedIds] = useState([]);
@@ -452,11 +552,94 @@ const [gridSubjects, setGridSubjects] = useState([]);
     const [crSubjects, setCrSubjects] = useState([]);
     const [attendanceStats, setAttendanceStats] = useState({ total: 0, present: 0, percentage: 0 });
     const [attendanceRecords, setAttendanceRecords] = useState([]);
-    const [todayClasses, setTodayClasses] = useState([]);
-    const [globalAcademicTotal, setGlobalAcademicTotal] = useState(null);
-    const liveCardRef = useRef(null);
+     const [rawTimetableSlots, setRawTimetableSlots] = useState([]);
+     const [globalAcademicTotal, setGlobalAcademicTotal] = useState(null);
+     const liveCardRef = useRef(null);
+     const isProfileLoaded = !!studentProfile;
 
-    const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      let currentDay = days[new Date().getDay()];
+      if (currentDay === 'Sunday') currentDay = 'Tuesday';
+
+      const profileSource = studentProfile || profile;
+
+      const resolvedBranch =
+        profileSource?.selected_branch ||
+        profileSource?.branch ||
+        profileSource?.branch_id ||
+        profileSource?.department ||
+        profileSource?.batches?.department ||
+        profileSource?.batches?.branch ||
+        null;
+
+      const resolvedSemester =
+        profileSource?.batches?.semester ||
+        profileSource?.semester ||
+        profileSource?.selected_semester ||
+        null;
+
+      const resolvedBatch =
+        profileSource?.batch ||
+        profileSource?.batches?.batch ||
+        'B1';
+
+      const resolvedSection =
+        profileSource?.section ||
+        profileSource?.selected_section ||
+        profileSource?.batches?.section ||
+        'A';
+
+      const finalBranch = resolvedBranch || 'IT';
+      const finalSemester = resolvedSemester || 4;
+
+      // The HOD timetable stores every batch's rows side by side, so the query above
+     // (branch + semester + day only) returns other batches' labs too. `batch` is the
+     // discriminator the editor writes: "all" for a lecture the whole semester
+     // attends, or a specific batch ("B1") for a lab/tutorial. Prefer an explicit
+     // batch label on the profile, then fall back to B1.
+     const todayClasses = useMemo(() => {
+     if (!rawTimetableSlots || rawTimetableSlots.length === 0) return [];
+
+     const studentBatch = String(
+       [resolvedBatch, resolvedSection].find((value) =>
+         /b\s*-?\s*\d+/i.test(String(value ?? ''))
+       ) ||
+         resolvedSection ||
+         'B1'
+     )
+       .trim()
+       .toLowerCase();
+
+    const COMMON_BATCH_TAGS = new Set(['', 'all', 'common', 'everyone', 'global']);
+
+    const isCommonSlot = (slot) =>
+      COMMON_BATCH_TAGS.has(String(slot?.batch ?? '').trim().toLowerCase());
+
+    const isTargetedAtStudent = (slot) => {
+      const tags = String(slot?.batch ?? '').match(/\bb\s*-?\s*\d+\b/gi) || [];
+      return tags.some((tag) => tag.replace(/[\s-]/g, '').toLowerCase() === studentBatch);
+    };
+
+    const batchVisibleClasses = rawTimetableSlots.filter(
+      (slot) => isCommonSlot(slot) || isTargetedAtStudent(slot)
+    );
+
+    const labRowsIn = rawTimetableSlots.filter(isLabLikeSlot);
+    if (labRowsIn.length > 0) {
+      const describe = (slot) => ({
+        name: slot.subjects?.name || slot.subject_name,
+        batch: slot.batch,
+        start: slot.start_time,
+        end: slot.end_time,
+        subject_id: slot.subject_id,
+      });
+      const kept = labRowsIn.filter((slot) => batchVisibleClasses.includes(slot));
+      if (kept.length !== labRowsIn.length) {
+      }
+    }
+
+    return restoreSpanDurations(groupConsecutiveClasses(batchVisibleClasses));
+  }, [rawTimetableSlots, resolvedBatch, resolvedSection, currentDay]);
 
     const subjectWiseStats = attendanceRecords.reduce((acc, record) => {
       const subjectName = record.attendance_sessions?.subjects?.name || 'Unknown';
@@ -551,7 +734,8 @@ const [myUploads, setMyUploads] = useState([]);
     const [deleteTargetId, setDeleteTargetId] = useState(null);
     const [openMenuId, setOpenMenuId] = useState(null);
 
-    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+     const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
     const [activeProfileTab, setActiveProfileTab] = useState("general");
     const [editPhone, setEditPhone] = useState("");
     const [editAvatarFile, setEditAvatarFile] = useState(null);
@@ -560,12 +744,33 @@ const [myUploads, setMyUploads] = useState([]);
     const [editConfirmPassword, setEditConfirmPassword] = useState("");
     const [profileSaving, setProfileSaving] = useState(false);
     const [passwordSaving, setPasswordSaving] = useState(false);
+    // Avatar cropping: the picked file is only a source image until the student
+    // confirms the crop, so nothing is uploaded from the file input directly.
+    const [imageToCrop, setImageToCrop] = useState(null);
+    const [crop, setCrop] = useState({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState(1);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+    const [cropSaving, setCropSaving] = useState(false);
     const editAvatarPreviewRef = useRef("");
+    const imageToCropRef = useRef("");
     const isDirector = profile?.role === 'director';
 
     const showToast = (message, type = "success") => {
       setToast({ message, type });
       setTimeout(() => setToast(null), 3500);
+    };
+
+    // Drops the cropper back to the plain form and releases the source object
+    // URL, so a cancelled or closed picker never leaks a blob URL.
+    const cancelCrop = () => {
+      if (imageToCropRef.current) {
+        URL.revokeObjectURL(imageToCropRef.current);
+        imageToCropRef.current = "";
+      }
+      setImageToCrop(null);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+      setCroppedAreaPixels(null);
     };
 
     const openProfileModal = () => {
@@ -578,7 +783,9 @@ const [myUploads, setMyUploads] = useState([]);
       setEditAvatarPreview("");
       setEditNewPassword("");
       setEditConfirmPassword("");
+      cancelCrop();
       setActiveProfileTab("general");
+      setIsProfileMenuOpen(false);
       setIsProfileModalOpen(true);
     };
 
@@ -590,17 +797,141 @@ const [myUploads, setMyUploads] = useState([]);
       setEditAvatarPreview("");
       setEditNewPassword("");
       setEditConfirmPassword("");
+      cancelCrop();
       setIsProfileModalOpen(false);
     };
 
-useEffect(() => {
+    // Explicit user-driven retry. A failed query is never cached, so clearing
+    // the entry and re-running is enough to get a genuinely fresh attempt.
+    const retrySubjectsLoad = () => {
+      const profileSource = studentProfile || profile;
+      const branch =
+        profileSource?.selected_branch ||
+        profileSource?.branch ||
+        profileSource?.branch_id ||
+        profileSource?.department ||
+        profileSource?.batches?.department ||
+        profileSource?.batches?.branch ||
+        null;
+      if (branch && selectedSemester !== null) {
+        invalidateSubjectCache(`grid:${branch}:Semester ${selectedSemester}`);
+      }
+      fetchSubjectsForGrid();
+    };
+
+    // Uploads the pending avatar (already a cropped blob when it came from the
+    // cropper) and writes the profile row, then applies the result to the
+    // profile state so the header repaints with the new picture immediately.
+    //
+    // `avatarFile` is a parameter rather than read from state on purpose: the
+    // cropper creates that file in the same tick it calls this, so the state
+    // captured by this callback's closure is still the previous (usually null)
+    // value and the upload would silently be skipped.
+    const persistProfileChanges = useCallback(async (avatarFile) => {
+      if (!user) throw new Error("No user found");
+      const fileToUpload = avatarFile ?? editAvatarFile;
+      let avatarUrl = studentProfile?.avatar_url || profile?.avatar_url;
+
+      if (fileToUpload) {
+        const extension = "png";
+        const filePath = `${user.id}/${Date.now()}-avatar.${extension}`;
+        const { error: uploadError } = await supabase.storage
+          .from("avatars")
+          .upload(filePath, fileToUpload, { upsert: true, contentType: "image/png" });
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.storage
+          .from("avatars")
+          .getPublicUrl(filePath);
+
+        avatarUrl = publicUrlData.publicUrl;
+      }
+
+      const previousAvatarUrl = studentProfile?.avatar_url || profile?.avatar_url || null;
+      const updates = {
+        phone: editPhone,
+        ...(avatarUrl && avatarUrl !== previousAvatarUrl ? { avatar_url: avatarUrl } : {}),
+      };
+
+      const { error: updateError } = await supabase
+        .from("user_profiles")
+        .update(updates)
+        .eq("id", user.id);
+
+      if (updateError) throw updateError;
+
+      // Both the header and the overview/profile card read from these, so the
+      // new avatar has to land in state, not just in the database.
+      setStudentProfile((prev) => ({ ...(prev || {}), ...updates, avatar_url: avatarUrl ?? prev?.avatar_url }));
+      setProfile((prev) => ({ ...(prev || {}), ...updates, avatar_url: avatarUrl ?? prev?.avatar_url }));
+      return { ...updates, avatar_url: avatarUrl };
+    }, [user, studentProfile, profile, editAvatarFile, editPhone]);
+
+    // Selecting a picture only opens the cropper — the file itself is never
+    // uploaded until the student confirms the crop.
+    const handleAvatarSelect = (event) => {
+      const file = event.target.files?.[0];
+      // Allow re-picking the same file after a cancel.
+      event.target.value = "";
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        showToast("Please choose an image file.", "error");
+        return;
+      }
+      cancelCrop();
+      const url = URL.createObjectURL(file);
+      imageToCropRef.current = url;
+      setImageToCrop(url);
+    };
+
+    const handleCropSave = async () => {
+      if (!imageToCrop || !croppedAreaPixels) return;
+      setCropSaving(true);
+      try {
+        const blob = await getCroppedImg(imageToCrop, croppedAreaPixels);
+        const croppedFile = new File([blob], "avatar.png", { type: "image/png" });
+
+        if (editAvatarPreviewRef.current) URL.revokeObjectURL(editAvatarPreviewRef.current);
+        const previewUrl = URL.createObjectURL(croppedFile);
+        editAvatarPreviewRef.current = previewUrl;
+
+        setEditAvatarFile(croppedFile);
+        setEditAvatarPreview(previewUrl);
+        cancelCrop();
+
+        setProfileSaving(true);
+        // The cropped file is passed in explicitly: state set in this tick is
+        // not visible to the callback's closure yet.
+        const result = await persistProfileChanges(croppedFile);
+
+        if (!result?.avatar_url) {
+          throw new Error("The picture was saved but no avatar URL was returned.");
+        }
+
+        showToast("Profile picture updated successfully!");
+        closeProfileModal();
+        setEditAvatarFile(null);
+        setEditAvatarPreview("");
+      } catch (err) {
+        console.error("Avatar crop save error:", err);
+        showToast(err.message || "Failed to update profile picture", "error");
+      } finally {
+        setCropSaving(false);
+        setProfileSaving(false);
+      }
+    };
+
+    useEffect(() => {
+      if (!user || !user.id) {
+        setIsLoading(false);
+        return;
+      }
       let cancelled = false;
 
       async function loadStudentData() {
         setIsLoading(true);
         try {
-           if (!user) return;
-
            const { data: crData, error: crError } = await supabase
              .from("class_representatives")
              .select("branch, year, semester")
@@ -613,17 +944,29 @@ useEffect(() => {
              setCrDetails(crData);
            }
 
-const { data: profileData, error: profileError } = await supabase
-              .from("user_profiles")
-              .select("*, batches(*)")
-              .eq("id", user.id)
-              .single();
+             const { data: profileData, error: profileError } = await supabase
+               .from("user_profiles")
+               .select("*, batches(*)")
+               .eq("id", user.id)
+               .single();
 
-            if (profileError) throw profileError;
-            if (!cancelled) {
-              setProfile(profileData);
-              setStudentProfile(profileData);
-            }
+             if (profileError) {
+               if (profileError.code === 'PGRST116') {
+                 if (!cancelled) {
+                   setStudentProfile({});
+                 }
+                 return;
+               }
+                console.error("Profile fetch failed. Token likely stale. Hard resetting...");
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.href = '/';
+                return;
+             }
+             if (!cancelled && profileData) {
+               setProfile(profileData);
+               setStudentProfile(profileData);
+             }
 
             const { data: bookmarkData, error: bookmarkError } = await supabase
               .from("bookmarks")
@@ -736,36 +1079,69 @@ if (!cancelled && defaultSemester !== null) {
           }
         }
 
-        if (user?.id) {
-          loadStudentData();
-        } else {
-          setIsLoading(false);
-        }
+        loadStudentData();
         return () => {
           cancelled = true;
         };
-    }, [user?.id]);
+    }, [user]);
 
+  // Subjects are read by the Overview widget and the "My Subjects" tab, and
+  // re-read on every branch/semester change. The shared cache collapses a
+  // remount onto the same in-flight request, so switching tabs renders the
+  // already-loaded list instead of flashing an empty state and refetching.
+  //
+  // The department filter uses the same fallback chain as the rest of this
+  // file. Filtering on `selected_branch` alone sent `department=eq.undefined`
+  // for students whose profile only carries `branch`, which PostgREST rejects
+  // and which previously surfaced as a permanently empty list.
   async function fetchSubjectsForGrid() {
-    const branch = studentProfile?.selected_branch;
-    if (!branch || selectedSemester === null) {
+    const profileSource = studentProfile || profile;
+    const branch =
+      profileSource?.selected_branch ||
+      profileSource?.branch ||
+      profileSource?.branch_id ||
+      profileSource?.department ||
+      profileSource?.batches?.department ||
+      profileSource?.batches?.branch ||
+      null;
+    const semester = selectedSemester;
+
+    if (!branch || semester === null) {
       setGridSubjects([]);
-      return;
-    }
-    const { data, error } = await supabase
-      .from('subjects')
-      .select('*, faculty:faculty_id(id, full_name, avatar_url, profile_image_url)')
-      .eq('department', branch)
-      .eq('semester', `Semester ${selectedSemester}`);
-
-    console.log("Debug Fetch:", { branch, semester: selectedSemester, data, error });
-
-    if (error) {
-      console.error("Error fetching subjects:", error);
+      setSubjectsError(null);
+      setSubjectsLoading(false);
       return;
     }
 
-    setGridSubjects(data || []);
+    const cacheKey = `grid:${branch}:Semester ${semester}`;
+    setSubjectsLoading(true);
+    setSubjectsError(null);
+    try {
+      const data = await fetchCached(cacheKey, async () => {
+        console.log("[fetcher] executing Supabase query...", { branch, semester, cacheKey });
+        const { data: rows, error } = await supabase
+          .from('subjects')
+          .select('*, faculty:faculty_id(id, full_name, avatar_url, profile_image_url)')
+          .eq('department', branch)
+          .eq('semester', `Semester ${semester}`);
+
+        console.log("[fetcher] query returned:", { rows: rows?.length ?? 0, error: error?.message ?? null });
+        if (error) throw new Error(error.message || 'Failed to fetch subjects');
+        if (!rows) return [];
+        return rows;
+      });
+
+      setGridSubjects(data);
+    } catch (err) {
+      // Log the exact parameters: an RLS denial and a bad filter look identical
+      // in the UI (an empty list) but very different here.
+      console.error("[subjects] load failed", { cacheKey, branch, semester, err });
+      setGridSubjects([]);
+      setSubjectsError(err.message || "Could not load your subjects.");
+    } finally {
+      // Unconditional: the skeleton must never outlive the request.
+      setSubjectsLoading(false);
+    }
   }
 
     useEffect(() => {
@@ -775,11 +1151,24 @@ if (!cancelled && defaultSemester !== null) {
         const { data } = await supabase.auth.getUser();
         const authUser = data?.user;
         if (!cancelled && authUser) {
-          const { data: prof } = await supabase
+          const { data: prof, error } = await supabase
             .from('user_profiles')
             .select('*')
             .eq('id', authUser.id)
             .single();
+          if (error) {
+            if (error.code === 'PGRST116') {
+              if (!cancelled) {
+                setStudentProfile({});
+              }
+              return;
+            }
+            console.error("Profile fetch failed. Token likely stale. Hard resetting...");
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.href = '/';
+            return;
+          }
           if (!cancelled && prof) {
             setStudentProfile((prev) => ({ ...prev, ...prof }));
           }
@@ -787,7 +1176,32 @@ if (!cancelled && defaultSemester !== null) {
       }
       loadUserProfile();
       return () => { cancelled = true; };
-    }, [user?.id]);
+    }, [user]);
+
+    useEffect(() => {
+      const checkAuth = setTimeout(() => {
+        if (!user) {
+          localStorage.clear();
+          sessionStorage.clear();
+          window.location.href = '/';
+        }
+      }, 1000);
+
+      return () => clearTimeout(checkAuth);
+    }, [user]);
+
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        if (!studentProfile) {
+          console.warn("Snappy timeout triggered. Redirecting to home...");
+          localStorage.clear();
+          sessionStorage.clear();
+          window.location.replace('/');
+        }
+      }, 2500);
+
+      return () => clearTimeout(timer);
+    }, [studentProfile]);
 
   useEffect(() => {
       if (activeTab !== "my-uploads") {
@@ -801,54 +1215,26 @@ if (!cancelled && defaultSemester !== null) {
     }, [activeTab]);
 
   useEffect(() => {
-    if (!studentProfile) return;
+    if (!isProfileLoaded) {
+        return;
+    }
     let cancelled = false;
-
-    const myBatch = String(
-      studentProfile?.section ||
-      studentProfile?.batch ||
-      studentProfile?.selected_section ||
-      studentProfile?.batches?.section ||
-      ''
-    ).trim().toLowerCase();
-
-    const branch =
-      studentProfile?.selected_branch ||
-      studentProfile?.branch ||
-      studentProfile?.branch_id ||
-      studentProfile?.department ||
-      studentProfile?.batches?.department ||
-      studentProfile?.batches?.branch ||
-      null;
-
-    const studentSemester = parseInt(
-      String(
-        studentProfile?.batches?.semester ||
-        studentProfile?.selected_semester ||
-        ''
-      ).replace(/\D/g, ''),
-      10
-    );
 
     const fetchTodayClasses = async () => {
         try {
-            const stuBranch = studentProfile?.branch || 'IT';
-            const stuSemester = studentProfile?.semester || 4;
 
-            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-            let currentDay = days[new Date().getDay()];
-            if (currentDay === 'Sunday') currentDay = 'Tuesday';
+            const normalizedSemester = Number(String(finalSemester).replace(/\D/g, ''));
 
             const { data: rawSlots, error } = await supabase
                 .from('timetable_slots')
                 .select('*')
-                .eq('branch', stuBranch)
-                .eq('semester', stuSemester)
+                .eq('branch', finalBranch)
+                .eq('semester', normalizedSemester)
                 .eq('day_of_week', currentDay);
 
             if (error) throw error;
             if (!rawSlots || rawSlots.length === 0) {
-                setTodayClasses([]);
+                setRawTimetableSlots([]);
                 return;
             }
 
@@ -873,45 +1259,20 @@ if (!cancelled && defaultSemester !== null) {
                 user_profiles: facultyMap.get(slot.faculty_id) || null,
             }));
 
-            data.push({
-                id: 'short-break-static',
-                type: 'break',
-                start_time: '11:00:00',
-                end_time: '11:15:00',
-                subject_name: '☕ Short Break',
-                faculty_name: 'Relax & Recharge',
-                room_no: 'Campus'
-            });
-            
-            data.push({
-                id: 'lunch-break-static',
-                type: 'break',
-                start_time: '13:05:00',
-                end_time: '13:45:00',
-                subject_name: '🍱 Lunch Break',
-                faculty_name: 'Enjoy your meal!',
-                room_no: 'Cafeteria'
-            });
+            const normalized = sortChronologically(injectStaticBreaks(data));
 
-            try {
-                const sortedSlots = data.sort((a, b) => (a.start_time || '').localeCompare(b.start_time || ''));
+            console.log("FINAL RENDER SLOTS:", normalized);
 
-                console.log("FINAL RENDER SLOTS (Bypassed Filter):", sortedSlots);
-
-                setTodayClasses(sortedSlots);
-            } catch (err) {
-                console.error("Sorting/Rendering Error:", err);
-                setTodayClasses(data || []);
-            }
+             setRawTimetableSlots(normalized);
         } catch (err) {
             console.error("Fetch Error:", err);
-            setTodayClasses([]);
+             setRawTimetableSlots([]);
         }
     };
 
     fetchTodayClasses();
     return () => { cancelled = true; };
-  }, [studentProfile]);
+  }, [finalBranch, finalSemester, resolvedSection, resolvedBatch, currentDay, isProfileLoaded]);
 
    useEffect(() => {
        if (liveCardRef && liveCardRef.current) {
@@ -950,10 +1311,24 @@ if (!cancelled && defaultSemester !== null) {
     return () => { cancelled = true; };
   }, [activeTab, user?.id]);
 
-useEffect(() => {
-      if (!studentProfile?.selected_branch) return;
-       fetchSubjectsForGrid();
-    }, [studentProfile?.selected_branch, selectedSemester]);
+  useEffect(() => {
+       if (!isProfileLoaded) {
+           return;
+       }
+        fetchSubjectsForGrid();
+    }, [selectedSemester, isProfileLoaded]);
+
+    // Watchdog. The skeleton is only cleared by a settled request, so if the
+    // bootstrap finished but the profile never arrived (profile query failed,
+    // RLS denial, signed-out session) there is no request to settle and the
+    // spinner would run forever. Release it here instead.
+    useEffect(() => {
+      if (isLoading) return;
+      if (studentProfile || profile) return;
+      console.warn("[subjects] no profile available; releasing the loading state");
+      setSubjectsLoading(false);
+      setSubjectsError("We could not load your profile, so your subjects are unavailable.");
+    }, [isLoading, studentProfile, profile]);
 
     useEffect(() => {
       if (crDetails && crDetails.branch && crDetails.semester) {
@@ -1103,7 +1478,15 @@ async function fetchAllMaterials() {
   };
 
   async function handleSignOut() {
-    await signOut();
+    try {
+      await signOut();
+    } catch (error) {
+      console.warn("Backend signout failed, forcing local cleanup:", error);
+    } finally {
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '/';
+    }
   }
 
   // --- UPLOAD LOGIC ---
@@ -1247,6 +1630,57 @@ async function fetchAllMaterials() {
     .toUpperCase()
     .slice(0, 2);
 
+  const profilePicUrl = studentProfile?.avatar_url || profile?.avatar_url || "";
+
+  // A freshly uploaded object can 404 for a moment before the bucket serves it.
+  // Remembering which URL failed (instead of a plain boolean) keeps the failure
+  // scoped to that one URL, so the next successful upload renders normally.
+  const [failedAvatarUrls, setFailedAvatarUrls] = useState({});
+  const avatarFailed = Boolean(profilePicUrl) && failedAvatarUrls[profilePicUrl];
+  const markAvatarFailed = (url) =>
+    setFailedAvatarUrls((prev) => ({ ...prev, [url]: true }));
+  const headerAvatarVisible = Boolean(profilePicUrl) && !avatarFailed;
+
+  const recentAnnouncements = announcements.slice(0, 3);
+
+  // Bottom bento row mirrors the full Subjects page cards for the current
+  // semester, so the whole enrolled list is rendered and the widget scrolls.
+  const quickSubjects = gridSubjects;
+
+  const attendanceTone =
+    attendanceStats.percentage >= 75
+      ? "good"
+      : attendanceStats.percentage >= 60
+      ? "fair"
+      : "low";
+
+  // Today's classes arrive sorted by start_time, so a clock lookup is enough to
+  // find the class in progress and the next teaching slot after it.
+  const timetableClock = new Date().toLocaleTimeString('en-US', {
+    hour12: false,
+    timeZone: 'Asia/Kolkata',
+  });
+
+  // Breaks and non-academic slots are not teaching time.
+  const isTeachingSlot = (slot) => !isBreakSlot(slot);
+
+   const currentClassIndex = todayClasses.findIndex(
+    (slot) =>
+      isTeachingSlot(slot) &&
+      timetableClock >= slot.start_time &&
+      timetableClock <= slot.end_time
+  );
+
+  const nextClassIndex =
+    currentClassIndex === -1
+      ? Math.max(
+          todayClasses.findIndex(
+            (slot) => isTeachingSlot(slot) && slot.start_time > timetableClock
+          ),
+           todayClasses.findIndex((slot) => slot.start_time > timetableClock)
+        )
+      : -1;
+
   const filteredLibraryItems = allMaterials.filter((item) => {
     const matchesSearch =
       item.title?.toLowerCase().includes(librarySearch.toLowerCase()) ||
@@ -1275,7 +1709,7 @@ async function fetchAllMaterials() {
       const matchedSubject = gridSubjects?.find(s => s.id === item.subject_id) || {};
       const facultyFullName = item.faculty_name || matchedSubject?.faculty?.full_name || 'Not Assigned';
       const shortFacultyName = facultyFullName.length > 15 ? facultyFullName.split(' ')[0] : facultyFullName;
-      const avatarUrl = item.faculty_avatar || matchedSubject?.faculty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(facultyFullName)}&background=1e1e2d&color=fff`;
+      const avatarUrl = item.faculty_avatar || matchedSubject?.faculty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(facultyFullName)}&background=e2e8f0&color=475569`;
 
       return (
         <div key={item.id} className="pw-lecture-card">
@@ -1283,15 +1717,16 @@ async function fetchAllMaterials() {
           <div className="pw-card-top">
             <div className="pw-card-top-left">
               <span className="pw-subject-badge">{item.subject_name || matchedSubject?.subject_name || "Lecture"}</span>
-              <div className="pw-subject-line"></div>
               <p className="pw-card-desc" title={item.title}>{item.title || 'Untitled Lecture'}</p>
               <span className="pw-teacher-name" title={facultyFullName}>By {shortFacultyName}</span>
             </div>
             <div className="pw-card-top-right">
-              <div className="pw-avatar-container" onClick={() => handleView && handleView(item)}>
-                <img src={avatarUrl} alt="Faculty" />
-                <div className="pw-play-btn">
-                  <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M8 5v14l11-7z"/></svg>
+              <div className="material-avatar-wrapper" onClick={() => handleView && handleView(item)}>
+                <div className="pw-avatar-container">
+                  <img src={avatarUrl} alt="Faculty" />
+                </div>
+                <div className="material-avatar-icon">
+                  <Play size={12} fill="currentColor" aria-hidden="true" />
                 </div>
               </div>
             </div>
@@ -1309,12 +1744,12 @@ async function fetchAllMaterials() {
               </span>
             </div>
             
-            <h3 className="pw-card-title">{item.description || 'No description provided'}</h3>
+            <h3 className={`pw-card-title${item.description ? "" : " pw-card-title--empty"}`}>{item.description || 'No description provided'}</h3>
             
             <div className="pw-card-actions" style={{ position: 'relative' }}>
-              <svg onClick={(e) => { e.stopPropagation(); handleView && handleView(item); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#6b7280" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" title="View Material"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"></path></svg>
+              <svg onClick={(e) => { e.stopPropagation(); handleView && handleView(item); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" title="View Material"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"></path></svg>
               
-              <svg onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === item.id ? null : item.id); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#6b7280" fill="none" strokeWidth="2" title="More Options"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+              <svg onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === item.id ? null : item.id); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" strokeWidth="2" title="More Options"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
 
               {/* Dropdown Menu & Invisible Click-Outside Overlay */}
               {openMenuId === item.id && (
@@ -1333,7 +1768,7 @@ async function fetchAllMaterials() {
                         setOpenMenuId(null);
                       }}
                     >
-                      {bookmarkedIds.includes(item.id) ? '★ Remove Bookmark' : '☆ Bookmark'}
+                      {bookmarkedIds.includes(item.id) ? (<><Star size={16} fill="currentColor" aria-hidden="true" /> Remove Bookmark</>) : (<><Star size={16} aria-hidden="true" /> Bookmark</>)}
                     </div>
                     <div 
                       className="pw-dropdown-item"
@@ -1343,7 +1778,7 @@ async function fetchAllMaterials() {
                         setOpenMenuId(null);
                       }}
                     >
-                      ↓ Download
+                      <Download size={16} aria-hidden="true" /> Download
                     </div>
                   </div>
                 </>
@@ -1355,22 +1790,23 @@ async function fetchAllMaterials() {
     }
     const facultyFullName = item.faculty_name || gridSubjects?.find(s => s.id === item.subject_id)?.faculty?.full_name || 'Not Assigned';
     const shortFacultyName = facultyFullName.length > 15 ? facultyFullName.split(' ')[0] : facultyFullName;
-    const avatarUrl = item.faculty_avatar || gridSubjects?.find(s => s.id === item.subject_id)?.faculty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(facultyFullName)}&background=1e1e2d&color=fff`;
+    const avatarUrl = item.faculty_avatar || gridSubjects?.find(s => s.id === item.subject_id)?.faculty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(facultyFullName)}&background=e2e8f0&color=475569`;
 
     return (
       <div key={item.id} className="pw-lecture-card" onClick={() => handleView(item)}>
         <div className="pw-card-top">
           <div className="pw-card-top-left">
-            <span className="pw-subject-badge" style={{ color: '#38bdf8' }}>{item.type ? item.type.toUpperCase() : "DOCUMENT"}</span>
-            <div className="pw-subject-line" style={{ background: '#38bdf8' }}></div>
+            <span className="pw-subject-badge">{item.type ? item.type.toUpperCase() : "DOCUMENT"}</span>
             <p className="pw-card-desc" title={item.title}>{item.title || 'Untitled Document'}</p>
             <span className="pw-teacher-name" title={facultyFullName}>By {shortFacultyName}</span>
           </div>
           <div className="pw-card-top-right">
-            <div className="pw-avatar-container">
-              <img src={avatarUrl} alt="Faculty" />
-              <div className="pw-play-btn" style={{ background: '#0284c7' }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <div className="material-avatar-wrapper">
+              <div className="pw-avatar-container">
+                <img src={avatarUrl} alt="Faculty" />
+              </div>
+              <div className="material-avatar-icon" style={{ background: 'var(--info-text)' }}>
+                <FileText size={12} aria-hidden="true" />
               </div>
             </div>
           </div>
@@ -1381,27 +1817,27 @@ async function fetchAllMaterials() {
             <span className="pw-date">
               {new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </span>
-            <span className="pw-duration" style={{ color: '#38bdf8' }}>
-              📄 {item.type === 'Class Notes' ? 'PDF Note' : 'Document'}
+            <span className="pw-duration" style={{ color: 'var(--info-text)' }}>
+              <FileText size={14} aria-hidden="true" /> {item.type === 'Class Notes' ? 'PDF Note' : 'Document'}
             </span>
           </div>
           
-          <h3 className="pw-card-title">{item.description || 'No description provided'}</h3>
+          <h3 className={`pw-card-title${item.description ? "" : " pw-card-title--empty"}`}>{item.description || 'No description provided'}</h3>
           
           <div className="pw-card-actions" style={{ position: 'relative' }}>
-            <svg onClick={(e) => { e.stopPropagation(); handleView(item); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#6b7280" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" title="View Material"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+            <svg onClick={(e) => { e.stopPropagation(); handleView(item); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" title="View Material"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
             
-            <svg onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === item.id ? null : item.id); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#6b7280" fill="none" strokeWidth="2" title="More Options"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+            <svg onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === item.id ? null : item.id); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" strokeWidth="2" title="More Options"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
 
             {openMenuId === item.id && (
               <>
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 40, cursor: 'default' }} onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); }}></div>
                 <div className="pw-dropdown-menu" style={{ zIndex: 50 }}>
                   <div className="pw-dropdown-item" onClick={(e) => { e.stopPropagation(); toggleBookmark(item.id); setOpenMenuId(null); }}>
-                    {bookmarkedIds.includes(item.id) ? '★ Remove Bookmark' : '☆ Bookmark'}
+                    {bookmarkedIds.includes(item.id) ? (<><Star size={16} fill="currentColor" aria-hidden="true" /> Remove Bookmark</>) : (<><Star size={16} aria-hidden="true" /> Bookmark</>)}
                   </div>
                   <div className="pw-dropdown-item" onClick={(e) => { e.stopPropagation(); alert('Download feature coming soon!'); setOpenMenuId(null); }}>
-                    ↓ Download
+                    <Download size={16} aria-hidden="true" /> Download
                   </div>
                 </div>
               </>
@@ -1429,9 +1865,27 @@ async function fetchAllMaterials() {
     </div>
   );
 
+  if (!studentProfile) {
+      return (
+          <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem', fontWeight: 'bold' }}>
+              Loading Dashboard...
+          </div>
+      );
+  }
+
   return (
     <div className="student-dashboard-layout">
-      <aside className="student-sidebar">
+      <button
+        type="button"
+        className="sidebar-toggle-btn"
+        onClick={() => setIsSidebarOpen((prev) => !prev)}
+        aria-label={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+        aria-expanded={isSidebarOpen}
+      >
+        <Menu size={22} aria-hidden="true" />
+      </button>
+
+      <aside className={`student-sidebar ${isSidebarOpen ? "open" : "closed"}`}>
         <div className="student-sidebar__header">
           <div className="student-sidebar__logo">
             <svg
@@ -1477,20 +1931,42 @@ async function fetchAllMaterials() {
          </div>
        </aside>
 
-       <main className="student-main">
+        <main className={`student-main ${isSidebarOpen ? "student-main--sidebar-open" : "student-main--sidebar-closed"}`}>
          <header className="student-header">
-           <div className="student-header__title-wrap">
-             <h2 className="student-header__title">Student Dashboard</h2>
-             <span className="student-header__welcome">
-               Welcome back, {displayName.split(" ")[0]}
-             </span>
-           </div>
+            <div className="student-header__lead">
+              <div className="student-header__title-wrap">
+                <h2 className="student-header__title">Student Dashboard</h2>
+                <span className="student-header__welcome">
+                  Welcome back, {displayName.split(" ")[0]}
+                </span>
+              </div>
+            </div>
 
            <div className="student-header__right">
-             <div className="student-header__user">
-               <div className="student-header__avatar">{initials}</div>
+             <div className="student-header__profile-anchor">
+              <button
+                type="button"
+                className="student-header__user"
+                onClick={() => setIsProfileMenuOpen((prev) => !prev)}
+                aria-haspopup="true"
+                aria-expanded={isProfileMenuOpen}
+              >
+                {headerAvatarVisible ? (
+                  <img
+                    key={profilePicUrl}
+                    src={profilePicUrl}
+                    className="header-avatar-img"
+                    alt="Profile"
+                    onError={() => markAvatarFailed(profilePicUrl)}
+                  />
+                ) : (
+                  <div className="student-header__avatar">{initials}</div>
+                )}
                 <div className="student-header__meta">
-                  <span className="student-header__name">{displayName}</span>
+                  <span className="student-header__name">
+                    {displayName}
+                    <ChevronDown size={16} className="student-header__chevron" aria-hidden="true" />
+                  </span>
                   <div className="student-header__meta-row">
                     {crDetails && (
                       <span className="student-header__cr-badge">CR Mode</span>
@@ -1498,6 +1974,81 @@ async function fetchAllMaterials() {
                     <span className="student-header__role">{displayRole}</span>
                   </div>
                 </div>
+              </button>
+
+              {isProfileMenuOpen && (
+                <>
+                  <div
+                    className="profile-dropdown-backdrop"
+                    onClick={() => setIsProfileMenuOpen(false)}
+                    aria-hidden="true"
+                  />
+                  <div className="profile-dropdown-menu">
+                    {headerAvatarVisible ? (
+                      <img
+                        key={profilePicUrl}
+                        src={profilePicUrl}
+                        alt="Avatar"
+                        className="student-profile-avatar-img"
+                        onError={() => markAvatarFailed(profilePicUrl)}
+                      />
+                    ) : (
+                      <div className="student-profile__icon">
+                        <svg
+                          width="32"
+                          height="32"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                          <circle cx="12" cy="7" r="4" />
+                        </svg>
+                      </div>
+                    )}
+                    <button
+                      className="student-profile-card__edit-btn"
+                      onClick={() => openProfileModal()}
+                    >
+                      <Pencil size={14} />
+                      <span>Edit Profile</span>
+                    </button>
+                    <div className="student-profile__body">
+                      <div className="student-profile__row">
+                        <span className="student-profile__label">Name</span>
+                        <span className="student-profile__value">
+                          {studentProfile?.full_name || profile?.full_name || "—"}
+                        </span>
+                      </div>
+                      <div className="student-profile__row">
+                        <span className="student-profile__label">Roll No</span>
+                        <span className="student-profile__value">
+                          {studentProfile?.roll_number ||
+                            profile?.roll_number ||
+                            "—"}
+                        </span>
+                      </div>
+                      <div className="student-profile__row">
+                        <span className="student-profile__label">Phone</span>
+                        <span className="student-profile__value">
+                          {studentProfile?.phone || profile?.phone || "—"}
+                        </span>
+                      </div>
+                      <div className="student-profile__row">
+                        <span className="student-profile__label">College ID</span>
+                        <span className="student-profile__value">
+                          {studentProfile?.college_id ||
+                            profile?.college_id ||
+                            "—"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
              </div>
              <button className="student-header__signout" onClick={handleSignOut}>
               <svg
@@ -1522,32 +2073,47 @@ async function fetchAllMaterials() {
         <div className="student-content">
           {activeTab === "overview" && (
             <div className="student-grid">
-              <section className="student-section student-section--grow student-section--full">
-                <h3 className="student-section__title">📅 Today's Classes <span className="st-header-sub">({todayClasses[0]?.day_of_week || 'Today'})</span></h3>
-                {todayClasses.length === 0 ? (
+              <div className="overview-top-grid">
+              <section className="overview-panel overview-panel--timetable">
+                <h3 className="student-section__title"><Calendar size={18} aria-hidden="true" /> Today's Classes <span className="st-header-sub">({todayClasses[0]?.day_of_week || 'Today'})</span></h3>
+                 {todayClasses.length === 0 ? (
                   <div className="student-empty-box">
-                    <p>No classes today! Enjoy your day off. 🎉</p>
+                    <p>No classes today! Enjoy your day off. <PartyPopper size={16} aria-hidden="true" style={{ display: 'inline', verticalAlign: '-3px', color: 'var(--warning-text)' }} /></p>
                   </div>
                 ) : (
                   <div className="st-timeline-container">
-                    {todayClasses.map((slot) => {
-                      const now = new Date();
-                      const currentTime = now.toLocaleTimeString('en-US', { hour12: false, timeZone: 'Asia/Kolkata' });
-                      const isLive = currentTime >= slot.start_time && currentTime <= slot.end_time;
+                     {todayClasses.map((slot, slotIndex) => {
+                      const isLive = timetableClock >= slot.start_time && timetableClock <= slot.end_time;
+                      const isCurrentClass = slotIndex === currentClassIndex;
+                      const isNextClass = !isCurrentClass && slotIndex === nextClassIndex;
 
                        return (
                          <div
                            key={slot.id}
                            ref={isLive ? liveCardRef : null}
-                           className={`st-class-card st-type-${slot.type?.toLowerCase() || 'theory'}`}
+                           className={`st-class-card st-type-${slotTypeOf(slot)}${isCurrentClass ? ' current-class-card' : ''}${isNextClass ? ' next-class-card' : ''}`}
                          >
                           <div className="st-time-col">
                             <span className="st-time-badge">{formatTime12h(slot.start_time)} - {formatTime12h(slot.end_time)}</span>
-                            {isLive && <span className="student-schedule-card__live">🟢 LIVE</span>}
+                            {isLive && <span className="student-schedule-card__live"><CircleDot size={12} aria-hidden="true" /> LIVE</span>}
+                            {isNextClass && <span className="st-class-flag st-class-flag--next">NEXT</span>}
                           </div>
                           <div className="st-info-col">
-                            <h4>{slot.subjects?.name || slot.name || slot.subject_name || 'Unknown Subject'} <span className="st-sub-code">({slot.subjects?.code || slot.code || 'N/A'})</span></h4>
-                            <p className="st-faculty">{slot.user_profiles?.full_name || slot.faculty?.full_name || 'Assigned Faculty'}</p>
+                            <h4>
+                              {slot.break_kind === 'coffee' ? <Coffee size={15} aria-hidden="true" style={{ display: 'inline', verticalAlign: '-2px', color: 'var(--warning-text)' }} /> : null}
+                              {slot.break_kind === 'food' ? <Utensils size={15} aria-hidden="true" style={{ display: 'inline', verticalAlign: '-2px', color: 'var(--warning-text)' }} /> : null}
+                              {slot.subjects?.name || slot.name || slot.subject_name || 'Unknown Subject'}
+                              {!isBreakSlot(slot) && (slot.subjects?.code || slot.code) ? (
+                                <span className="st-sub-code"> ({slot.subjects?.code || slot.code})</span>
+                              ) : null}
+                            </h4>
+                            {/* A break has no faculty — suppress the line entirely
+                                rather than falling back to "Assigned Faculty". */}
+                            {!isBreakSlot(slot) ? (
+                              <p className="st-faculty">
+                                {slot.user_profiles?.full_name || slot.faculty?.full_name || 'Assigned Faculty'}
+                              </p>
+                            ) : null}
                           </div>
                           <div className="st-room-col">
                             <span className="st-room-badge">{slot.room_no ? `Room ${slot.room_no}` : 'TBA'}</span>
@@ -1559,74 +2125,109 @@ async function fetchAllMaterials() {
                 )}
               </section>
 
-              <section className="student-section student-section--profile">
-                <h3 className="student-section__title">Student Profile</h3>
-                <div className="student-profile-card">
-                  {studentProfile?.avatar_url ? (
-                    <img
-                      src={studentProfile.avatar_url}
-                      alt="Avatar"
-                      className="student-profile-avatar-img"
-                    />
-                  ) : (
-                    <div className="student-profile__icon">
-                      <svg
-                        width="32"
-                        height="32"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+              <section className="overview-panel overview-panel--attendance">
+                <div className="st-att-widget">
+                  <div className="st-att-widget__head">
+                    <span className="st-att-widget__icon" aria-hidden="true">
+                      <CalendarCheck size={18} />
+                    </span>
+                    <div className="st-att-widget__head-text">
+                      <h3 className="student-section__title">Attendance</h3>
+                      <span className="st-att-widget__sub">Overall semester status</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="st-att-widget__action"
+                      onClick={() => setActiveTab("attendance")}
+                    >
+                      View Details
+                      <ArrowRight size={15} aria-hidden="true" />
+                    </button>
+                  </div>
+
+                  <div className="st-att-widget__body attendance-widget-inner">
+                    <div className="attendance-top-row">
+                      <div
+                        className="st-att-ring"
+                        style={{ "--st-att-pct": `${attendanceStats.percentage || 0}%` }}
+                        role="img"
+                        aria-label={`${attendanceStats.percentage || 0}% attendance`}
                       >
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                        <circle cx="12" cy="7" r="4" />
-                      </svg>
+                        <div className="st-att-ring__inner">
+                          <span className="st-att-ring__value">{attendanceStats.percentage || 0}%</span>
+                          <span className="st-att-ring__label">Overall</span>
+                        </div>
+                      </div>
+
+                      <div className="attendance-stats-list">
+                        <div className="attendance-stat-item">
+                          <span className="attendance-stat-item__label">
+                            <span className="attendance-stat-dot attendance-stat-dot--attended" aria-hidden="true" />
+                            Attended
+                          </span>
+                          <span className="attendance-stat-item__value">{attendanceStats.present}</span>
+                        </div>
+                        <div className="attendance-stat-item">
+                          <span className="attendance-stat-item__label">
+                            <span className="attendance-stat-dot attendance-stat-dot--absent" aria-hidden="true" />
+                            Absent
+                          </span>
+                          <span className="attendance-stat-item__value">
+                            {Math.max(attendanceStats.total - attendanceStats.present, 0)}
+                          </span>
+                        </div>
+                        <div className="attendance-stat-item">
+                          <span className="attendance-stat-item__label">
+                            <span className="attendance-stat-dot attendance-stat-dot--total" aria-hidden="true" />
+                            Total Classes
+                          </span>
+                          <span className="attendance-stat-item__value">{attendanceStats.total}</span>
+                        </div>
+                      </div>
                     </div>
-                  )}
-                  <button
-                    className="student-profile-card__edit-btn"
-                    onClick={() => openProfileModal()}
-                  >
-                    <Pencil size={14} />
-                    <span>Edit Profile</span>
-                  </button>
-                  <div className="student-profile__body">
-                    <div className="student-profile__row">
-                      <span className="student-profile__label">Name</span>
-                      <span className="student-profile__value">
-                        {studentProfile?.full_name || profile?.full_name || "—"}
+
+                    <div
+                      className={`attendance-status-banner attendance-status-banner--${attendanceTone}`}
+                      role="status"
+                    >
+                      <span className="attendance-status-banner__icon" aria-hidden="true">
+                        {attendanceTone === 'good' ? (
+                          <CheckCircle2 size={16} />
+                        ) : (
+                          <AlertTriangle size={16} />
+                        )}
                       </span>
+                      {attendanceTone === 'good'
+                        ? 'Great going! You are above the required 75% attendance.'
+                        : attendanceTone === 'fair'
+                        ? 'Attendance is slipping. Stay above the 75% requirement.'
+                        : 'Critical: you are below the 60% attendance requirement.'}
                     </div>
-                    <div className="student-profile__row">
-                      <span className="student-profile__label">Roll No</span>
-                      <span className="student-profile__value">
-                        {studentProfile?.roll_number ||
-                          profile?.roll_number ||
-                          "—"}
-                      </span>
-                    </div>
-                    <div className="student-profile__row">
-                      <span className="student-profile__label">Phone</span>
-                      <span className="student-profile__value">
-                        {studentProfile?.phone || profile?.phone || "—"}
-                      </span>
-                    </div>
-                    <div className="student-profile__row">
-                      <span className="student-profile__label">College ID</span>
-                      <span className="student-profile__value">
-                        {studentProfile?.college_id ||
-                          profile?.college_id ||
-                          "—"}
-                      </span>
-                    </div>
+                  </div>
+
+                  <div className="st-att-widget__bar" aria-hidden="true">
+                    <span
+                      className={`st-att-widget__bar-fill st-att-widget__bar-fill--${attendanceTone}`}
+                      style={{ width: `${attendanceStats.percentage || 0}%` }}
+                    />
                   </div>
                 </div>
               </section>
+              </div>
 
-              <section className="student-section student-section--grow student-section--notices">
-                <h3 className="student-section__title">Notice Board</h3>
+              <div className="overview-bottom-grid">
+              <section className="overview-panel overview-panel--notices">
+                <div className="st-notice-head">
+                  <h3 className="student-section__title">Notice Board</h3>
+                  <button
+                    type="button"
+                    className="st-notice-head__action"
+                    onClick={() => setActiveTab("announcements")}
+                  >
+                    View All
+                    <ArrowRight size={15} aria-hidden="true" />
+                  </button>
+                </div>
                 {announcements.length === 0 ? (
                   <div className="student-empty-box">
                     <svg
@@ -1644,26 +2245,36 @@ async function fetchAllMaterials() {
                   </div>
                 ) : (
                   <div className="student-announcements">
-                    {announcements.map((announcement) => (
-                      <div key={announcement.id} style={{ backgroundColor: 'rgba(31, 41, 55, 0.4)', border: '1px solid rgba(55, 65, 81, 0.5)', borderRadius: '12px', padding: '24px', marginBottom: '16px' }}>
-  
+                    {recentAnnouncements.map((announcement) => (
+                      <div
+                        key={announcement.id}
+                        style={{
+                          backgroundColor: "var(--bg-card)",
+                          border: "1px solid var(--border)",
+                          borderRadius: "var(--radius-lg)",
+                          boxShadow: "var(--shadow-sm)",
+                          padding: "24px",
+                          marginBottom: "16px",
+                        }}
+                      >
+
   {/* TOP: Title on Left, Badge & Date on Right */}
   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-    <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#ffffff', margin: 0, textAlign: 'left' }}>
+    <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: 0, textAlign: 'left' }}>
       {announcement.title}
     </h3>
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-      <span style={{ padding: '4px 12px', backgroundColor: 'rgba(55, 65, 81, 0.5)', color: '#60a5fa', fontSize: '0.75rem', fontWeight: '600', borderRadius: '9999px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+      <span style={{ padding: '4px 12px', backgroundColor: 'var(--info-subtle)', border: '1px solid var(--info-border)', color: 'var(--info-text)', fontSize: '0.75rem', fontWeight: '600', borderRadius: '9999px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
         {announcement.type}
       </span>
-      <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
+      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
         {new Date(announcement.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
       </span>
     </div>
   </div>
 
   {/* MIDDLE: Left-aligned content */}
-  <p style={{ color: '#d1d5db', fontSize: '0.875rem', textAlign: 'left', marginBottom: '24px', whiteSpace: 'pre-wrap', marginTop: 0 }}>
+  <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', textAlign: 'left', marginBottom: '24px', whiteSpace: 'pre-wrap', marginTop: 0 }}>
     {announcement.content}
   </p>
 
@@ -1674,9 +2285,9 @@ async function fetchAllMaterials() {
         href={announcement.file_url || announcement.link}
         target="_blank"
         rel="noopener noreferrer"
-        style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: 'rgba(30, 58, 138, 0.4)', color: '#bfdbfe', fontSize: '0.875rem', fontWeight: '500', borderRadius: '9999px', textDecoration: 'none' }}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: 'var(--brand-subtle)', border: '1px solid var(--border-brand)', color: 'var(--text-brand)', fontSize: '0.875rem', fontWeight: '500', borderRadius: '9999px', textDecoration: 'none' }}
       >
-        <span style={{ fontSize: '1rem' }}>🔗</span> View
+        <ExternalLink size={16} /> View
       </a>
     </div>
   )}
@@ -1685,6 +2296,107 @@ async function fetchAllMaterials() {
                   </div>
                 )}
               </section>
+
+              <section className="overview-panel overview-panel--subjects">
+                <div className="st-notice-head">
+                  <h3 className="student-section__title">
+                    <BookOpen size={18} aria-hidden="true" /> My Subjects
+                  </h3>
+                  <button
+                    type="button"
+                    className="st-notice-head__action"
+                    onClick={() => setActiveTab("subjects")}
+                  >
+                    View All
+                    <ArrowRight size={15} aria-hidden="true" />
+                  </button>
+                </div>
+
+                {subjectsLoading ? (
+                  <div className="quick-subjects-grid" aria-busy="true" aria-label="Loading subjects">
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <div key={index} className="subject-sync-card subject-sync-card--skeleton">
+                        <div className="subject-sync-card__header">
+                          <span className="subject-card__skeleton-line subject-card__skeleton-line--title" />
+                          <span className="subject-card__skeleton-circle" />
+                        </div>
+                        <div className="subject-sync-card__badges">
+                          <span className="subject-card__skeleton-line subject-card__skeleton-line--pill" />
+                          <span className="subject-card__skeleton-line subject-card__skeleton-line--pill" />
+                        </div>
+                        <div className="subject-sync-card__faculty">
+                          <span className="subject-card__skeleton-circle subject-card__skeleton-circle--sm" />
+                          <span className="subject-card__skeleton-line subject-card__skeleton-line--label" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : gridSubjects.length > 0 ? (
+                  <div className="quick-subjects-scroll-area">
+                    <div className="quick-subjects-grid">
+                      {gridSubjects.map((subject) => {
+                        const facultyName =
+                          subject.faculty?.full_name || subject.faculty_name || "Faculty TBA";
+                        const facultyAvatar =
+                          subject.faculty?.avatar_url ||
+                          subject.faculty?.profile_image_url ||
+                          subject.faculty_avatar ||
+                          "";
+                        const credits = subject.credits ?? subject.credit_hours ?? null;
+
+                        return (
+                          <div
+                            key={subject.id}
+                            className="subject-sync-card"
+                            onClick={() => setActiveTab("subjects")}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter" || event.key === " ") {
+                                event.preventDefault();
+                                setActiveTab("subjects");
+                              }
+                            }}
+                          >
+                            <div className="subject-sync-card__header">
+                              <h4 className="subject-sync-card__title">
+                                {subject.subject_name || subject.name || subject.title || "Unnamed Subject"}
+                              </h4>
+                              <FacultyAvatar
+                                className="subject-sync-card__avatar"
+                                src={facultyAvatar}
+                                name={facultyName}
+                                size={40}
+                              />
+                            </div>
+
+                            <div className="subject-sync-card__badges">
+                              <span className="code-badge">
+                                {subject.subject_code || subject.code || "No Code"}
+                              </span>
+                              <span className="credit-badge">
+                                <Clock size={12} aria-hidden="true" /> Credit {credits ?? "N/A"}
+                              </span>
+                              {subject.is_live && <span className="subject-sync-card__live">LIVE</span>}
+                            </div>
+
+                            <div className="subject-sync-card__faculty">
+                              <User size={14} aria-hidden="true" />
+                              <span title={facultyName}>by {facultyName}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="student-empty-box">
+                    <BookOpen size={36} aria-hidden="true" />
+                    <p>{subjectsError || "No subjects enrolled yet."}</p>
+                  </div>
+                )}
+              </section>
+              </div>
             </div>
           )}
 
@@ -1697,7 +2409,7 @@ async function fetchAllMaterials() {
              <section className="student-section" style={{ animation: "fadeIn 0.25s ease" }}>
                <div style={{ width: "100%", boxSizing: "border-box" }}>
                  <h3 className="student-section__title" style={{ margin: 0, fontSize: "1.5rem" }}>My Uploads</h3>
-                 <p style={{ color: "#94a3b8", fontSize: "0.9rem", margin: 0 }}>Manage your uploaded study materials</p>
+                  <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", margin: 0 }}>Manage your uploaded study materials</p>
 
                  {myUploads.length === 0 ? (
                    <div className="student-material-empty">
@@ -1762,43 +2474,11 @@ async function fetchAllMaterials() {
              <section className="student-section">
                {selectedSubject ? (
                 <>
-                  <div
-                    className="student-subject-detail-header"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      width: "100%",
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center" }}>
+                  <div className="student-subject-detail-header">
+                    <div className="student-subject-detail-header__left">
                       <button
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          padding: "8px 16px",
-                          borderRadius: "20px",
-                          background: "rgba(255, 255, 255, 0.1)",
-                          backdropFilter: "blur(10px)",
-                          border: "1px solid rgba(255, 255, 255, 0.15)",
-                          color: "#e2e8f0",
-                          cursor: "pointer",
-                          fontWeight: "500",
-                          fontSize: "13px",
-                          transition: "all 0.2s ease",
-                        }}
+                        className="student-back-btn"
                         onClick={() => setSelectedSubject(null)}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = "rgba(139, 92, 246, 0.25)";
-                          e.currentTarget.style.borderColor = "rgba(139, 92, 246, 0.5)";
-                          e.currentTarget.style.boxShadow = "0 0 15px rgba(139, 92, 246, 0.3)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
-                          e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.15)";
-                          e.currentTarget.style.boxShadow = "none";
-                        }}
                       >
                         <svg
                           width="16"
@@ -1809,6 +2489,7 @@ async function fetchAllMaterials() {
                           strokeWidth="2"
                           strokeLinecap="round"
                           strokeLinejoin="round"
+                          aria-hidden="true"
                         >
                           <line x1="19" y1="12" x2="5" y2="12" />
                           <polyline points="12 19 5 12 12 5" />
@@ -1823,13 +2504,7 @@ async function fetchAllMaterials() {
                           selectedSubject.name ||
                           selectedSubject.title ||
                           "Unnamed Subject"}
-                        <span
-                          style={{
-                            color: "#8b5cf6",
-                            fontWeight: "bold",
-                            marginLeft: "0.5rem",
-                          }}
-                        >
+                        <span className="student-subject-detail-header__code">
                           {selectedSubject.subject_code ||
                             selectedSubject.code ||
                             "No Code"}
@@ -1839,22 +2514,9 @@ async function fetchAllMaterials() {
                     {crDetails && (
                        <button
                         onClick={() => openUploadModal(selectedSubject)}
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          background:
-                            "linear-gradient(135deg, #3b82f6, #8b5cf6)",
-                          color: "white",
-                          padding: "10px 20px",
-                          borderRadius: "8px",
-                          border: "none",
-                          cursor: "pointer",
-                          fontWeight: "600",
-                          fontSize: "14px",
-                        }}
+                        className="student-upload-btn"
                       >
-                        <Upload size={18} /> Upload Material
+                        <Upload size={18} aria-hidden="true" /> Upload Material
                       </button>
                     )}
                   </div>
@@ -1890,16 +2552,17 @@ async function fetchAllMaterials() {
           <div className="pw-card-top">
             <div className="pw-card-top-left">
               <span className="pw-subject-badge">{selectedSubject?.subject_name || "Lecture"}</span>
-              <div className="pw-subject-line"></div>
               {/* Swapped: Title is now at the top */}
               <p className="pw-card-desc" title={material.title}>{material.title || 'Untitled Lecture'}</p>
               <span className="pw-teacher-name" title={facultyFullName}>By {shortFacultyName}</span>
             </div>
             <div className="pw-card-top-right">
-              <div className="pw-avatar-container" onClick={() => handleView(material)}>
-                <img src={avatarUrl} alt="Faculty" />
-                <div className="pw-play-btn">
-                  <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M8 5v14l11-7z"/></svg>
+              <div className="material-avatar-wrapper">
+                <div className="pw-avatar-container">
+                  <img src={avatarUrl} alt="Faculty" />
+                </div>
+                <div className="material-avatar-icon" style={{ background: 'var(--info-text)' }}>
+                  <FileText size={12} aria-hidden="true" />
                 </div>
               </div>
             </div>
@@ -1918,12 +2581,12 @@ async function fetchAllMaterials() {
             </div>
             
             {/* Swapped: Description is now at the bottom */}
-            <h3 className="pw-card-title">{material.description || 'No description provided'}</h3>
+            <h3 className={`pw-card-title${material.description ? "" : " pw-card-title--empty"}`}>{material.description || 'No description provided'}</h3>
             
             <div className="pw-card-actions" style={{ position: 'relative' }}>
-              <svg onClick={(e) => { e.stopPropagation(); handleView(material); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#6b7280" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" title="View Material"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"></path></svg>
+              <svg onClick={(e) => { e.stopPropagation(); handleView(material); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" title="View Material"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"></path></svg>
               
-              <svg onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === material.id ? null : material.id); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#6b7280" fill="none" strokeWidth="2" title="More Options"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+              <svg onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === material.id ? null : material.id); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" strokeWidth="2" title="More Options"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
 
               {/* Dropdown Menu & Invisible Click-Outside Overlay */}
               {openMenuId === material.id && (
@@ -1944,7 +2607,7 @@ async function fetchAllMaterials() {
                         setOpenMenuId(null);
                       }}
                     >
-                      {bookmarkedIds.includes(material.id) ? '★ Remove Bookmark' : '☆ Bookmark'}
+                      {bookmarkedIds.includes(material.id) ? (<><Star size={16} fill="currentColor" aria-hidden="true" /> Remove Bookmark</>) : (<><Star size={16} aria-hidden="true" /> Bookmark</>)}
                     </div>
                     <div 
                       className="pw-dropdown-item"
@@ -1954,7 +2617,7 @@ async function fetchAllMaterials() {
                         setOpenMenuId(null);
                       }}
                     >
-                      ↓ Download
+                      <Download size={16} aria-hidden="true" /> Download
                     </div>
                   </div>
                 </>
@@ -1966,22 +2629,23 @@ async function fetchAllMaterials() {
     }
     const facultyFullName = material.faculty_name || selectedSubject?.faculty?.full_name || 'Not Assigned';
     const shortFacultyName = facultyFullName.length > 15 ? facultyFullName.split(' ')[0] : facultyFullName;
-    const avatarUrl = material.faculty_avatar || selectedSubject?.faculty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(facultyFullName)}&background=1e1e2d&color=fff`;
+    const avatarUrl = material.faculty_avatar || selectedSubject?.faculty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(facultyFullName)}&background=e2e8f0&color=475569`;
 
     return (
       <div key={material.id} className="pw-lecture-card" onClick={() => handleView(material)}>
         <div className="pw-card-top">
           <div className="pw-card-top-left">
-            <span className="pw-subject-badge" style={{ color: '#38bdf8' }}>{material.type ? material.type.toUpperCase() : "DOCUMENT"}</span>
-            <div className="pw-subject-line" style={{ background: '#38bdf8' }}></div>
+            <span className="pw-subject-badge">{material.type ? material.type.toUpperCase() : "DOCUMENT"}</span>
             <p className="pw-card-desc" title={material.title}>{material.title || material.name || 'Untitled Document'}</p>
             <span className="pw-teacher-name" title={facultyFullName}>By {shortFacultyName}</span>
           </div>
           <div className="pw-card-top-right">
-            <div className="pw-avatar-container">
-              <img src={avatarUrl} alt="Faculty" />
-              <div className="pw-play-btn" style={{ background: '#0284c7' }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <div className="material-avatar-wrapper">
+              <div className="pw-avatar-container">
+                <img src={avatarUrl} alt="Faculty" />
+              </div>
+              <div className="material-avatar-icon" style={{ background: 'var(--info-text)' }}>
+                <FileText size={12} aria-hidden="true" />
               </div>
             </div>
           </div>
@@ -1992,27 +2656,27 @@ async function fetchAllMaterials() {
             <span className="pw-date">
               {new Date(material.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </span>
-            <span className="pw-duration" style={{ color: '#38bdf8' }}>
-              📄 {material.type === 'Class Notes' ? 'PDF Note' : 'Document'}
+            <span className="pw-duration" style={{ color: 'var(--info-text)' }}>
+              <FileText size={14} aria-hidden="true" /> {material.type === 'Class Notes' ? 'PDF Note' : 'Document'}
             </span>
           </div>
           
-          <h3 className="pw-card-title">{material.description || 'No description provided'}</h3>
+          <h3 className={`pw-card-title${material.description ? "" : " pw-card-title--empty"}`}>{material.description || 'No description provided'}</h3>
           
           <div className="pw-card-actions" style={{ position: 'relative' }}>
-            <svg onClick={(e) => { e.stopPropagation(); handleView(material); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#6b7280" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" title="View Material"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+            <svg onClick={(e) => { e.stopPropagation(); handleView(material); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" title="View Material"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
             
-            <svg onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === material.id ? null : material.id); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#6b7280" fill="none" strokeWidth="2" title="More Options"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+            <svg onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === material.id ? null : material.id); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" strokeWidth="2" title="More Options"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
 
             {openMenuId === material.id && (
               <>
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 40, cursor: 'default' }} onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); }}></div>
                 <div className="pw-dropdown-menu" style={{ zIndex: 50 }}>
                   <div className="pw-dropdown-item" onClick={(e) => { e.stopPropagation(); toggleBookmark(material.id); setOpenMenuId(null); }}>
-                    {bookmarkedIds.includes(material.id) ? '★ Remove Bookmark' : '☆ Bookmark'}
+                    {bookmarkedIds.includes(material.id) ? (<><Star size={16} fill="currentColor" aria-hidden="true" /> Remove Bookmark</>) : (<><Star size={16} aria-hidden="true" /> Bookmark</>)}
                   </div>
                   <div className="pw-dropdown-item" onClick={(e) => { e.stopPropagation(); alert('Download feature coming soon in My Downloads!'); setOpenMenuId(null); }}>
-                    ↓ Download
+                    <Download size={16} aria-hidden="true" /> Download
                   </div>
                 </div>
               </>
@@ -2068,7 +2732,40 @@ async function fetchAllMaterials() {
                       ))}
                     </div>
                   </div>
-                  {gridSubjects.length === 0 ? (
+                  {/* Loading is checked first: showing the empty state while the
+                      query is still in flight is what made the tab look broken. */}
+                  {subjectsLoading ? (
+                    <div className="subjects-grid" aria-busy="true" aria-label="Loading subjects">
+                      {Array.from({ length: 6 }).map((_, index) => (
+                        <div key={index} className="subject-card subject-card--skeleton">
+                          <div className="subject-card__skeleton-head">
+                            <span className="subject-card__skeleton-line subject-card__skeleton-line--title" />
+                            <span className="subject-card__skeleton-circle" />
+                          </div>
+                          <div className="subject-card__skeleton-badges">
+                            <span className="subject-card__skeleton-line subject-card__skeleton-line--pill" />
+                            <span className="subject-card__skeleton-line subject-card__skeleton-line--pill" />
+                          </div>
+                          <div className="subject-card__skeleton-footer">
+                            <span className="subject-card__skeleton-circle subject-card__skeleton-circle--sm" />
+                            <span className="subject-card__skeleton-line subject-card__skeleton-line--label" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : subjectsError ? (
+                    <div className="student-empty-box student-subjects-error">
+                      <AlertTriangle size={32} aria-hidden="true" />
+                      <p>{subjectsError}</p>
+                      <button
+                        type="button"
+                        className="student-cropper__btn student-cropper__btn--primary student-subjects-error__retry"
+                        onClick={retrySubjectsLoad}
+                      >
+                        Try Again
+                      </button>
+                    </div>
+                  ) : gridSubjects.length === 0 ? (
                     <div className="student-empty-box">
                       <svg
                         width="44"
@@ -2098,39 +2795,40 @@ async function fetchAllMaterials() {
                             className="subject-card"
                             onClick={() => setSelectedSubject(subject)}
                           >
-                            <div>
+                            <div className="subject-card__header">
                               <h4>
                                 {subject.subject_name || subject.name || subject.title || "Unnamed Subject"}
                               </h4>
-                              <div className="premium-card-meta">
-                                <span className="premium-card-code">
-                                  {subject.subject_code || subject.code || "No Code"}
-                                </span>
-                                <span className="premium-card-credits">
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <polyline points="12 6 12 12 8 16" />
-                                  </svg>
-                                  Credit {subject.credits || subject.credit_hours || 'N/A'}
-                                </span>
-                              </div>
+                              <FacultyAvatar
+                                className="subject-card__avatar"
+                                src={subject.faculty?.avatar_url || subject.faculty?.profile_image_url || ""}
+                                name={subject.faculty?.full_name || subject.faculty_name || 'Faculty'}
+                                size={64}
+                              />
+                            </div>
+
+                            <div className="subject-card__badges">
+                              <span className="premium-card-code">
+                                {subject.subject_code || subject.code || "No Code"}
+                              </span>
+                              <span className="premium-card-credits">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <circle cx="12" cy="12" r="10" />
+                                  <polyline points="12 6 12 12 8 16" />
+                                </svg>
+                                Credit {subject.credits || subject.credit_hours || 'N/A'}
+                              </span>
+                              {subject.is_live && (
+                                <span className="premium-live-badge">LIVE</span>
+                              )}
                             </div>
 
                             <div className="premium-card-faculty">
-                              <img
-                                src={subject.faculty?.avatar_url || subject.faculty?.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(subject.faculty?.full_name || subject.faculty_name || 'Teacher')}&background=2d2d3f&color=8b5cf6`}
-                                alt="Faculty"
-                              />
+                              <User size={14} aria-hidden="true" />
                               <span>
-                                {subject.faculty?.full_name || subject.faculty_name || 'Faculty TBA'}
+                                by {subject.faculty?.full_name || subject.faculty_name || 'Faculty TBA'}
                               </span>
                             </div>
-
-                            {subject.is_live && (
-                              <span className="premium-live-badge">
-                                LIVE
-                              </span>
-                            )}
                           </div>
                         ))}
                       </div>
@@ -2221,7 +2919,7 @@ async function fetchAllMaterials() {
                           const matchedSubject = gridSubjects?.find(s => s.id === material.subject_id) || {};
                           const facultyFullName = material.faculty_name || matchedSubject?.faculty?.full_name || 'Not Assigned';
                           const shortFacultyName = facultyFullName.length > 15 ? facultyFullName.split(' ')[0] : facultyFullName;
-                          const avatarUrl = material.faculty_avatar || matchedSubject?.faculty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(facultyFullName)}&background=1e1e2d&color=fff`;
+                          const avatarUrl = material.faculty_avatar || matchedSubject?.faculty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(facultyFullName)}&background=e2e8f0&color=475569`;
 
                           return (
                             <div key={material.id} className="pw-lecture-card">
@@ -2229,15 +2927,16 @@ async function fetchAllMaterials() {
                               <div className="pw-card-top">
                                 <div className="pw-card-top-left">
                                   <span className="pw-subject-badge">{material.subject_name || matchedSubject?.subject_name || "Lecture"}</span>
-                                  <div className="pw-subject-line"></div>
                                   <p className="pw-card-desc" title={material.title}>{material.title || 'Untitled Lecture'}</p>
                                   <span className="pw-teacher-name" title={facultyFullName}>By {shortFacultyName}</span>
                                 </div>
                                 <div className="pw-card-top-right">
-                                  <div className="pw-avatar-container" onClick={() => handleView && handleView(material)}>
-                                    <img src={avatarUrl} alt="Faculty" />
-                                    <div className="pw-play-btn">
-                                      <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M8 5v14l11-7z"/></svg>
+                                  <div className="material-avatar-wrapper" onClick={() => handleView && handleView(material)}>
+                                    <div className="pw-avatar-container">
+                                      <img src={avatarUrl} alt="Faculty" />
+                                    </div>
+                                    <div className="material-avatar-icon">
+                                      <Play size={12} fill="currentColor" aria-hidden="true" />
                                     </div>
                                   </div>
                                 </div>
@@ -2255,12 +2954,12 @@ async function fetchAllMaterials() {
                                   </span>
                                 </div>
                                 
-                                <h3 className="pw-card-title">{material.description || 'No description provided'}</h3>
+                                <h3 className={`pw-card-title${material.description ? "" : " pw-card-title--empty"}`}>{material.description || 'No description provided'}</h3>
                                 
                                 <div className="pw-card-actions" style={{ position: 'relative' }}>
-                                  <svg onClick={(e) => { e.stopPropagation(); handleView && handleView(material); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#6b7280" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" title="View Material"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"></path></svg>
+                                  <svg onClick={(e) => { e.stopPropagation(); handleView && handleView(material); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" title="View Material"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"></path></svg>
                                   
-                                  <svg onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === material.id ? null : material.id); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#6b7280" fill="none" strokeWidth="2" title="More Options"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+                                  <svg onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === material.id ? null : material.id); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" strokeWidth="2" title="More Options"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
 
                                   {/* Dropdown Menu & Invisible Click-Outside Overlay */}
                                   {openMenuId === material.id && (
@@ -2279,7 +2978,7 @@ async function fetchAllMaterials() {
                                             setOpenMenuId(null);
                                           }}
                                         >
-                                          {bookmarkedIds.includes(material.id) ? '★ Remove Bookmark' : '☆ Bookmark'}
+                                          {bookmarkedIds.includes(material.id) ? (<><Star size={16} fill="currentColor" aria-hidden="true" /> Remove Bookmark</>) : (<><Star size={16} aria-hidden="true" /> Bookmark</>)}
                                         </div>
                                         <div 
                                           className="pw-dropdown-item"
@@ -2289,7 +2988,7 @@ async function fetchAllMaterials() {
                                             setOpenMenuId(null);
                                           }}
                                         >
-                                          ↓ Download
+                                          <Download size={16} aria-hidden="true" /> Download
                                         </div>
                                       </div>
                                     </>
@@ -2301,53 +3000,54 @@ async function fetchAllMaterials() {
                         }
                         const facultyFullName = material.faculty_name || gridSubjects?.find(s => s.id === material.subject_id)?.faculty?.full_name || 'Not Assigned';
                         const shortFacultyName = facultyFullName.length > 15 ? facultyFullName.split(' ')[0] : facultyFullName;
-                        const avatarUrl = material.faculty_avatar || gridSubjects?.find(s => s.id === material.subject_id)?.faculty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(facultyFullName)}&background=1e1e2d&color=fff`;
+                        const avatarUrl = material.faculty_avatar || gridSubjects?.find(s => s.id === material.subject_id)?.faculty?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(facultyFullName)}&background=e2e8f0&color=475569`;
 
                         return (
                           <div key={material.id} className="pw-lecture-card" onClick={() => handleView(material)}>
                             <div className="pw-card-top">
                               <div className="pw-card-top-left">
-                                <span className="pw-subject-badge" style={{ color: '#38bdf8' }}>{material.type ? material.type.toUpperCase() : "DOCUMENT"}</span>
-                                <div className="pw-subject-line" style={{ background: '#38bdf8' }}></div>
+                                <span className="pw-subject-badge">{material.type ? material.type.toUpperCase() : "DOCUMENT"}</span>
                                 <p className="pw-card-desc" title={material.title}>{material.title || material.name || 'Untitled Document'}</p>
                                 <span className="pw-teacher-name" title={facultyFullName}>By {shortFacultyName}</span>
                               </div>
                               <div className="pw-card-top-right">
-                                <div className="pw-avatar-container">
-                                  <img src={avatarUrl} alt="Faculty" />
-                                  <div className="pw-play-btn" style={{ background: '#0284c7' }}>
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                <div className="material-avatar-wrapper">
+                                  <div className="pw-avatar-container">
+                                    <img src={avatarUrl} alt="Faculty" />
+                                  </div>
+                                  <div className="material-avatar-icon" style={{ background: 'var(--info-text)' }}>
+                                    <FileText size={12} aria-hidden="true" />
                                   </div>
                                 </div>
                               </div>
-                            </div>
+        </div>
                             
                             <div className="pw-card-bottom">
                               <div className="pw-card-meta">
                                 <span className="pw-date">
                                   {new Date(material.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                 </span>
-                                <span className="pw-duration" style={{ color: '#38bdf8' }}>
-                                  📄 {material.type === 'Class Notes' ? 'PDF Note' : 'Document'}
+                                <span className="pw-duration" style={{ color: 'var(--info-text)' }}>
+                                  <FileText size={14} aria-hidden="true" /> {material.type === 'Class Notes' ? 'PDF Note' : 'Document'}
                                 </span>
                               </div>
                               
-                              <h3 className="pw-card-title">{material.description || 'No description provided'}</h3>
+                              <h3 className={`pw-card-title${material.description ? "" : " pw-card-title--empty"}`}>{material.description || 'No description provided'}</h3>
                               
                               <div className="pw-card-actions" style={{ position: 'relative' }}>
-                                <svg onClick={(e) => { e.stopPropagation(); handleView(material); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#6b7280" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" title="View Material"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+                                <svg onClick={(e) => { e.stopPropagation(); handleView(material); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" title="View Material"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
                                 
-                                <svg onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === material.id ? null : material.id); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" stroke="#6b7280" fill="none" strokeWidth="2" title="More Options"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+                                <svg onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === material.id ? null : material.id); }} className="pw-action-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" strokeWidth="2" title="More Options"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
 
                                 {openMenuId === material.id && (
                                   <>
                                     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 40, cursor: 'default' }} onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); }}></div>
                                     <div className="pw-dropdown-menu" style={{ zIndex: 50 }}>
                                       <div className="pw-dropdown-item" onClick={(e) => { e.stopPropagation(); toggleBookmark(material.id); setOpenMenuId(null); }}>
-                                        {bookmarkedIds.includes(material.id) ? '★ Remove Bookmark' : '☆ Bookmark'}
+                                        {bookmarkedIds.includes(material.id) ? (<><Star size={16} fill="currentColor" aria-hidden="true" /> Remove Bookmark</>) : (<><Star size={16} aria-hidden="true" /> Bookmark</>)}
                                       </div>
                                       <div className="pw-dropdown-item" onClick={(e) => { e.stopPropagation(); alert('Download feature coming soon!'); setOpenMenuId(null); }}>
-                                        ↓ Download
+                                        <Download size={16} aria-hidden="true" /> Download
                                       </div>
                                     </div>
                                   </>
@@ -2385,25 +3085,25 @@ async function fetchAllMaterials() {
               ) : (
                 <div className="student-announcements">
                   {announcements.map((announcement) => (
-                    <div key={announcement.id} style={{ backgroundColor: 'rgba(31, 41, 55, 0.4)', border: '1px solid rgba(55, 65, 81, 0.5)', borderRadius: '12px', padding: '24px', marginBottom: '16px' }}>
+                    <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-sm)', padding: '24px', marginBottom: '16px' }}>
   
   {/* TOP: Title on Left, Badge & Date on Right */}
   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-    <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#ffffff', margin: 0, textAlign: 'left' }}>
+    <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: 0, textAlign: 'left' }}>
       {announcement.title}
     </h3>
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-      <span style={{ padding: '4px 12px', backgroundColor: 'rgba(55, 65, 81, 0.5)', color: '#60a5fa', fontSize: '0.75rem', fontWeight: '600', borderRadius: '9999px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+      <span style={{ padding: '4px 12px', backgroundColor: 'var(--info-subtle)', border: '1px solid var(--info-border)', color: 'var(--info-text)', fontSize: '0.75rem', fontWeight: '600', borderRadius: '9999px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
         {announcement.type}
       </span>
-      <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
+      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
         {new Date(announcement.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
       </span>
     </div>
   </div>
 
   {/* MIDDLE: Left-aligned content */}
-  <p style={{ color: '#d1d5db', fontSize: '0.875rem', textAlign: 'left', marginBottom: '24px', whiteSpace: 'pre-wrap', marginTop: 0 }}>
+  <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', textAlign: 'left', marginBottom: '24px', whiteSpace: 'pre-wrap', marginTop: 0 }}>
     {announcement.content}
   </p>
 
@@ -2414,9 +3114,9 @@ async function fetchAllMaterials() {
         href={announcement.file_url || announcement.link}
         target="_blank"
         rel="noopener noreferrer"
-        style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: 'rgba(30, 58, 138, 0.4)', color: '#bfdbfe', fontSize: '0.875rem', fontWeight: '500', borderRadius: '9999px', textDecoration: 'none' }}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: 'var(--brand-subtle)', border: '1px solid var(--border-brand)', color: 'var(--text-brand)', fontSize: '0.875rem', fontWeight: '500', borderRadius: '9999px', textDecoration: 'none' }}
       >
-        <span style={{ fontSize: '1rem' }}>🔗</span> View
+        <ExternalLink size={16} aria-hidden="true" /> View
       </a>
     </div>
   )}
@@ -2452,26 +3152,9 @@ async function fetchAllMaterials() {
 
       {toast && (
         <div
-          style={{
-            position: "fixed",
-            top: "1.5rem",
-            right: "1.5rem",
-            zIndex: 999999,
-            background: toast.type === "success"
-              ? "rgba(22, 101, 52, 0.95)"
-              : "rgba(127, 29, 29, 0.95)",
-            border: `1px solid ${toast.type === "success" ? "#22c55e" : "#ef4444"}`,
-            borderLeft: toast.type === "success" ? "4px solid #22c55e" : "4px solid #ef4444",
-            color: "#fff",
-            padding: "0.9rem 1.25rem",
-            borderRadius: "12px",
-            fontSize: "0.9rem",
-            fontWeight: "600",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
-            backdropFilter: "blur(8px)",
-            animation: "toast-slide-in 0.3s ease",
-            maxWidth: "360px",
-          }}
+          role="status"
+          aria-live="polite"
+          className={`student-toast ${toast.type === "success" ? "student-toast--success" : "student-toast--error"}`}
         >
           {toast.message}
         </div>
@@ -2479,110 +3162,112 @@ async function fetchAllMaterials() {
 
       {isProfileModalOpen && (
         <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 999997,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "rgba(0, 0, 0, 0.6)",
-            backdropFilter: "blur(6px)",
-            animation: "upload-modal-fade-in 0.2s ease",
-          }}
+          className="student-profile-modal__overlay"
           onClick={() => closeProfileModal()}
         >
           <div
-            style={{
-              background: "rgba(15, 23, 42, 0.95)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-              borderRadius: "20px",
-              padding: "2rem",
-              maxWidth: "460px",
-              width: "92%",
-              maxHeight: "90vh",
-              overflowY: "auto",
-              boxShadow: "0 20px 50px rgba(0,0,0,0.5)",
-              color: "#e2e8f0",
-              fontFamily: "inherit",
-            }}
+            className="student-profile-modal"
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-              <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "700", color: "#f1f5f9" }}>
-                Edit Profile
-              </h3>
+            <div className="student-profile-modal__header">
+              <h3 className="student-profile-modal__title">Edit Profile</h3>
               <button
                 onClick={() => closeProfileModal()}
-                style={{
-                  background: "rgba(255,255,255,0.05)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: "8px",
-                  color: "#cbd5e1",
-                  cursor: "pointer",
-                  padding: "0.35rem 0.6rem",
-                  fontSize: "0.8rem",
-                  fontFamily: "inherit",
-                }}
+                className="student-profile-modal__close"
               >
                 ✕
               </button>
             </div>
 
             {/* Tabs */}
-            <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.25rem", background: "rgba(255,255,255,0.04)", padding: "0.35rem", borderRadius: "12px" }}>
+            <div className="student-profile-modal__tabs" style={{ display: imageToCrop ? "none" : undefined }}>
               <button
                 onClick={() => setActiveProfileTab("general")}
-                style={{
-                  flex: 1,
-                  padding: "0.55rem",
-                  borderRadius: "10px",
-                  border: "none",
-                  fontSize: "0.85rem",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  background: activeProfileTab === "general" ? "linear-gradient(135deg, #6366f1, #8b5cf6)" : "transparent",
-                  color: activeProfileTab === "general" ? "#fff" : "#94a3b8",
-                  transition: "all 0.2s ease",
-                }}
+                className={`student-profile-modal__tab ${activeProfileTab === "general" ? "student-profile-modal__tab--active" : ""}`}
               >
                 General Details
               </button>
               <button
                 onClick={() => setActiveProfileTab("security")}
-                style={{
-                  flex: 1,
-                  padding: "0.55rem",
-                  borderRadius: "10px",
-                  border: "none",
-                  fontSize: "0.85rem",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  background: activeProfileTab === "security" ? "linear-gradient(135deg, #6366f1, #8b5cf6)" : "transparent",
-                  color: activeProfileTab === "security" ? "#fff" : "#94a3b8",
-                  transition: "all 0.2s ease",
-                  display: isDirector ? 'flex' : 'none',
-                }}
+                className={`student-profile-modal__tab ${activeProfileTab === "security" ? "student-profile-modal__tab--active" : ""}`}
+                style={{ display: isDirector ? 'flex' : 'none' }}
               >
                 Security
               </button>
             </div>
 
-            {activeProfileTab === "general" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            {/* The cropper takes over the modal body until it is confirmed or
+                cancelled, so the pending photo is never uploaded un-cropped. */}
+            {imageToCrop && (
+              <div className="student-profile-modal__body student-cropper">
+                <p className="student-cropper__hint">
+                  Drag to reposition, then zoom to frame your face inside the circle.
+                </p>
+
+                <div className="crop-container">
+                  <Cropper
+                    image={imageToCrop}
+                    crop={crop}
+                    zoom={zoom}
+                    cropShape="round"
+                    showGrid={false}
+                    onCropChange={setCrop}
+                    onZoomChange={setZoom}
+                    onCropComplete={(_, areaPixels) => setCroppedAreaPixels(areaPixels)}
+                  />
+                </div>
+
+                <div className="student-cropper__zoom">
+                  <label className="student-cropper__zoom-label" htmlFor="avatar-zoom">
+                    Zoom
+                  </label>
+                  <input
+                    id="avatar-zoom"
+                    type="range"
+                    min={1}
+                    max={3}
+                    step={0.01}
+                    value={zoom}
+                    onChange={(event) => setZoom(Number(event.target.value))}
+                    className="student-cropper__slider"
+                    aria-label="Zoom"
+                  />
+                </div>
+
+                <div className="student-cropper__actions">
+                  <button
+                    type="button"
+                    className="student-cropper__btn student-cropper__btn--ghost"
+                    onClick={cancelCrop}
+                    disabled={cropSaving}
+                  >
+                    Cancel Crop
+                  </button>
+                  <button
+                    type="button"
+                    className="student-cropper__btn student-cropper__btn--primary"
+                    onClick={handleCropSave}
+                    disabled={cropSaving || !croppedAreaPixels}
+                  >
+                    {cropSaving ? "Saving..." : "Save & Set Profile"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {!imageToCrop && activeProfileTab === "general" && (
+              <div className="student-profile-modal__body">
                 {/* Avatar Upload */}
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem" }}>
-                  <div style={{ position: "relative", width: "96px", height: "96px", borderRadius: "50%", overflow: "hidden", border: "2px solid rgba(99,102,241,0.3)", background: "rgba(20,20,40,0.6)" }}>
+                <div className="student-profile-modal__avatar">
+                  <div className="student-profile-modal__avatar-frame">
                     {editAvatarPreview || studentProfile?.avatar_url ? (
                       <img
                         src={editAvatarPreview || studentProfile?.avatar_url}
                         alt="Avatar preview"
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        className="student-profile-modal__avatar-img"
                       />
                     ) : (
-                      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#6366f1" }}>
+                      <div className="student-profile-modal__avatar-placeholder">
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                           <circle cx="12" cy="7" r="4" />
@@ -2592,17 +3277,7 @@ async function fetchAllMaterials() {
                   </div>
                   <label
                     htmlFor="avatar-upload"
-                    style={{
-                      padding: "0.5rem 1rem",
-                      borderRadius: "10px",
-                      background: "rgba(99,102,241,0.15)",
-                      border: "1px dashed rgba(99,102,241,0.4)",
-                      color: "#a5b4fc",
-                      fontSize: "0.8rem",
-                      fontWeight: "600",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                    }}
+                    className="student-profile-modal__avatar-btn"
                   >
                     {editAvatarFile ? editAvatarFile.name : "Choose Avatar Image"}
                   </label>
@@ -2611,82 +3286,41 @@ async function fetchAllMaterials() {
                     type="file"
                     accept="image/*"
                     style={{ display: "none" }}
-                    onChange={(e) => {
-                      const file = e.target.files[0];
-                      if (file) {
-                        setEditAvatarFile(file);
-                        if (editAvatarPreviewRef.current) URL.revokeObjectURL(editAvatarPreviewRef.current);
-                        const url = URL.createObjectURL(file);
-                        editAvatarPreviewRef.current = url;
-                        setEditAvatarPreview(url);
-                      }
-                    }}
+                    onChange={handleAvatarSelect}
                   />
                 </div>
 
                 {/* Phone */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-                  <label style={{ fontSize: "0.72rem", fontWeight: "600", color: "#6366f1", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    Phone Number
-                  </label>
+                <div className="student-profile-modal__field">
+                  <label className="student-profile-modal__label">Phone Number</label>
                   <input
                     type="tel"
                     value={editPhone}
                     onChange={(e) => setEditPhone(e.target.value)}
                     placeholder="Enter phone number"
                     disabled={!isDirector}
-                    style={{
-                      width: "100%",
-                      padding: "0.65rem 0.85rem",
-                      borderRadius: "10px",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      background: "rgba(20,20,40,0.5)",
-                      color: "#f1f5f9",
-                      fontSize: "0.9rem",
-                      fontFamily: "inherit",
-                      outline: "none",
-                    }}
+                    className="student-profile-modal__input"
                   />
                 </div>
 
                 {/* Read-only fields */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.6rem 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                    <span style={{ fontSize: "0.75rem", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>Roll Number</span>
+                <div className="student-profile-modal__field">
+                  <div className="student-profile-modal__row">
+                    <span className="student-profile-modal__label">Roll Number</span>
                     <input
                       type="text"
                       value={studentProfile?.roll_number || profile?.roll_number || "—"}
                       disabled
-                      style={{
-                        width: "60%",
-                        padding: "0.4rem 0.6rem",
-                        borderRadius: "8px",
-                        border: "1px solid rgba(255,255,255,0.06)",
-                        background: "rgba(255,255,255,0.03)",
-                        color: "#64748b",
-                        fontSize: "0.85rem",
-                        fontFamily: "'JetBrains Mono', monospace",
-                        opacity: 0.7,
-                      }}
+                      className="student-profile-modal__input student-profile-modal__input--mono"
                     />
                   </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.6rem 0" }}>
-                    <span style={{ fontSize: "0.75rem", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>College Email</span>
+                  <div className="student-profile-modal__row">
+                    <span className="student-profile-modal__label">College Email</span>
                     <input
                       type="text"
                       value={profile?.email || studentProfile?.email || "—"}
                       disabled
-                      style={{
-                        width: "60%",
-                        padding: "0.4rem 0.6rem",
-                        borderRadius: "8px",
-                        border: "1px solid rgba(255,255,255,0.06)",
-                        background: "rgba(255,255,255,0.03)",
-                        color: "#64748b",
-                        fontSize: "0.85rem",
-                        fontFamily: "'JetBrains Mono', monospace",
-                        opacity: 0.7,
-                      }}
+                      className="student-profile-modal__input student-profile-modal__input--mono"
                     />
                   </div>
                 </div>
@@ -2695,38 +3329,7 @@ async function fetchAllMaterials() {
                   onClick={async () => {
                     setProfileSaving(true);
                     try {
-                      if (!user) throw new Error("No user found");
-                      let avatarUrl = studentProfile?.avatar_url || profile?.avatar_url;
-
-                      if (editAvatarFile) {
-                         const filePath = `${user.id}/${Date.now()}-${editAvatarFile.name}`;
-                        const { error: uploadError } = await supabase.storage
-                          .from("avatars")
-                          .upload(filePath, editAvatarFile, { upsert: true });
-
-                        if (uploadError) throw uploadError;
-
-                        const { data: publicUrlData } = supabase.storage
-                          .from("avatars")
-                          .getPublicUrl(filePath);
-
-                        avatarUrl = publicUrlData.publicUrl;
-                      }
-
-                      const updates = {
-                        phone: editPhone,
-                        ...(avatarUrl && avatarUrl !== (studentProfile?.avatar_url || profile?.avatar_url) ? { avatar_url: avatarUrl } : {}),
-                      };
-
-                      const { error: updateError } = await supabase
-                        .from("user_profiles")
-                        .update(updates)
-                        .eq("id", user.id);
-
-                      if (updateError) throw updateError;
-
-                      setStudentProfile((prev) => ({ ...prev, ...updates }));
-                      setProfile((prev) => ({ ...prev, ...updates }));
+                      await persistProfileChanges();
                       showToast("Profile updated successfully!");
                       closeProfileModal();
                       setEditAvatarFile(null);
@@ -2739,33 +3342,17 @@ async function fetchAllMaterials() {
                     }
                   }}
                   disabled={profileSaving}
-                  style={{
-                    width: "100%",
-                    padding: "0.7rem",
-                    borderRadius: "12px",
-                    border: "none",
-                    fontSize: "0.9rem",
-                    fontWeight: "600",
-                    cursor: profileSaving ? "not-allowed" : "pointer",
-                    background: profileSaving
-                      ? "rgba(99,102,241,0.4)"
-                      : "linear-gradient(135deg, #6366f1, #8b5cf6)",
-                    color: "#fff",
-                    fontFamily: "inherit",
-                    opacity: profileSaving ? 0.7 : 1,
-                    transition: "all 0.2s ease",
-                    boxShadow: "0 4px 14px rgba(99, 102, 241, 0.3)",
-                  }}
+                  className="student-profile-modal__save"
                 >
                   {profileSaving ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             )}
 
-            {activeProfileTab === "security" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-                  <label style={{ fontSize: "0.72rem", fontWeight: "600", color: "#6366f1", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            {!imageToCrop && activeProfileTab === "security" && (
+              <div className="student-profile-modal__body">
+                <div className="student-profile-modal__field">
+                  <label className="student-profile-modal__label">
                     New Password
                   </label>
                   <input
@@ -2773,21 +3360,11 @@ async function fetchAllMaterials() {
                     value={editNewPassword}
                     onChange={(e) => setEditNewPassword(e.target.value)}
                     placeholder="Enter new password"
-                    style={{
-                      width: "100%",
-                      padding: "0.65rem 0.85rem",
-                      borderRadius: "10px",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      background: "rgba(20,20,40,0.5)",
-                      color: "#f1f5f9",
-                      fontSize: "0.9rem",
-                      fontFamily: "inherit",
-                      outline: "none",
-                    }}
+                    className="student-profile-modal__input"
                   />
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-                  <label style={{ fontSize: "0.72rem", fontWeight: "600", color: "#6366f1", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <div className="student-profile-modal__field">
+                  <label className="student-profile-modal__label">
                     Confirm New Password
                   </label>
                   <input
@@ -2795,17 +3372,7 @@ async function fetchAllMaterials() {
                     value={editConfirmPassword}
                     onChange={(e) => setEditConfirmPassword(e.target.value)}
                     placeholder="Re-enter new password"
-                    style={{
-                      width: "100%",
-                      padding: "0.65rem 0.85rem",
-                      borderRadius: "10px",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      background: "rgba(20,20,40,0.5)",
-                      color: "#f1f5f9",
-                      fontSize: "0.9rem",
-                      fontFamily: "inherit",
-                      outline: "none",
-                    }}
+                    className="student-profile-modal__input"
                   />
                 </div>
 
@@ -2840,23 +3407,7 @@ async function fetchAllMaterials() {
                     }
                   }}
                   disabled={passwordSaving}
-                  style={{
-                    width: "100%",
-                    padding: "0.7rem",
-                    borderRadius: "12px",
-                    border: "none",
-                    fontSize: "0.9rem",
-                    fontWeight: "600",
-                    cursor: passwordSaving ? "not-allowed" : "pointer",
-                    background: passwordSaving
-                      ? "rgba(99,102,241,0.4)"
-                      : "linear-gradient(135deg, #6366f1, #8b5cf6)",
-                    color: "#fff",
-                    fontFamily: "inherit",
-                    opacity: passwordSaving ? 0.7 : 1,
-                    transition: "all 0.2s ease",
-                    boxShadow: "0 4px 14px rgba(99, 102, 241, 0.3)",
-                  }}
+                  className="student-profile-modal__save"
                 >
                   {passwordSaving ? "Updating..." : "Change Password"}
                 </button>
@@ -2868,92 +3419,30 @@ async function fetchAllMaterials() {
 
       {deleteTargetId !== null && (
         <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 999998,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "rgba(0, 0, 0, 0.6)",
-            backdropFilter: "blur(6px)",
-            animation: "upload-modal-fade-in 0.2s ease",
-          }}
+          className="student-delete-modal__overlay"
           onClick={() => setDeleteTargetId(null)}
         >
           <div
-            style={{
-              background: "rgba(15, 23, 42, 0.95)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-              borderRadius: "20px",
-              padding: "2rem",
-              maxWidth: "420px",
-              width: "90%",
-              boxShadow: "0 20px 50px rgba(0,0,0,0.5)",
-              textAlign: "center",
-            }}
+            className="student-delete-modal"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3
-              style={{
-                margin: "0 0 0.5rem",
-                fontSize: "1.2rem",
-                fontWeight: "700",
-                color: "#fca5a5",
-              }}
-            >
+            <h3 className="student-delete-modal__title">
               Are you sure you want to delete?
             </h3>
-            <p
-              style={{
-                margin: "0 0 1.75rem",
-                fontSize: "0.9rem",
-                color: "#94a3b8",
-              }}
-            >
+            <p className="student-delete-modal__text">
               This action cannot be undone.
             </p>
-            <div
-              style={{
-                display: "flex",
-                gap: "0.75rem",
-                justifyContent: "center",
-              }}
-            >
+            <div className="student-delete-modal__actions">
               <button
                 onClick={() => setDeleteTargetId(null)}
-                style={{
-                  padding: "0.65rem 1.5rem",
-                  borderRadius: "12px",
-                  fontSize: "0.9rem",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  background: "rgba(255,255,255,0.05)",
-                  color: "#cbd5e1",
-                  fontFamily: "inherit",
-                  transition: "all 0.2s ease",
-                }}
+                className="student-delete-modal__btn student-delete-modal__btn--cancel"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDelete}
                 disabled={deleteLoading}
-                style={{
-                  padding: "0.65rem 1.5rem",
-                  borderRadius: "12px",
-                  fontSize: "0.9rem",
-                  fontWeight: "600",
-                  cursor: deleteLoading ? "not-allowed" : "pointer",
-                  border: "none",
-                  background: "linear-gradient(135deg, #ef4444, #dc2626)",
-                  color: "#fff",
-                  fontFamily: "inherit",
-                  opacity: deleteLoading ? 0.6 : 1,
-                  boxShadow: "0 4px 14px rgba(239, 68, 68, 0.35)",
-                  transition: "all 0.2s ease",
-                }}
+                className="student-delete-modal__btn student-delete-modal__btn--confirm"
               >
                 {deleteLoading ? "Deleting..." : "Delete"}
               </button>

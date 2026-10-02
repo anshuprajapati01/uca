@@ -1,23 +1,25 @@
-/* Student Results UI - Premium Isolated Styles */
+/* Student Results UI - Clean SaaS Light Theme */
 
 .results-container {
   padding-bottom: 60px;
 }
 
+/* ---------- 1. Page header ---------- */
 .results-header h2 {
   font-size: 1.8rem;
-  color: #f1f5f9;
+  color: var(--text-primary);
   margin-bottom: 5px;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
 
 .results-header p {
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 0.95rem;
   margin-bottom: 25px;
 }
 
+/* ---------- 2. Overview metrics ---------- */
 .results-overview-grid {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -28,27 +30,27 @@
 }
 
 .cgpa-card {
-  background: linear-gradient(180deg, #1e293b 0%, #1e293b 100%);
-  border: 1px solid #334155;
-  border-radius: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   padding: 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  box-shadow: var(--shadow-sm);
   transition: all 0.3s ease;
   width: 280px;
   min-height: 320px;
 }
 
 .cgpa-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.3);
-  border-color: rgba(139, 92, 246, 0.3);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-brand);
 }
 
 .cgpa-card h3 {
-  color: #cbd5e1;
+  color: var(--text-secondary);
   font-size: 1.05rem;
   margin-bottom: 24px;
   font-weight: 600;
@@ -75,7 +77,7 @@
 
 .cgpa-bg-circle {
   fill: transparent;
-  stroke: #1e293b;
+  stroke: var(--bg-muted);
   stroke-width: 8;
 }
 
@@ -84,6 +86,7 @@
   stroke: url(#purpleGradient);
   stroke-width: 8;
   stroke-linecap: round;
+  filter: none;
   transition: stroke-dashoffset 1s ease-out;
 }
 
@@ -98,23 +101,23 @@
 .cgpa-value {
   font-size: 2.2rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
   line-height: 1;
 }
 
 .cgpa-label {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: var(--text-secondary);
   margin-top: 2px;
 }
 
 .cgpa-badge {
   margin-top: 20px;
   padding: 6px 16px;
-  border-radius: 20px;
-  background: rgba(16, 185, 129, 0.1);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: var(--radius-full);
+  background: var(--success-subtle);
+  color: var(--success-text);
+  border: 1px solid var(--success-border);
   font-size: 0.85rem;
   font-weight: 500;
 }
@@ -128,25 +131,25 @@
 }
 
 .internal-card {
-  background: linear-gradient(180deg, #1e293b 0%, #1e293b 100%);
-  border: 1px solid #334155;
-  border-radius: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   padding: 24px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  box-shadow: var(--shadow-sm);
   transition: all 0.3s ease;
 }
 
 .internal-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.3);
-  border-color: rgba(139, 92, 246, 0.3);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-brand);
 }
 
 .internal-card .stat-label {
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 0.85rem;
   margin-bottom: 6px;
   font-weight: 500;
@@ -155,19 +158,22 @@
 .internal-card .stat-value {
   font-size: 2rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
   line-height: 1.2;
 }
 
 .internal-card .stat-desc {
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 0.8rem;
   margin-top: 6px;
 }
 
-.section-title {
+/* Scoped: `.section-title` is also defined unscoped in CurriculumManager.css
+   with white text and weight 900, which would override this heading depending
+   on stylesheet load order. */
+.results-container .section-title {
   font-size: 1.25rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
   margin-top: 20px;
   margin-bottom: 20px;
   font-weight: 700;
@@ -176,23 +182,29 @@
   z-index: 1;
 }
 
+/* ---------- 3. Semester breakdown ---------- */
 .semester-list {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.semester-card {
-  background: linear-gradient(180deg, #1e293b 0%, #1e293b 100%);
-  border: 1px solid #334155;
-  border-radius: 14px;
+/* Scoped so no other stylesheet can repaint this wrapper. `.semester-card` is
+   also used by the admin Curriculum Manager, whose dark glass treatment
+   previously leaked here depending on bundle load order. */
+.results-container .semester-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   padding: 20px 24px;
+  box-shadow: var(--shadow-sm);
   transition: all 0.25s ease;
 }
 
-.semester-card:hover {
-  border-color: #6d28d9;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.results-container .semester-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-brand);
+  box-shadow: var(--shadow-md);
 }
 
 .sem-card-top {
@@ -203,13 +215,13 @@
 }
 
 .sem-card-top h4 {
-  color: #fff;
+  color: var(--text-primary);
   font-size: 1.1rem;
   font-weight: 600;
 }
 
 .sem-card-top p {
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 0.85rem;
   margin-top: 2px;
 }
@@ -221,27 +233,30 @@
 .sgpa-val {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #38bdf8;
+  color: var(--brand);
   line-height: 1;
 }
 
 .sem-status {
   font-size: 0.75rem;
   padding: 3px 10px;
-  border-radius: 15px;
+  border-radius: var(--radius-full);
   margin-top: 6px;
   font-weight: 600;
   display: inline-block;
+  border: 1px solid transparent;
 }
 
 .sem-status.pass {
-  background: rgba(16, 185, 129, 0.1);
-  color: #34d399;
+  background: var(--success-subtle);
+  color: var(--success-text);
+  border-color: var(--success-border);
 }
 
 .sem-status.ongoing {
-  background: rgba(245, 158, 11, 0.1);
-  color: #fbbf24;
+  background: var(--warning-subtle);
+  color: var(--warning-text);
+  border-color: var(--warning-border);
 }
 
 .sem-card-bottom {
@@ -250,40 +265,75 @@
   align-items: center;
   margin-top: 14px;
   padding-top: 14px;
-  border-top: 1px solid #334155;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .sem-card-bottom p {
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 0.85rem;
   margin: 0;
 }
 
 .sem-card-bottom p span {
-  color: #cbd5e1;
+  color: var(--text-primary);
   font-weight: 500;
+}
+
+.sem-card-bottom-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
 }
 
 .view-scorecard-btn {
   background: none;
   border: none;
-  color: #a78bfa;
+  color: var(--brand);
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
   padding: 0;
+  font-family: inherit;
   transition: color 0.2s ease;
 }
 
 .view-scorecard-btn:hover {
-  color: #c4b5fd;
+  color: var(--brand-hover);
   text-decoration: underline;
 }
 
+.print-scorecard-btn {
+  margin-left: 12px;
+  background: var(--info);
+  color: var(--brand-on);
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.85rem;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.print-scorecard-btn svg {
+  flex-shrink: 0;
+}
+
+.print-scorecard-btn:hover {
+  background: var(--brand-hover);
+}
+
+/* ---------- 4. AKTU scorecard table ---------- */
 .aktu-scorecard-wrapper {
   margin-top: 20px;
   padding-top: 20px;
-  border-top: 1px dashed #334155;
+  border-top: 1px dashed var(--border-strong);
   overflow-x: auto;
 }
 
@@ -294,42 +344,47 @@
   font-size: 0.9rem;
 }
 
-.aktu-table th {
-  color: #94a3b8;
+.aktu-table thead th {
+  background: var(--bg-muted);
+  color: var(--text-secondary);
   font-weight: 600;
-  padding: 12px 16px;
-  border-bottom: 1px solid #334155;
-  background: rgba(30, 41, 59, 0.6);
-  font-size: 0.85rem;
   text-transform: uppercase;
+  font-size: 0.8rem;
   letter-spacing: 0.04em;
-}
-
-.aktu-table td {
   padding: 12px 16px;
-  color: #e2e8f0;
-  border-bottom: 1px solid #1e293b;
+  border-bottom: 1px solid var(--border-strong);
 }
 
-.aktu-table tr:last-child td {
+.aktu-table tbody tr {
+  background: var(--bg-card);
+}
+
+.aktu-table tbody td {
+  padding: 12px 16px;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.aktu-table tbody tr:last-child td {
   border-bottom: none;
 }
 
-.aktu-table tr:hover {
-  background: rgba(124, 58, 237, 0.05);
+.aktu-table tbody tr:hover {
+  background: var(--bg-subtle);
 }
 
 .sub-code {
-  color: #a78bfa !important;
+  color: var(--text-tertiary) !important;
   font-weight: 600;
 }
 
 .sub-type {
   font-size: 0.75rem;
   padding: 2px 8px;
-  border-radius: 4px;
-  background: #2d314d;
-  color: #cbd5e1;
+  border-radius: var(--radius-sm);
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
@@ -337,11 +392,12 @@
   font-family: monospace;
   font-size: 1rem;
   font-weight: 600;
+  color: var(--text-secondary);
 }
 
 .max-marks {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--text-tertiary);
   font-weight: 400;
 }
 
@@ -351,25 +407,25 @@
 
 .grade-aplus,
 .grade-a {
-  color: #34d399;
+  color: var(--success-text);
 }
 
 .grade-bplus,
 .grade-b {
-  color: #38bdf8;
+  color: var(--info-text);
 }
 
 .grade-c {
-  color: #fbbf24;
+  color: var(--warning-text);
 }
 
 .grade-f {
-  color: #f87171;
+  color: var(--danger-text);
 }
 
 .loading-results {
   text-align: center;
-  color: #94a3b8;
+  color: var(--text-secondary);
   padding: 60px 20px;
   font-size: 0.95rem;
 }
@@ -427,5 +483,6 @@
   .aktu-table th, .aktu-table td {
     border: 1px solid #ccc !important;
     color: #000 !important;
+    background: #fff !important;
   }
 }

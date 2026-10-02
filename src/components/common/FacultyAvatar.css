@@ -1,0 +1,47 @@
+.faculty-avatar {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  /* Painted up front so the slot never collapses to zero height while the
+     image is still downloading. */
+  background: var(--bg-muted);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-tertiary);
+}
+
+.faculty-avatar__placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Hidden rather than removed, so the image fades over it instead of the
+     disc blinking empty on every load. */
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.faculty-avatar--loaded .faculty-avatar__placeholder {
+  opacity: 0;
+}
+
+.faculty-avatar__img {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.faculty-avatar--loaded .faculty-avatar__img {
+  opacity: 1;
+}

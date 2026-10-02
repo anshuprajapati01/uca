@@ -14,7 +14,7 @@ import { APP_NAME } from '../../config/constants.js';
  * getDerivedStateFromError and reports them in componentDidCatch.
  *
  * Elevated roles / sensitive actions are never affected: this only governs
- * UI rendering resilience. The fallback matches the app's dark theme.
+ * UI rendering resilience. The fallback matches the app's light theme.
  */
 export default class ErrorBoundary extends Component {
   constructor(props) {
@@ -45,8 +45,8 @@ export default class ErrorBoundary extends Component {
           style={{
             minHeight: '100dvh',
             width: '100vw',
-            background: 'var(--bg)',
-            color: 'var(--text)',
+            background: 'var(--bg-app)',
+            color: 'var(--text-secondary)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -64,8 +64,8 @@ export default class ErrorBoundary extends Component {
               height: '64px',
               flexShrink: 0,
               borderRadius: '50%',
-              background: 'radial-gradient(ellipse at center, color-mix(in srgb, var(--accent) 12%, transparent) 0%, transparent 60%)',
-              border: '1px solid var(--accent-border)',
+              background: 'var(--brand-subtle)',
+              border: '1px solid var(--border-brand)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -79,7 +79,7 @@ export default class ErrorBoundary extends Component {
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
-              style={{ color: 'var(--accent)' }}
+              style={{ color: 'var(--brand)' }}
             >
               <path
                 d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"
@@ -87,12 +87,12 @@ export default class ErrorBoundary extends Component {
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                color="var(--accent)"
+                color="var(--brand)"
                 fill="none"
               />
               <path
                 d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"
-                stroke="var(--text-h)"
+                stroke="var(--text-secondary)"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -101,7 +101,7 @@ export default class ErrorBoundary extends Component {
             </svg>
           </div>
 
-          <h1 style={{ margin: 0, color: 'var(--text-h)', fontSize: '1.75rem' }}>
+          <h1 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.75rem' }}>
             Oops! Something went wrong
           </h1>
           <p style={{ margin: 0, maxWidth: '32rem', fontSize: '0.95rem' }}>
@@ -116,10 +116,10 @@ export default class ErrorBoundary extends Component {
               onClick={() => window.location.reload()}
               style={{
                 padding: '0.6rem 1.25rem',
-                borderRadius: '0.6rem',
-                border: '1px solid var(--accent-border)',
-                background: 'var(--accent-bg)',
-                color: '#fff',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--brand)',
+                background: 'var(--brand)',
+                color: 'var(--brand-on)',
                 fontWeight: 600,
                 cursor: 'pointer',
                 fontSize: '0.9rem',
@@ -133,13 +133,14 @@ export default class ErrorBoundary extends Component {
               onClick={() => (window.location.href = '/')}
               style={{
                 padding: '0.6rem 1.25rem',
-                borderRadius: '0.6rem',
+                borderRadius: 'var(--radius-md)',
                 border: '1px solid var(--border)',
-                background: 'var(--bg)',
-                color: 'var(--text-h)',
+                background: 'var(--bg-card)',
+                color: 'var(--text-primary)',
                 fontWeight: 600,
                 cursor: 'pointer',
                 fontSize: '0.9rem',
+                transition: 'border-color 0.15s ease',
               }}
             >
               Go to Home
@@ -153,10 +154,10 @@ export default class ErrorBoundary extends Component {
               style={{
                 padding: '0.35rem 0.85rem',
                 fontSize: '0.8rem',
-                color: 'var(--text)',
+                color: 'var(--text-secondary)',
                 background: 'transparent',
                 border: '1px solid var(--border)',
-                borderRadius: '0.5rem',
+                borderRadius: 'var(--radius-sm)',
                 cursor: 'pointer',
               }}
             >

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { Clock, CircleCheckBig, Search, Star, LayoutGrid } from "lucide-react";
 import { supabase } from '../../lib/supabase.js';
 import "./Attendance.css";
 
@@ -141,28 +142,6 @@ const recordBelongsToSubject = (rec, sub) => {
 
   return false;
 };
-
-const ClockIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="9" />
-    <polyline points="12 7 12 12 15 14" />
-  </svg>
-);
-
-const CheckIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="20 6 9 17 4 12" />
-  </svg>
-);
-
-const GridIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="3" width="7" height="7" />
-    <rect x="14" y="3" width="7" height="7" />
-    <rect x="14" y="14" width="7" height="7" />
-    <rect x="3" y="14" width="7" height="7" />
-  </svg>
-);
 
 const EXTRA_ACTIVITY_TYPES = [
   'Extra Class',
@@ -538,7 +517,7 @@ export default function Attendance({ subjects, records, loading = false, student
         <div className="att-hero-stats">
           <div className="att-glass att-stat-card">
             <span className="att-stat-label">
-              <span className="att-stat-icon att-stat-icon--total"><ClockIcon /></span>
+              <span className="att-stat-icon att-stat-icon--total"><Clock size={16} aria-hidden="true" /></span>
               Total Classes
             </span>
             <span className="att-stat-value">{safeOverall.total}</span>
@@ -546,7 +525,7 @@ export default function Attendance({ subjects, records, loading = false, student
           </div>
           <div className="att-glass att-stat-card">
             <span className="att-stat-label">
-              <span className="att-stat-icon att-stat-icon--present"><CheckIcon /></span>
+              <span className="att-stat-icon att-stat-icon--present"><CircleCheckBig size={16} aria-hidden="true" /></span>
               Attended Classes
             </span>
             <span className="att-stat-value">{safeOverall.present}</span>
@@ -563,29 +542,14 @@ export default function Attendance({ subjects, records, loading = false, student
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
 
             {/* Search Input */}
-            <div style={{ position: 'relative' }}>
+            <div className="att-search">
               <input
                 type="text"
                 placeholder="Search subject..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '20px',
-                  padding: '8px 14px 8px 32px',
-                  color: '#fff',
-                  fontSize: '0.85rem',
-                  outline: 'none',
-                  width: '180px',
-                  transition: 'all 0.3s ease'
-                }}
-                onFocus={(e) => e.target.style.border = '1px solid rgba(139, 92, 246, 0.5)'}
-                onBlur={(e) => e.target.style.border = '1px solid rgba(255, 255, 255, 0.1)'}
               />
-              <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, fontSize: '0.9rem' }}>
-                🔍
-              </span>
+              <span className="att-search__icon"><Search size={16} aria-hidden="true" /></span>
             </div>
 
             <div className="att-filter">
@@ -615,13 +579,13 @@ export default function Attendance({ subjects, records, loading = false, student
                 className={`att-filter-btn ${subjectType === "Extra" ? "att-filter-btn--active att-filter-btn--extra" : ""}`}
                 onClick={() => setSubjectType("Extra")}
               >
-                ⭐ Extra
+                <Star size={14} fill="currentColor" aria-hidden="true" /> Extra
               </button>
             </div>
           </div>
 
           <h3 className="att-section-title">
-            <span className="att-section-icon"><GridIcon /></span>
+            <span className="att-section-icon"><LayoutGrid size={20} aria-hidden="true" /></span>
             Subject-wise Attendance
           </h3>
         </div>
@@ -787,42 +751,17 @@ export default function Attendance({ subjects, records, loading = false, student
                          <td>{day}</td>
                          <td>
                            {timeLabel}
-                          {isExtra && (
-                            <span style={{ 
-                              background: 'rgba(250, 204, 21, 0.15)', 
-                              color: '#facc15', 
-                              border: '1px solid rgba(250, 204, 21, 0.4)', 
-                              boxShadow: '0 0 10px rgba(250, 204, 21, 0.1)',
-                              fontSize: '0.7rem', 
-                              padding: '3px 8px', 
-                              borderRadius: '6px', 
-                              marginLeft: '10px', 
-                              fontWeight: '600',
-                              letterSpacing: '0.5px',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px'
-                            }}>
-                              <span style={{ fontSize: '0.8rem' }}>✨</span> EXTRA
-                            </span>
-                          )}
+{isExtra && (
+                              <span className="att-extra-tag">
+                                <span aria-hidden="true">✨</span> EXTRA
+                              </span>
+                            )}
                         </td>
                         <td>
                           {(() => {
                             const isPresent = rec.status === true || rec.status === 'P' || rec.status === 'Present' || rec.status === 'PRESENT';
                             return (
-                              <span style={{
-                                padding: '3px 10px',
-                                borderRadius: '9999px',
-                                fontSize: '0.7rem',
-                                fontWeight: '600',
-                                letterSpacing: '0.5px',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                background: isPresent ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                                color: isPresent ? '#22c55e' : '#ef4444',
-                                border: `1px solid ${isPresent ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`,
-                              }}>
+                              <span className={`att-status-pill ${isPresent ? 'att-status-pill--present' : 'att-status-pill--absent'}`}>
                                 {isPresent ? 'PRESENT' : 'ABSENT'}
                               </span>
                             );
