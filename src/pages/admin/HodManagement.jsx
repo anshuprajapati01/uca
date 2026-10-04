@@ -582,6 +582,9 @@ if (error) {
                         className="hod-remove-btn"
                         onClick={() => setPendingDelete(assignment)}
                         disabled={loading}
+                        style={{ width: '100%', backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', padding: '10px 16px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.2s ease' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#fee2e2'; e.currentTarget.style.borderColor = '#f87171'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#fef2f2'; e.currentTarget.style.borderColor = '#fecaca'; }}
                       >
                         <Trash2 size={16} />
                         Remove Assignment

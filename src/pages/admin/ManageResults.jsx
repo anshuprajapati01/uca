@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import Papa from 'papaparse';
+import { UploadCloud, CheckCircle2, XCircle } from 'lucide-react';
 
 const ManageResults = () => {
   const { user } = useAuth();
@@ -448,26 +449,26 @@ const { error: insertError } = await supabase
         </div>
       )}
       <div style={{ marginBottom: '30px' }}>
-        <h2 style={{ fontSize: '1.8rem', color: '#f1f5f9', marginBottom: '5px' }}>Batch Publish Results</h2>
-        <p style={{ color: '#94a3b8' }}>Upload AKTU university results via CSV. Subjects are automatically mapped based on selected semester.</p>
+        <h2 style={{ color: '#0f172a', fontSize: '1.875rem', fontWeight: '700', marginBottom: '8px', textAlign: 'center', letterSpacing: '-0.025em' }}>Batch Publish Results</h2>
+        <p style={{ color: '#64748b', fontSize: '0.95rem', textAlign: 'center', marginBottom: '32px' }}>Upload AKTU university results via CSV. Subjects are automatically mapped based on selected semester.</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px', background: '#151725', padding: '20px', borderRadius: '12px', border: '1px solid #2d314d' }}>
+      <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'flex-end', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', marginBottom: '24px' }}>
         <div>
-          <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.85rem', marginBottom: '8px' }}>Assigned Year</label>
-          <select value={filters.year} onChange={handleYearChange} style={{ width: '100%', padding: '10px', background: '#1e293b', border: '1px solid #2d314d', borderRadius: '6px', color: '#fff', outline: 'none' }}>
+          <label style={{ color: '#475569', fontSize: '0.875rem', fontWeight: '600', marginBottom: '8px', display: 'block' }}>Assigned Year</label>
+          <select value={filters.year} onChange={handleYearChange} style={{ width: '100%', minWidth: '200px', appearance: 'none', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', color: '#0f172a', padding: '10px 16px', borderRadius: '8px', outline: 'none', cursor: 'pointer' }}>
             {allowedYears.map(year => <option key={year} value={year}>{year}</option>)}
           </select>
         </div>
         <div>
-          <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.85rem', marginBottom: '8px' }}>Assigned Branch</label>
-          <select name="branch" value={filters.branch} onChange={handleFilterChange} style={{ width: '100%', padding: '10px', background: '#1e293b', border: '1px solid #2d314d', borderRadius: '6px', color: '#fff', outline: 'none' }}>
+          <label style={{ color: '#475569', fontSize: '0.875rem', fontWeight: '600', marginBottom: '8px', display: 'block' }}>Assigned Branch</label>
+          <select name="branch" value={filters.branch} onChange={handleFilterChange} style={{ width: '100%', minWidth: '200px', appearance: 'none', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', color: '#0f172a', padding: '10px 16px', borderRadius: '8px', outline: 'none', cursor: 'pointer' }}>
             {allowedBranches.map(branch => <option key={branch} value={branch}>{branch}</option>)}
           </select>
         </div>
         <div>
-          <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.85rem', marginBottom: '8px' }}>Target Semester</label>
-          <select name="semester" value={filters.semester} onChange={handleFilterChange} style={{ width: '100%', padding: '10px', background: '#1e293b', border: '1px solid #2d314d', borderRadius: '6px', color: '#fff', outline: 'none' }}>
+          <label style={{ color: '#475569', fontSize: '0.875rem', fontWeight: '600', marginBottom: '8px', display: 'block' }}>Target Semester</label>
+          <select name="semester" value={filters.semester} onChange={handleFilterChange} style={{ width: '100%', minWidth: '200px', appearance: 'none', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', color: '#0f172a', padding: '10px 16px', borderRadius: '8px', outline: 'none', cursor: 'pointer' }}>
             {getSemestersForYear(filters.year).map(sem => <option key={sem} value={sem}>Semester {sem}</option>)}
           </select>
         </div>
@@ -476,37 +477,37 @@ const { error: insertError } = await supabase
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '30px' }}>
         <button 
           onClick={() => { setShowConfigModal(true); fetchConfig(); fetchSubjectsFromDb(); }}
-          style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', alignSelf: 'flex-end' }}
+          style={{ backgroundColor: '#4f46e5', color: '#ffffff', border: 'none', padding: '10px 24px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', boxShadow: '0 2px 4px rgba(79, 70, 229, 0.2)' }}
         >
           Configure Semester
         </button>
       </div>
 
       {configData && configData.length > 0 && (
-        <div style={{ marginTop: '20px', marginBottom: '20px', background: '#1e293b', padding: '20px', borderRadius: '8px', border: '1px solid #334155' }}>
-          <h3 style={{ color: '#fff', fontSize: '1.1rem', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            ✅ Active Configuration for Semester {filters.semester}
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', marginBottom: '32px', marginTop: '24px' }}>
+          <h3 style={{ backgroundColor: '#f8fafc', padding: '16px 24px', borderBottom: '1px solid #e2e8f0', color: '#0f172a', fontWeight: '700', fontSize: '1.125rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <CheckCircle2 size={16} color="#10b981" /> Active Configuration for Semester {filters.semester}
           </h3>
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', color: '#cbd5e1', textAlign: 'left', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid #334155', color: '#94a3b8' }}>
-                  <th style={{ padding: '12px' }}>Subject Code</th>
-                  <th style={{ padding: '12px' }}>Subject Name</th>
-                  <th style={{ padding: '12px' }}>SGPA Active</th>
-                  <th style={{ padding: '12px' }}>Mandatory</th>
+                <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                  <th style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', padding: '12px 24px', textAlign: 'left' }}>Subject Code</th>
+                  <th style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', padding: '12px 24px', textAlign: 'left' }}>Subject Name</th>
+                  <th style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', padding: '12px 24px', textAlign: 'left' }}>SGPA Active</th>
+                  <th style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', padding: '12px 24px', textAlign: 'left' }}>Mandatory</th>
                 </tr>
               </thead>
               <tbody>
                 {configData.map((sub, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid #334155' }}>
-                    <td style={{ padding: '12px', fontWeight: '500', color: '#e2e8f0' }}>{sub.subject_code}</td>
-                    <td style={{ padding: '12px' }}>{sub.subject_name}</td>
-                    <td style={{ padding: '12px' }}>
-                      {sub.is_cgpa_active ? <span style={{ color: '#22c55e' }}>✔ Yes</span> : <span style={{ color: '#ef4444' }}>✖ No</span>}
+                  <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <td style={{ color: '#334155', padding: '16px 24px', fontSize: '0.875rem' }}>{sub.subject_code}</td>
+                    <td style={{ color: '#334155', padding: '16px 24px', fontSize: '0.875rem' }}>{sub.subject_name}</td>
+                    <td style={{ color: '#334155', padding: '16px 24px', fontSize: '0.875rem' }}>
+                      {sub.is_cgpa_active ? <><CheckCircle2 size={16} color="#10b981" /> Yes</> : <><XCircle size={16} color="#ef4444" /> No</>}
                     </td>
-                    <td style={{ padding: '12px' }}>
-                      {sub.is_mandatory ? <span style={{ color: '#22c55e' }}>✔ Yes</span> : <span style={{ color: '#ef4444' }}>✖ No</span>}
+                    <td style={{ color: '#334155', padding: '16px 24px', fontSize: '0.875rem' }}>
+                      {sub.is_mandatory ? <><CheckCircle2 size={16} color="#10b981" /> Yes</> : <><XCircle size={16} color="#ef4444" /> No</>}
                     </td>
                   </tr>
                 ))}
@@ -518,21 +519,21 @@ const { error: insertError } = await supabase
 
       {previewData.length === 0 && (
         <>
-          <div style={{ background: '#151725', border: '2px dashed #6d28d9', borderRadius: '12px', padding: '50px 20px', textAlign: 'center', marginBottom: '30px' }}>
-            <svg style={{ width: '48px', height: '48px', color: '#8b5cf6', margin: '0 auto 15px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-            <h3 style={{ color: '#e2e8f0', fontSize: '1.2rem', marginBottom: '10px' }}>Upload AKTU Result CSV here</h3>
-            <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '25px' }}>File headers must include: <strong>roll_number, full_name, sgpa, total_marks, status</strong> plus subject columns like <strong>BCS401_int, BCS401_ext, BCS401_grade</strong></p>
+          <div style={{ backgroundColor: '#f8fafc', border: '2px dashed #cbd5e1', borderRadius: '12px', padding: '48px 24px', textAlign: 'center', transition: 'all 0.2s ease', marginTop: '24px' }}>
+            <UploadCloud size={48} color="#4f46e5" style={{ margin: '0 auto 15px', display: 'block' }} />
+            <h3 style={{ color: '#0f172a', fontSize: '1.25rem', fontWeight: '600', marginTop: '16px', marginBottom: '8px' }}>Upload AKTU Result CSV here</h3>
+            <p style={{ color: '#64748b', fontSize: '0.875rem', marginBottom: '24px', lineHeight: '1.5' }}>File headers must include: <strong>roll_number, full_name, sgpa, total_marks, status</strong> plus subject columns like <strong>BCS401_int, BCS401_ext, BCS401_grade</strong></p>
             
             <input type="file" accept=".csv" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileUpload} />
             
             <div style={{ marginBottom: '15px' }}>
-              <button onClick={handleDownloadTemplate} style={{ background: 'transparent', color: '#38bdf8', border: '1px solid #38bdf8', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: '500' }}>
+              <button onClick={handleDownloadTemplate} style={{ backgroundColor: '#ffffff', color: '#4f46e5', border: '1px solid #c7d2fe', padding: '10px 20px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', marginRight: '16px' }}>
                 📥 Download Blank CSV Template
               </button>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px' }}>
-              <button onClick={handleBrowseClick} style={{ background: '#6d28d9', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
+              <button onClick={handleBrowseClick} style={{ backgroundColor: '#4f46e5', color: '#ffffff', border: 'none', padding: '10px 24px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', boxShadow: '0 2px 4px rgba(79, 70, 229, 0.2)' }}>
                 Browse CSV File
               </button>
             </div>
@@ -547,12 +548,12 @@ const { error: insertError } = await supabase
       )}
 
       {previewData.length > 0 && (
-        <div style={{ background: '#151725', border: '1px solid #2d314d', borderRadius: '12px', overflow: 'hidden' }}>
-          <div style={{ padding: '20px', borderBottom: '1px solid #2d314d', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ margin: 0, color: '#f1f5f9', fontSize: '1.1rem' }}>Data Preview ({previewData.length} records)</h3>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+          <div style={{ backgroundColor: '#f8fafc', padding: '20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ margin: 0, color: '#0f172a', fontSize: '1.1rem', fontWeight: '700' }}>Data Preview ({previewData.length} records)</h3>
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={() => setPreviewData([])} style={{ background: '#2d314d', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={handlePublishBulk} disabled={publishing} style={{ background: '#34d399', color: '#0f172a', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: publishing ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}>
+              <button onClick={() => setPreviewData([])} style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={handlePublishBulk} disabled={publishing} style={{ background: '#10b981', color: '#ffffff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: publishing ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}>
                 {publishing ? 'Publishing...' : 'Confirm & Publish All'}
               </button>
             </div>
@@ -560,22 +561,22 @@ const { error: insertError } = await supabase
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
-                <tr style={{ background: 'rgba(30, 41, 59, 0.5)' }}>
-                  <th style={{ padding: '15px', color: '#94a3b8', borderBottom: '1px solid #2d314d' }}>Roll Number</th>
-                  <th style={{ padding: '15px', color: '#94a3b8', borderBottom: '1px solid #2d314d' }}>Student Name</th>
-                  <th style={{ padding: '15px', color: '#94a3b8', borderBottom: '1px solid #2d314d' }}>SGPA</th>
-                  <th style={{ padding: '15px', color: '#94a3b8', borderBottom: '1px solid #2d314d' }}>Total Marks</th>
-                  <th style={{ padding: '15px', color: '#94a3b8', borderBottom: '1px solid #2d314d' }}>Status</th>
+                <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                  <th style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', padding: '12px 24px', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>Roll Number</th>
+                  <th style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', padding: '12px 24px', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>Student Name</th>
+                  <th style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', padding: '12px 24px', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>SGPA</th>
+                  <th style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', padding: '12px 24px', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>Total Marks</th>
+                  <th style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', padding: '12px 24px', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>Status</th>
                 </tr>
               </thead>
               <tbody>
                 {previewData.map((row, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid #1e293b' }}>
-                    <td style={{ padding: '15px', color: '#cbd5e1' }}>{row.roll_number}</td>
-                    <td style={{ padding: '15px', color: '#f1f5f9' }}>{row.full_name}</td>
-                    <td style={{ padding: '15px', color: '#38bdf8', fontWeight: 'bold' }}>{row.sgpa}</td>
-                    <td style={{ padding: '15px', color: '#cbd5e1' }}>{row.total_marks}</td>
-                    <td style={{ padding: '15px' }}><span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold', background: row.status === 'PASS' ? 'rgba(52, 211, 153, 0.1)' : 'rgba(248, 113, 113, 0.1)', color: row.status === 'PASS' ? '#34d399' : '#f87171' }}>{row.status}</span></td>
+                  <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <td style={{ color: '#334155', padding: '16px 24px', fontSize: '0.875rem' }}>{row.roll_number}</td>
+                    <td style={{ color: '#334155', padding: '16px 24px', fontSize: '0.875rem' }}>{row.full_name}</td>
+                    <td style={{ color: '#0f172a', padding: '16px 24px', fontSize: '0.875rem', fontWeight: '600' }}>{row.sgpa}</td>
+                    <td style={{ color: '#334155', padding: '16px 24px', fontSize: '0.875rem' }}>{row.total_marks}</td>
+                    <td style={{ padding: '16px 24px' }}><span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold', background: row.status === 'PASS' ? '#d1fae5' : '#fee2e2', color: row.status === 'PASS' ? '#065f46' : '#991b1b' }}>{row.status}</span></td>
                   </tr>
                 ))}
               </tbody>
@@ -584,26 +585,26 @@ const { error: insertError } = await supabase
         </div>
       )}
 
-      <div style={{ marginTop: '40px', marginBottom: '20px', background: '#151725', borderRadius: '12px', border: '1px solid #2d314d', overflow: 'hidden' }}>
-        <div style={{ padding: '20px', borderBottom: '1px solid #2d314d' }}>
-          <h3 style={{ margin: 0, color: '#f1f5f9', fontSize: '1.1rem' }}>
+      <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', marginTop: '32px' }}>
+        <div style={{ backgroundColor: '#f8fafc', padding: '16px 24px', borderBottom: '1px solid #e2e8f0' }}>
+          <h3 style={{ margin: 0, color: '#0f172a', fontWeight: '700', fontSize: '1.125rem', textAlign: 'center' }}>
             Uploaded Results for {filters.semester ? `Semester ${filters.semester}` : 'Selected Semester'}
           </h3>
         </div>
         <div style={{ overflowX: 'auto' }}>
           {uploadedRecords.length === 0 ? (
-            <div style={{ padding: '30px', textAlign: 'center', color: '#64748b' }}>
+            <div style={{ color: '#64748b', padding: '48px 24px', textAlign: 'center' }}>
               No results uploaded yet for this semester.
             </div>
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
-                <tr style={{ background: 'rgba(30, 41, 59, 0.5)' }}>
-                  <th style={{ padding: '15px', color: '#94a3b8', borderBottom: '1px solid #2d314d' }}>Roll Number</th>
-                  <th style={{ padding: '15px', color: '#94a3b8', borderBottom: '1px solid #2d314d' }}>SGPA</th>
-                  <th style={{ padding: '15px', color: '#94a3b8', borderBottom: '1px solid #2d314d' }}>Total Marks</th>
-                  <th style={{ padding: '15px', color: '#94a3b8', borderBottom: '1px solid #2d314d' }}>Upload Date</th>
-                  <th style={{ padding: '15px', color: '#94a3b8', borderBottom: '1px solid #2d314d', textAlign: 'center' }}>Action</th>
+                <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                  <th style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', padding: '12px 24px', textAlign: 'left' }}>Roll Number</th>
+                  <th style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', padding: '12px 24px', textAlign: 'left' }}>SGPA</th>
+                  <th style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', padding: '12px 24px', textAlign: 'left' }}>Total Marks</th>
+                  <th style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', padding: '12px 24px', textAlign: 'left' }}>Upload Date</th>
+                  <th style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', padding: '12px 24px', textAlign: 'center' }}>Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -617,12 +618,12 @@ const { error: insertError } = await supabase
                     minute: '2-digit'
                   });
                   return (
-                    <tr key={record.id} style={{ borderBottom: '1px solid #1e293b' }}>
-                      <td style={{ padding: '15px', color: '#cbd5e1', fontWeight: '500' }}>{record.roll_number}</td>
-                      <td style={{ padding: '15px', color: '#38bdf8', fontWeight: 'bold' }}>{record.sgpa ?? 'N/A'}</td>
-                      <td style={{ padding: '15px', color: '#cbd5e1' }}>{record.total_marks ?? 'N/A'}</td>
-                      <td style={{ padding: '15px', color: '#94a3b8', fontSize: '0.85rem' }}>{formattedDate}</td>
-                      <td style={{ padding: '15px', textAlign: 'center' }}>
+                    <tr key={record.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ color: '#334155', padding: '16px 24px', fontSize: '0.875rem', fontWeight: '500' }}>{record.roll_number}</td>
+                      <td style={{ color: '#334155', padding: '16px 24px', fontSize: '0.875rem' }}>{record.sgpa ?? 'N/A'}</td>
+                      <td style={{ color: '#334155', padding: '16px 24px', fontSize: '0.875rem' }}>{record.total_marks ?? 'N/A'}</td>
+                      <td style={{ color: '#64748b', padding: '16px 24px', fontSize: '0.875rem' }}>{formattedDate}</td>
+                      <td style={{ padding: '16px 24px', textAlign: 'center' }}>
                         <button
                           onClick={() => setRecordToDelete(record.id)}
                           style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}
@@ -641,53 +642,53 @@ const { error: insertError } = await supabase
 
       {showConfigModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div style={{ background: '#1e293b', padding: '30px', borderRadius: '12px', width: '700px', maxHeight: '85vh', overflowY: 'auto', border: '1px solid #334155' }}>
-            <h3 style={{ color: '#fff', marginBottom: '20px' }}>Configure Semester {filters.semester} Subjects</h3>
-            <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '20px' }}>Manage subjects and toggle settings for this semester.</p>
+          <div style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px', width: '100%', maxWidth: '700px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h3 style={{ color: '#0f172a', fontSize: '1.5rem', fontWeight: '700', textAlign: 'center', marginBottom: '8px' }}>Configure Semester {filters.semester} Subjects</h3>
+            <p style={{ color: '#64748b', textAlign: 'center', marginBottom: '24px' }}>Manage subjects and toggle settings for this semester.</p>
 
-            <div style={{ background: '#0f172a', padding: '16px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #334155' }}>
-              <h4 style={{ color: '#f1f5f9', margin: '0 0 12px 0', fontSize: '0.95rem' }}>Add New Subject</h4>
+            <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
+              <h4 style={{ color: '#0f172a', margin: '0 0 12px 0', fontSize: '0.95rem', fontWeight: '600' }}>Add New Subject</h4>
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr 1fr auto', gap: '10px', alignItems: 'end' }}>
                 <div>
-                  <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.75rem', marginBottom: '4px' }}>Subject Name</label>
+                  <label style={{ display: 'block', color: '#475569', fontSize: '0.75rem', marginBottom: '4px', fontWeight: '600' }}>Subject Name</label>
                   <input 
                     type="text" 
                     value={newSubject.name}
                     onChange={e => setNewSubject({...newSubject, name: e.target.value})}
                     placeholder="e.g. Data Structures"
-                    style={{ width: '100%', padding: '8px', background: '#1e293b', border: '1px solid #334155', borderRadius: '4px', color: '#fff', outline: 'none' }}
+                    style={{ width: '100%', padding: '10px 12px', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', color: '#0f172a', outline: 'none' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.75rem', marginBottom: '4px' }}>Subject Code</label>
+                  <label style={{ display: 'block', color: '#475569', fontSize: '0.75rem', marginBottom: '4px', fontWeight: '600' }}>Subject Code</label>
                   <input 
                     type="text" 
                     value={newSubject.code}
                     onChange={e => setNewSubject({...newSubject, code: e.target.value.toUpperCase()})}
                     placeholder="e.g. BCS301"
-                    style={{ width: '100%', padding: '8px', background: '#1e293b', border: '1px solid #334155', borderRadius: '4px', color: '#fff', outline: 'none' }}
+                    style={{ width: '100%', padding: '10px 12px', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', color: '#0f172a', outline: 'none' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.75rem', marginBottom: '4px' }}>Type</label>
+                  <label style={{ display: 'block', color: '#475569', fontSize: '0.75rem', marginBottom: '4px', fontWeight: '600' }}>Type</label>
                   <select 
                     value={newSubject.type}
                     onChange={e => setNewSubject({...newSubject, type: e.target.value})}
-                    style={{ width: '100%', padding: '8px', background: '#1e293b', border: '1px solid #334155', borderRadius: '4px', color: '#fff', outline: 'none' }}
+                    style={{ width: '100%', padding: '10px 12px', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', color: '#0f172a', outline: 'none' }}
                   >
                     <option value="Theory">Theory</option>
                     <option value="Practical">Practical</option>
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.75rem', marginBottom: '4px' }}>Credits</label>
+                  <label style={{ display: 'block', color: '#475569', fontSize: '0.75rem', marginBottom: '4px', fontWeight: '600' }}>Credits</label>
                   <input 
                     type="number" 
                     value={newSubject.credits}
                     onChange={e => setNewSubject({...newSubject, credits: parseInt(e.target.value) || 0})}
                     min="1"
                     max="6"
-                    style={{ width: '100%', padding: '8px', background: '#1e293b', border: '1px solid #334155', borderRadius: '4px', color: '#fff', outline: 'none' }}
+                    style={{ width: '100%', padding: '10px 12px', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', color: '#0f172a', outline: 'none' }}
                   />
                 </div>
                 <button onClick={handleAddSubject} style={{ padding: '8px 16px', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', height: '36px' }}>Add</button>
@@ -695,12 +696,12 @@ const { error: insertError } = await supabase
             </div>
 
             {subjects.length === 0 ? (
-              <div style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>No subjects configured. Add subjects using the form above.</div>
+              <div style={{ color: '#64748b', textAlign: 'center', padding: '20px' }}>No subjects configured. Add subjects using the form above.</div>
             ) : (
-              <div>
-                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '10px', padding: '8px 14px', background: '#1e293b', borderRadius: '6px', marginBottom: '8px', border: '1px solid #334155' }}>
-                  <div style={{ color: '#94a3b8', fontSize: '0.8rem', fontWeight: 'bold' }}>Subject Details</div>
-                  <div style={{ color: '#94a3b8', fontSize: '0.8rem', fontWeight: 'bold' }}>
+              <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '10px', padding: '12px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                  <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase' }}>Subject Details</div>
+                  <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase' }}>
                     SGPA Active<br/>
                     <input 
                       type="checkbox" 
@@ -708,7 +709,7 @@ const { error: insertError } = await supabase
                       style={{ cursor: 'pointer' }}
                     />
                   </div>
-                  <div style={{ color: '#94a3b8', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                  <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase' }}>
                     Mandatory<br/>
                     <input 
                       type="checkbox" 
@@ -716,9 +717,9 @@ const { error: insertError } = await supabase
                       style={{ cursor: 'pointer' }}
                     />
                   </div>
-                  <div style={{ color: '#94a3b8', fontSize: '0.8rem', fontWeight: 'bold' }}>Action</div>
+                  <div style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase' }}>Action</div>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
                   {subjects.map((subject, index) => {
                     const subjectKey = subject.id || subject.code;
                     const cfg = configData.find(c => c.subject_id === subjectKey);
@@ -726,12 +727,12 @@ const { error: insertError } = await supabase
                     const isMandatory = cfg ? (cfg.is_mandatory !== false) : (subject.is_mandatory !== false);
 
                     return (
-                      <div key={subjectKey} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '10px', alignItems: 'center', background: '#0f172a', padding: '10px 14px', borderRadius: '6px', border: '1px solid #334155' }}>
+                      <div key={subjectKey} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '10px', alignItems: 'center', background: '#ffffff', padding: '16px', borderBottom: '1px solid #f1f5f9' }}>
                         <div>
-                          <div style={{ color: '#f1f5f9', fontWeight: 'bold', fontSize: '0.9rem' }}>{subject.code} - {subject.name}</div>
+                          <div style={{ color: '#0f172a', fontWeight: '600' }}>{subject.code} - {subject.name}</div>
                           <div style={{ color: '#64748b', fontSize: '0.75rem' }}>{subject.type} | Credits: {subject.credits || 3}</div>
                         </div>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#e2e8f0', fontSize: '0.8rem', cursor: 'pointer' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#334155', fontSize: '0.8rem', cursor: 'pointer' }}>
                           <input 
                             type="checkbox" 
                             checked={isCgpaActive}
@@ -739,7 +740,7 @@ const { error: insertError } = await supabase
                           />
                           {isCgpaActive ? 'Yes' : 'No'}
                         </label>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#e2e8f0', fontSize: '0.8rem', cursor: 'pointer' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#334155', fontSize: '0.8rem', cursor: 'pointer' }}>
                           <input 
                             type="checkbox" 
                             checked={isMandatory}
@@ -749,7 +750,7 @@ const { error: insertError } = await supabase
                         </label>
                         <button 
                           onClick={() => handleDeleteSubject(index)}
-                          style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold' }}
+                          style={{ backgroundColor: '#fee2e2', color: '#ef4444', padding: '6px 12px', borderRadius: '6px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
                         >
                           Delete
                         </button>

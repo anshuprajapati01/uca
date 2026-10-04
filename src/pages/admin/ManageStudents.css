@@ -1,6 +1,6 @@
 .manage-students {
   padding: 20px;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .manage-students__title {
@@ -24,27 +24,25 @@
 }
 
 .manage-students__tab--active {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(99, 102, 241, 0.4));
-  color: #fff;
-  border: 1px solid rgba(139, 92, 246, 0.8);
-  box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(99, 102, 241, 0.15));
+  color: var(--brand-on);
+  border: 1px solid var(--border-brand);
+  box-shadow: var(--shadow-sm);
 }
 
 .manage-students__tab:not(.manage-students__tab--active) {
-  background: rgba(255, 255, 255, 0.05);
-  color: #e2e8f0;
+  background: var(--bg-muted);
+  color: var(--text-secondary);
 }
 
 .manage-students__tab:not(.manage-students__tab--active):hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-hover);
 }
 
 .manage-students__glass {
-  background: rgba(15, 23, 42, 0.4);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
   border-radius: 16px;
   padding: 25px;
   margin-bottom: 30px;
@@ -76,9 +74,9 @@
   width: 100%;
   padding: 12px 12px 12px 40px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.2);
-  color: #e2e8f0;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-primary);
   font-size: 15px;
   transition: all 0.3s ease;
   box-sizing: border-box;
@@ -86,20 +84,18 @@
 
 .manage-students__search-input:focus {
   outline: none;
-  border-color: rgba(139, 92, 246, 0.8);
-  box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+  border-color: var(--brand);
+  box-shadow: var(--shadow-focus);
 }
 
 .manage-students__search-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
 }
 
 .manage-students__list-glass {
-  background: rgba(15, 23, 42, 0.4);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
   border-radius: 16px;
   padding: 20px;
   overflow-x: auto;
@@ -123,9 +119,9 @@
   min-width: 250px;
   padding: 12px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.2);
-  color: #e2e8f0;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-primary);
   font-size: 15px;
   transition: all 0.3s ease;
 }
@@ -133,13 +129,13 @@
 .manage-students__input:focus,
 .manage-students__select:focus {
   outline: none;
-  border-color: rgba(139, 92, 246, 0.8);
-  box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+  border-color: var(--brand);
+  box-shadow: var(--shadow-focus);
 }
 
 .manage-students__select option {
-  background-color: #0f172a;
-  color: #e2e8f0;
+  background-color: var(--bg-card);
+  color: var(--text-primary);
   padding: 10px;
 }
 
@@ -150,8 +146,8 @@
 
 .manage-students__submit {
   padding: 12px;
-  background: linear-gradient(135deg, #8b5cf6, #6366f1);
-  color: #fff;
+  background: linear-gradient(135deg, var(--brand), var(--brand-hover));
+  color: var(--brand-on);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -163,7 +159,7 @@
 
 .manage-students__submit:hover {
   transform: scale(1.02);
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.6);
+  box-shadow: var(--shadow-md);
 }
 
 .manage-students__table {
@@ -174,19 +170,19 @@
 
 .manage-students__th {
   padding: 12px;
-  border-bottom: 2px solid #333;
+  border-bottom: 2px solid var(--border-strong);
 }
 
 .manage-students__td {
   padding: 12px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .manage-students__delete-btn {
   padding: 6px 10px;
   background: transparent;
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.5);
+  color: var(--danger);
+  border: 1px solid var(--danger-border);
   border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
@@ -196,8 +192,8 @@
 
 .manage-students__delete-btn:hover {
   transform: scale(1.05);
-  box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
-  background: rgba(239, 68, 68, 0.1);
+  box-shadow: var(--shadow-sm);
+  background: var(--danger-subtle);
 }
 
 .custom-modal-overlay {
@@ -206,9 +202,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: var(--bg-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -216,11 +210,9 @@
 }
 
 .custom-modal-box {
-  background: rgba(15, 23, 42, 0.4);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
   border-radius: 16px;
   padding: 24px;
   text-align: center;
@@ -229,7 +221,7 @@
 }
 
 .custom-modal-text {
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 16px;
   margin-bottom: 20px;
 }
@@ -251,22 +243,109 @@
 }
 
 .modal-btn--cancel {
-  background: rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--bg-muted);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
 }
 
 .modal-btn--cancel:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--bg-hover);
   transform: scale(1.05);
 }
 
 .modal-btn--delete {
-  background: linear-gradient(135deg, #ef4444, #b91c1c);
-  color: #fff;
+  background: linear-gradient(135deg, var(--danger), var(--danger-hover));
+  color: var(--brand-on);
 }
 
 .modal-btn--delete:hover {
   transform: scale(1.05);
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+  box-shadow: var(--shadow-md);
+}
+
+.bulk-upload-card,
+.csv-upload-section {
+  background: var(--bg-subtle) !important;
+  border: 2px dashed var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+
+.csv-choose-btn {
+  color: var(--text-secondary) !important;
+}
+
+.student-table,
+.student-table td,
+.student-row td {
+  color: var(--text-primary) !important;
+}
+
+.section-column,
+.kanban-board {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary) !important;
+}
+
+.move-to-section-btn {
+  color: var(--brand) !important;
+  font-weight: 600 !important;
+  background: transparent !important;
+}
+
+.section-column .section-student-item,
+.section-student-item {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 12px 16px !important;
+  margin-bottom: 10px !important;
+  box-shadow: var(--shadow-xs) !important;
+  color: var(--text-primary) !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  transition: all 0.2s ease !important;
+}
+
+.section-student-item:hover {
+  box-shadow: var(--shadow-sm) !important;
+  border-color: var(--brand-subtle-hover) !important;
+  transform: translateY(-1px);
+}
+
+.section-student-item span,
+.section-student-item .roll-number,
+.section-student-item > div > div:last-child {
+  color: var(--text-secondary) !important;
+  font-size: 0.85rem !important;
+  font-weight: 500 !important;
+}
+
+.section-column select,
+.kanban-board select,
+.section-select {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 6px 10px !important;
+  font-weight: 500 !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.section-column select:focus {
+  border-color: var(--brand) !important;
+  box-shadow: 0 0 0 2px var(--brand-subtle) !important;
+}
+
+.move-to-section-btn,
+.section-column button,
+.kanban-board button {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border) !important;
 }

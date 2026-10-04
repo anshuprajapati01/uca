@@ -1057,7 +1057,7 @@ export default function FacultySessionalMarks() {
 
   return (
     <>
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', backgroundColor: '#151623', padding: '6px', borderRadius: '12px', width: 'fit-content' }}>
+      <div style={{ display: 'flex', gap: '8px', marginLeft: '24px', marginBottom: '24px', backgroundColor: '#f1f5f9', padding: '6px', borderRadius: '12px', width: 'fit-content' }}>
         <button
           type="button"
           onClick={() => setActiveTab('tes')}
@@ -1068,9 +1068,10 @@ export default function FacultySessionalMarks() {
             fontSize: '0.875rem',
             border: 'none',
             cursor: 'pointer',
-            backgroundColor: activeTab === 'tes' ? '#6366f1' : 'transparent',
-            color: activeTab === 'tes' ? 'white' : '#9ca3af',
-            boxShadow: activeTab === 'tes' ? '0 4px 6px -1px rgba(99, 102, 241, 0.3)' : 'none',
+            backgroundColor: activeTab === 'tes' ? '#4f46e5' : 'transparent',
+            color: activeTab === 'tes' ? '#ffffff' : '#64748b',
+            boxShadow: activeTab === 'tes' ? '0 2px 4px rgba(79, 70, 229, 0.2)' : 'none',
+            transition: 'all 0.2s'
           }}
           >
             Tutorials (TES)
@@ -1085,9 +1086,10 @@ export default function FacultySessionalMarks() {
             fontSize: '0.875rem',
             border: 'none',
             cursor: 'pointer',
-            backgroundColor: activeTab === 'les' ? '#6366f1' : 'transparent',
-            color: activeTab === 'les' ? 'white' : '#9ca3af',
-            boxShadow: activeTab === 'les' ? '0 4px 6px -1px rgba(99, 102, 241, 0.3)' : 'none',
+            backgroundColor: activeTab === 'les' ? '#4f46e5' : 'transparent',
+            color: activeTab === 'les' ? '#ffffff' : '#64748b',
+            boxShadow: activeTab === 'les' ? '0 2px 4px rgba(79, 70, 229, 0.2)' : 'none',
+            transition: 'all 0.2s'
           }}
         >
           Lab Register (LES)
@@ -1102,9 +1104,10 @@ export default function FacultySessionalMarks() {
             fontSize: '0.875rem',
             border: 'none',
             cursor: 'pointer',
-            backgroundColor: activeTab === 'ctput' ? '#6366f1' : 'transparent',
-            color: activeTab === 'ctput' ? 'white' : '#9ca3af',
-            boxShadow: activeTab === 'ctput' ? '0 4px 6px -1px rgba(99, 102, 241, 0.3)' : 'none',
+            backgroundColor: activeTab === 'ctput' ? '#4f46e5' : 'transparent',
+            color: activeTab === 'ctput' ? '#ffffff' : '#64748b',
+            boxShadow: activeTab === 'ctput' ? '0 2px 4px rgba(79, 70, 229, 0.2)' : 'none',
+            transition: 'all 0.2s'
           }}
         >
           Theory Exams (CT/PUT)
@@ -1112,22 +1115,24 @@ export default function FacultySessionalMarks() {
       </div>
 
       {activeTab === 'tes' && (
-        <div style={{ backgroundColor: '#1c1d2e', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)' }}>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', margin: '0 24px 24px 24px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: '1 1 300px' }}>
-              <label style={{ fontSize: '0.875rem', fontWeight: '600', color: '#d1d5db', whiteSpace: 'nowrap' }}>Select Subject:</label>
+              <label style={{ color: '#475569', fontWeight: '600', whiteSpace: 'nowrap' }}>Select Subject:</label>
               <select
                 value={theoryExamSubject}
                 onChange={handleTheoryExamSubjectChange}
                 style={{
                   flex: 1,
-                  backgroundColor: '#11131f',
-                  border: '1px solid #2d314d',
-                  color: 'white',
-                  padding: '10px 12px',
+                  backgroundColor: '#f8fafc',
+                  border: '1px solid #cbd5e1',
+                  color: '#0f172a',
+                  padding: '10px 16px',
                   borderRadius: '8px',
-                  fontSize: '0.875rem',
                   outline: 'none',
+                  cursor: 'pointer',
+                  minWidth: '220px',
+                  marginLeft: '12px',
                   fontFamily: 'inherit',
                 }}
                 >
@@ -1145,18 +1150,20 @@ export default function FacultySessionalMarks() {
                     );
                   })}
                 </select>
-              <label style={{ fontSize: '0.875rem', fontWeight: '600', color: '#d1d5db', whiteSpace: 'nowrap' }}>Select Section:</label>
+              <label style={{ color: '#475569', fontWeight: '600', whiteSpace: 'nowrap' }}>Select Section:</label>
               <select
                 value={theoryExamSection}
                 onChange={(e) => setTheoryExamSection(e.target.value)}
                 style={{
-                  backgroundColor: '#11131f',
-                  border: '1px solid #2d314d',
-                  color: 'white',
-                  padding: '10px 12px',
+                  backgroundColor: '#f8fafc',
+                  border: '1px solid #cbd5e1',
+                  color: '#0f172a',
+                  padding: '10px 16px',
                   borderRadius: '8px',
-                  fontSize: '0.875rem',
                   outline: 'none',
+                  cursor: 'pointer',
+                  minWidth: '220px',
+                  marginLeft: '12px',
                   fontFamily: 'inherit',
                 }}
               >
@@ -1174,15 +1181,15 @@ export default function FacultySessionalMarks() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '8px',
-                  padding: '10px 20px',
+                  padding: '10px 24px',
                   borderRadius: '8px',
                   fontWeight: '600',
                   fontSize: '0.875rem',
                   border: 'none',
                   cursor: theoryExamSubject && !isSavingTheoryExam ? 'pointer' : 'not-allowed',
-                  backgroundColor: theoryExamSubject && !isSavingTheoryExam ? '#059669' : '#4b5563',
-                  color: 'white',
-                  boxShadow: theoryExamSubject && !isSavingTheoryExam ? '0 10px 15px -3px rgba(5, 150, 105, 0.3)' : 'none',
+                  backgroundColor: '#10b981',
+                  color: '#ffffff',
+                  boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)',
                 }}
               >
                 Save Tutorials
@@ -1195,15 +1202,15 @@ export default function FacultySessionalMarks() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '8px',
-                  padding: '10px 20px',
+                  padding: '10px 24px',
                   borderRadius: '8px',
                   fontWeight: '600',
                   fontSize: '0.875rem',
                   border: 'none',
                   cursor: theoryExamSubject && !isExporting ? 'pointer' : 'not-allowed',
-                  backgroundColor: theoryExamSubject && !isExporting ? '#f59e0b' : '#4b5563',
-                  color: 'white',
-                  boxShadow: theoryExamSubject && !isExporting ? '0 10px 15px -3px rgba(245, 158, 11, 0.3)' : 'none',
+                  backgroundColor: '#f59e0b',
+                  color: '#ffffff',
+                  boxShadow: '0 2px 4px rgba(245, 158, 11, 0.2)',
                 }}
               >
                 Export TES Sheet
@@ -1212,29 +1219,29 @@ export default function FacultySessionalMarks() {
           </div>
 
           {!theoryExamSubject ? (
-            <div style={{ textAlign: 'center', padding: '48px', color: '#9ca3af' }}>
+            <div style={{ textAlign: 'center', padding: '48px', color: '#64748b' }}>
               <p>Please select a subject to view the Tutorials Register.</p>
             </div>
           ) : isTheoryExamLoading ? (
-            <div style={{ textAlign: 'center', padding: '48px', color: '#9ca3af' }}>
+            <div style={{ textAlign: 'center', padding: '48px', color: '#64748b' }}>
               Loading tutorial data…
             </div>
           ) : theoryExamStudents.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '48px', color: '#9ca3af' }}>
+            <div style={{ textAlign: 'center', padding: '48px', color: '#64748b' }}>
               <p>No students found for this subject.</p>
             </div>
           ) : (
-            <div style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: '70vh', borderRadius: '12px', border: '1px solid #2d314d' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', color: 'white', minWidth: '1250px' }}>
+            <div style={{ overflowX: 'auto', marginTop: '24px', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', color: '#0f172a', minWidth: '1250px' }}>
                 <thead>
-                  <tr style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#1c1d2e' }}>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', borderRight: '1px solid #2d314d', minWidth: '160px' }}>Student Name</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '80px' }}>Roll Number</th>
+                  <tr style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#f8fafc' }}>
+                    <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'left', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '160px' }}>Student Name</th>
+                    <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '80px' }}>Roll Number</th>
                     {['t1','t2','t3','t4','t5','t6','t7','t8','t9','t10'].map((t) => (
-                      <th key={t} style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.7rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '60px' }}>T{parseInt(t.slice(1))} (Max 10)</th>
+                      <th key={t} style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '60px' }}>T{parseInt(t.slice(1))} (Max 10)</th>
                     ))}
-                    <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#f59e0b', borderBottom: '1px solid #2d314d', minWidth: '80px' }}>Total (100)</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#34d399', borderBottom: '1px solid #2d314d', minWidth: '70px' }}>Final (5)</th>
+                     <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#059669', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '80px' }}>Total (100)</th>
+                     <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#4338ca', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '70px' }}>Final (5)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1247,15 +1254,15 @@ export default function FacultySessionalMarks() {
                     const final = Math.ceil((total * 5) / 100);
 
                     return (
-                      <tr key={student.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                        <td style={{ padding: '12px 24px', fontSize: '0.875rem', color: 'white', position: 'sticky', left: 0, backgroundColor: '#1c1d2e', zIndex: 10, fontWeight: '600' }}>
+                      <tr key={student.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        <td style={{ padding: '12px', color: '#334155', fontSize: '0.875rem', fontWeight: '500', whiteSpace: 'nowrap', position: 'sticky', left: 0, backgroundColor: '#ffffff', zIndex: 10 }}>
                           {student.full_name}
                         </td>
-                        <td style={{ padding: '12px 12px', textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8' }}>
+                        <td style={{ padding: '12px', color: '#334155', fontSize: '0.875rem', fontWeight: '500', whiteSpace: 'nowrap', textAlign: 'center' }}>
                           {student.roll_number || '—'}
                         </td>
                         {['t1','t2','t3','t4','t5','t6','t7','t8','t9','t10'].map((t) => (
-                          <td key={t} style={{ padding: '12px 12px' }}>
+                          <td key={t} style={{ padding: '12px' }}>
                             <input
                               type="number"
                               min="0"
@@ -1263,14 +1270,14 @@ export default function FacultySessionalMarks() {
                               value={g[t] ?? ''}
                               onChange={(e) => handleTheoryExamGradeChange(student.id, t, e.target.value)}
                               onKeyDown={handleGridKeyDown}
-                              style={{ width: '50px', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '6px', borderRadius: '4px', textAlign: 'center' }}
+                              style={{ width: '50px', padding: '8px', textAlign: 'center', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#0f172a', outline: 'none', fontWeight: '600', transition: 'border-color 0.2s' }}
                             />
                           </td>
                         ))}
-                        <td style={{ padding: '12px 12px', textAlign: 'center', fontWeight: 'bold', color: '#fbbf24' }}>
+                        <td style={{ padding: '12px', color: '#059669', fontWeight: '700', fontSize: '1rem', textAlign: 'center' }}>
                           {total}
                         </td>
-                        <td style={{ padding: '12px 12px', textAlign: 'center', fontWeight: 'bold', color: '#34d399' }}>
+                        <td style={{ padding: '12px', color: '#4338ca', fontWeight: '700', fontSize: '1rem', textAlign: 'center' }}>
                           {final}
                         </td>
                       </tr>
@@ -1284,22 +1291,24 @@ export default function FacultySessionalMarks() {
       )}
         
          {activeTab === 'les' && (
-        <div style={{ backgroundColor: '#1c1d2e', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)' }}>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', margin: '0 24px 24px 24px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: '1 1 300px' }}>
-              <label style={{ fontSize: '0.875rem', fontWeight: '600', color: '#d1d5db', whiteSpace: 'nowrap' }}>Select Subject:</label>
+              <label style={{ color: '#475569', fontWeight: '600', whiteSpace: 'nowrap' }}>Select Subject:</label>
               <select
                 value={selectedLabSubject}
                 onChange={handleLabSubjectChange}
                 style={{
                   flex: 1,
-                  backgroundColor: '#11131f',
-                  border: '1px solid #2d314d',
-                  color: 'white',
-                  padding: '10px 12px',
+                  backgroundColor: '#f8fafc',
+                  border: '1px solid #cbd5e1',
+                  color: '#0f172a',
+                  padding: '10px 16px',
                   borderRadius: '8px',
-                  fontSize: '0.875rem',
                   outline: 'none',
+                  cursor: 'pointer',
+                  minWidth: '220px',
+                  marginLeft: '12px',
                   fontFamily: 'inherit',
                 }}
               >
@@ -1317,18 +1326,20 @@ export default function FacultySessionalMarks() {
                   );
                 })}
                </select>
-               <label style={{ fontSize: '0.875rem', fontWeight: '600', color: '#d1d5db', whiteSpace: 'nowrap' }}>Select Section:</label>
+               <label style={{ color: '#475569', fontWeight: '600', whiteSpace: 'nowrap' }}>Select Section:</label>
                 <select
                   value={labSection}
                   onChange={(e) => setLabSection(e.target.value)}
                   style={{
-                    backgroundColor: '#11131f',
-                    border: '1px solid #2d314d',
-                    color: 'white',
-                    padding: '10px 12px',
+                    backgroundColor: '#f8fafc',
+                    border: '1px solid #cbd5e1',
+                    color: '#0f172a',
+                    padding: '10px 16px',
                     borderRadius: '8px',
-                    fontSize: '0.875rem',
                     outline: 'none',
+                    cursor: 'pointer',
+                    minWidth: '220px',
+                    marginLeft: '12px',
                     fontFamily: 'inherit',
                   }}
                 >
@@ -1346,247 +1357,248 @@ export default function FacultySessionalMarks() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '8px',
-                  padding: '10px 20px',
+                  padding: '10px 24px',
                   borderRadius: '8px',
                   fontWeight: '600',
                   fontSize: '0.875rem',
                   border: 'none',
                   cursor: selectedLabSubject && !isSavingLab ? 'pointer' : 'not-allowed',
-                  backgroundColor: selectedLabSubject && !isSavingLab ? '#059669' : '#4b5563',
-                  color: 'white',
-                  boxShadow: selectedLabSubject && !isSavingLab ? '0 10px 15px -3px rgba(5, 150, 105, 0.3)' : 'none',
+                  backgroundColor: '#10b981',
+                  color: '#ffffff',
+                  boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)',
                 }}
               >
                   Save Register
-              </button>
+                </button>
                 <button
                   type="button"
                   onClick={() => setIsExportModalOpen(true)}
                   disabled={!selectedLabSubject || labStudents.length === 0}
                  style={{
-                   display: 'inline-flex',
-                   alignItems: 'center',
-                   gap: '8px',
-                   padding: '10px 20px',
-                   borderRadius: '8px',
-                   fontWeight: '600',
-                   fontSize: '0.875rem',
-                   border: 'none',
-                   cursor: selectedLabSubject && labStudents.length > 0 ? 'pointer' : 'not-allowed',
-                   backgroundColor: selectedLabSubject && labStudents.length > 0 ? '#f59e0b' : '#4b5563',
-                   color: 'white',
-                   boxShadow: selectedLabSubject && labStudents.length > 0 ? '0 10px 15px -3px rgba(245, 158, 11, 0.3)' : 'none',
-                 }}
-               >
-                   Export LES Sheet
-               </button>
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 24px',
+                    borderRadius: '8px',
+                    fontWeight: '600',
+                    fontSize: '0.875rem',
+                    border: 'none',
+                    cursor: selectedLabSubject && labStudents.length > 0 ? 'pointer' : 'not-allowed',
+                    backgroundColor: '#f59e0b',
+                    color: '#ffffff',
+                    boxShadow: '0 2px 4px rgba(245, 158, 11, 0.2)',
+                  }}
+                >
+                    Export LES Sheet
+                </button>
             </div>
           </div>
 
           {!selectedLabSubject ? (
-            <div style={{ textAlign: 'center', padding: '48px', color: '#9ca3af' }}>
+            <div style={{ textAlign: 'center', padding: '48px', color: '#64748b' }}>
               <p>Please select a subject to view the Lab Register.</p>
             </div>
           ) : isLabLoading ? (
-            <div style={{ textAlign: 'center', padding: '48px', color: '#9ca3af' }}>
+            <div style={{ textAlign: 'center', padding: '48px', color: '#64748b' }}>
               Loading lab data…
             </div>
           ) : labStudents.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '48px', color: '#9ca3af' }}>
+            <div style={{ textAlign: 'center', padding: '48px', color: '#64748b' }}>
               <p>No students found for this subject.</p>
             </div>
           ) : (
-            <div style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: '70vh', borderRadius: '12px', border: '1px solid #2d314d' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', color: 'white', minWidth: '1500px' }}>
-                <thead>
-                  <tr style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#1c1d2e' }}>
-                     <th style={{ position: 'sticky', left: 0, backgroundColor: '#1c1d2e', padding: '12px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', borderRight: '1px solid #2d314d', minWidth: '160px' }}>Student Name</th>
-                     <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '80px' }}>Roll Number</th>
-                     <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.7rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '60px' }}>L1</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.7rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '60px' }}>L2</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.7rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '60px' }}>L3</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.7rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '60px' }}>L4</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.7rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '60px' }}>L5</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.7rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '60px' }}>L6</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.7rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '60px' }}>L7</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.7rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '60px' }}>L8</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.7rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '60px' }}>L9</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.7rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '60px' }}>L10</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#34d399', borderBottom: '1px solid #2d314d', minWidth: '70px' }}>Lab A (10)</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.7rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '60px' }}>LT</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#34d399', borderBottom: '1px solid #2d314d', minWidth: '70px' }}>LT B (10)</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.7rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '70px' }}>Total Class</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.7rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '70px' }}>Attended</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#34d399', borderBottom: '1px solid #2d314d', minWidth: '70px' }}>Att. C (5)</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.7rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '70px' }}>Benefit</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#f59e0b', borderBottom: '1px solid #2d314d', minWidth: '90px' }}>Final (50)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {labStudents.length === 0 ? (
-                    <tr>
-                       <td colSpan="20" style={{ textAlign: 'center', padding: '32px', color: '#9ca3af' }}>
-                         No students found.
-                       </td>
-                    </tr>
-                  ) : (
-                    labStudents.filter((student) =>
-                      labSection === 'All' ? true : (student.section || '').toUpperCase() === labSection,
-                    ).map((student) => {
-                      const g = labGrades[student.id] || {};
-                      const filledLabs = ['l1','l2','l3','l4','l5','l6','l7','l8','l9','l10'].filter(key => g[key] !== '' && g[key] !== undefined && g[key] !== null).length;
-                      const totalLab = ['l1','l2','l3','l4','l5','l6','l7','l8','l9','l10'].reduce((sum, key) => sum + (Number(g[key]) || 0), 0);
-                      const maxLabTotal = filledLabs > 0 ? filledLabs * 20 : 0;
-                      const A = maxLabTotal > 0 ? Math.ceil((totalLab / maxLabTotal) * 10) : 0;
-                      const B = Math.ceil((Number(g.lt_marks) || 0) / 2);
-                      const totalClasses = Number(g.total_classes) || 0;
-                      const attendedClasses = Number(g.attended_classes) || 0;
-                      const percent = totalClasses > 0 ? (attendedClasses / totalClasses) * 100 : 0;
-                      let C = 0;
-                      if(percent > 80) C = 5; else if(percent > 60) C = 4; else if(percent > 40) C = 3; else if(percent > 20) C = 2; else if(percent > 0) C = 1;
-                      const benefit = Number(g.benefit_marks) || 0;
-                      const finalInternal = A + B + C + benefit;
+            <div style={{ overflowX: 'auto', marginTop: '24px', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+               <table style={{ width: '100%', borderCollapse: 'collapse', color: '#0f172a', minWidth: '1500px' }}>
+                 <thead>
+                   <tr style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#f8fafc' }}>
+                      <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'left', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '160px' }}>Student Name</th>
+                      <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '80px' }}>Roll Number</th>
+                      <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '60px' }}>L1</th>
+                     <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '60px' }}>L2</th>
+                     <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '60px' }}>L3</th>
+                     <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '60px' }}>L4</th>
+                     <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '60px' }}>L5</th>
+                     <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '60px' }}>L6</th>
+                     <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '60px' }}>L7</th>
+                     <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '60px' }}>L8</th>
+                     <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '60px' }}>L9</th>
+                     <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '60px' }}>L10</th>
+                      <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#d97706', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '70px' }}>Lab A (10)</th>
+                      <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#4f46e5', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '60px' }}>LT</th>
+                      <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0d9488', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '70px' }}>LT B (10)</th>
+                      <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '70px' }}>Total Class</th>
+                      <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '70px' }}>Attended</th>
+                      <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#7e22ce', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '70px' }}>Att. C (5)</th>
+                      <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '70px' }}>Benefit</th>
+                      <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#4f46e5', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '90px' }}>Final (50)</th>
+                   </tr>
+                 </thead>
+                 <tbody>
+                   {labStudents.length === 0 ? (
+                     <tr>
+                        <td colSpan="20" style={{ textAlign: 'center', padding: '32px', color: '#64748b' }}>
+                          No students found.
+                        </td>
+                     </tr>
+                   ) : (
+                     labStudents.filter((student) =>
+                       labSection === 'All' ? true : (student.section || '').toUpperCase() === labSection,
+                     ).map((student) => {
+                       const g = labGrades[student.id] || {};
+                       const filledLabs = ['l1','l2','l3','l4','l5','l6','l7','l8','l9','l10'].filter(key => g[key] !== '' && g[key] !== undefined && g[key] !== null).length;
+                       const totalLab = ['l1','l2','l3','l4','l5','l6','l7','l8','l9','l10'].reduce((sum, key) => sum + (Number(g[key]) || 0), 0);
+                       const maxLabTotal = filledLabs > 0 ? filledLabs * 20 : 0;
+                       const A = maxLabTotal > 0 ? Math.ceil((totalLab / maxLabTotal) * 10) : 0;
+                       const B = Math.ceil((Number(g.lt_marks) || 0) / 2);
+                       const totalClasses = Number(g.total_classes) || 0;
+                       const attendedClasses = Number(g.attended_classes) || 0;
+                       const percent = totalClasses > 0 ? (attendedClasses / totalClasses) * 100 : 0;
+                       let C = 0;
+                       if(percent > 80) C = 5; else if(percent > 60) C = 4; else if(percent > 40) C = 3; else if(percent > 20) C = 2; else if(percent > 0) C = 1;
+                       const benefit = Number(g.benefit_marks) || 0;
+                       const finalInternal = A + B + C + benefit;
 
-                      return (
-                        <tr key={student.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                          <td style={{ padding: '12px 24px', fontSize: '0.875rem', color: 'white', position: 'sticky', left: 0, backgroundColor: '#1c1d2e', zIndex: 10, fontWeight: '600' }}>
-                            {student.full_name}
-                          </td>
-                          <td style={{ padding: '12px 12px', textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8' }}>
-                            {student.roll_number || student.roll_no || '—'}
-                          </td>
-                          {['l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9', 'l10'].map((lab) => (
-                            <td key={lab} style={{ padding: '12px 12px' }}>
-                              <input
-                                type="number"
-                                min="0"
-                                max="20"
-                                value={g[lab] ?? ''}
-                                onChange={(e) => handleLabGradeChange(student.id, lab, e.target.value)}
-                                onKeyDown={handleGridKeyDown}
-                                style={{ width: '50px', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '6px', borderRadius: '4px', textAlign: 'center' }}
-                              />
+                       return (
+                         <tr key={student.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                           <td style={{ padding: '12px', color: '#334155', fontSize: '0.875rem', fontWeight: '500', whiteSpace: 'nowrap', position: 'sticky', left: 0, backgroundColor: '#ffffff', zIndex: 10 }}>
+                             {student.full_name}
+                           </td>
+                           <td style={{ padding: '12px', color: '#334155', fontSize: '0.875rem', fontWeight: '500', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                             {student.roll_number || student.roll_no || '—'}
+                           </td>
+                           {['l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9', 'l10'].map((lab) => (
+                             <td key={lab} style={{ padding: '12px' }}>
+                               <input
+                                 type="number"
+                                 min="0"
+                                 max="20"
+                                 value={g[lab] ?? ''}
+                                 onChange={(e) => handleLabGradeChange(student.id, lab, e.target.value)}
+                                 onKeyDown={handleGridKeyDown}
+                                 style={{ width: '50px', padding: '8px', textAlign: 'center', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#0f172a', outline: 'none', fontWeight: '600', transition: 'border-color 0.2s' }}
+                               />
+                             </td>
+                           ))}
+                            <td style={{ padding: '12px', color: '#d97706', fontWeight: '700', fontSize: '1rem', textAlign: 'center' }}>
+                              {A}
                             </td>
-                          ))}
-                          <td style={{ padding: '12px 12px', textAlign: 'center', fontWeight: 'bold', color: '#34d399' }}>
-                            {A}
-                          </td>
-                          <td style={{ padding: '12px 12px' }}>
-                            <input
-                              type="number"
-                              min="0"
-                              max="20"
-                              value={g.lt_marks ?? ''}
-                              onChange={(e) => handleLabGradeChange(student.id, 'lt_marks', e.target.value)}
-                              onKeyDown={handleGridKeyDown}
-                              style={{ width: '50px', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '6px', borderRadius: '4px', textAlign: 'center' }}
-                            />
-                          </td>
-                          <td style={{ padding: '12px 12px', textAlign: 'center', fontWeight: 'bold', color: '#34d399' }}>
-                            {B}
-                          </td>
-                          <td style={{ padding: '12px 12px' }}>
-                            <input
-                              type="number"
-                              min="0"
-                              value={g.total_classes ?? ''}
-                              onChange={(e) => handleLabGradeChange(student.id, 'total_classes', e.target.value)}
-                              onKeyDown={handleGridKeyDown}
-                              style={{ width: '50px', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '6px', borderRadius: '4px', textAlign: 'center' }}
-                            />
-                          </td>
-                          <td style={{ padding: '12px 12px' }}>
-                            <input
-                              type="number"
-                              min="0"
-                              value={g.attended_classes ?? ''}
-                              onChange={(e) => handleLabGradeChange(student.id, 'attended_classes', e.target.value)}
-                              onKeyDown={handleGridKeyDown}
-                              style={{ width: '50px', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '6px', borderRadius: '4px', textAlign: 'center' }}
-                            />
-                          </td>
-                          <td style={{ padding: '12px 12px', textAlign: 'center', fontWeight: 'bold', color: '#34d399' }}>
-                            {C}
-                          </td>
-                          <td style={{ padding: '12px 12px' }}>
-                            <input
-                              type="number"
-                              min="0"
-                              max="25"
-                              value={g.benefit_marks ?? ''}
-                              onChange={(e) => handleLabGradeChange(student.id, 'benefit_marks', e.target.value)}
-                              onKeyDown={handleGridKeyDown}
-                              style={{ width: '50px', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '6px', borderRadius: '4px', textAlign: 'center' }}
-                            />
-                          </td>
-                          <td style={{ padding: '12px 24px', textAlign: 'center', fontWeight: 'bold', color: '#fbbf24' }}>
-                            {finalInternal}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
+                           <td style={{ padding: '12px' }}>
+                             <input
+                               type="number"
+                               min="0"
+                               max="20"
+                               value={g.lt_marks ?? ''}
+                               onChange={(e) => handleLabGradeChange(student.id, 'lt_marks', e.target.value)}
+                               onKeyDown={handleGridKeyDown}
+                               style={{ width: '50px', padding: '8px', textAlign: 'center', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#0f172a', outline: 'none', fontWeight: '600', transition: 'border-color 0.2s' }}
+                             />
+                           </td>
+                            <td style={{ padding: '12px', color: '#0d9488', fontWeight: '700', fontSize: '1rem', textAlign: 'center' }}>
+                              {B}
+                            </td>
+                           <td style={{ padding: '12px' }}>
+                             <input
+                               type="number"
+                               min="0"
+                               value={g.total_classes ?? ''}
+                               onChange={(e) => handleLabGradeChange(student.id, 'total_classes', e.target.value)}
+                               onKeyDown={handleGridKeyDown}
+                               style={{ width: '50px', padding: '8px', textAlign: 'center', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#0f172a', outline: 'none', fontWeight: '600', transition: 'border-color 0.2s' }}
+                             />
+                           </td>
+                           <td style={{ padding: '12px' }}>
+                             <input
+                               type="number"
+                               min="0"
+                               value={g.attended_classes ?? ''}
+                               onChange={(e) => handleLabGradeChange(student.id, 'attended_classes', e.target.value)}
+                               onKeyDown={handleGridKeyDown}
+                               style={{ width: '50px', padding: '8px', textAlign: 'center', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#0f172a', outline: 'none', fontWeight: '600', transition: 'border-color 0.2s' }}
+                             />
+                           </td>
+                            <td style={{ padding: '12px', color: '#7e22ce', fontWeight: '700', fontSize: '1rem', textAlign: 'center' }}>
+                              {C}
+                            </td>
+                           <td style={{ padding: '12px' }}>
+                             <input
+                               type="number"
+                               min="0"
+                               max="25"
+                               value={g.benefit_marks ?? ''}
+                               onChange={(e) => handleLabGradeChange(student.id, 'benefit_marks', e.target.value)}
+                               onKeyDown={handleGridKeyDown}
+                               style={{ width: '50px', padding: '8px', textAlign: 'center', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#0f172a', outline: 'none', fontWeight: '600', transition: 'border-color 0.2s' }}
+                             />
+                           </td>
+                            <td style={{ padding: '12px 24px', textAlign: 'center', fontWeight: '800', color: '#4f46e5', fontSize: '1.1rem' }}>
+                              {finalInternal}
+                            </td>
+                         </tr>
+                       );
+                      })
+                    )}
+                  </tbody>
+                </table>
+             </div>
+           )}
+         </div>
+       )}
 
-       {activeTab === 'ctput' && (
-         <div style={{ backgroundColor: '#1c1d2e', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)' }}>
-           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: '1 1 300px' }}>
-               <label style={{ fontSize: '0.875rem', fontWeight: '600', color: '#d1d5db', whiteSpace: 'nowrap' }}>Select Subject:</label>
-               <select
-                 value={theoryExamSubject}
-                 onChange={handleTheoryExamSubjectChange}
-                 style={{
-                   flex: 1,
-                   backgroundColor: '#11131f',
-                   border: '1px solid #2d314d',
-                   color: 'white',
-                   padding: '10px 12px',
-                   borderRadius: '8px',
-                   fontSize: '0.875rem',
-                   outline: 'none',
-                   fontFamily: 'inherit',
-                 }}
-               >
-                <option value="">-- Choose a subject --</option>
-                {mySubjects.filter((subject) => {
-                  const name = (subject.name || subject.subject_name || '').toLowerCase();
-                  const isLab = subject.type === 'practical' || name.includes('lab');
-                  return !isLab;
-                }).map((subject) => {
-                  const label = `${subject.name || subject.subject_name || 'Unnamed'} - ${subject.year || ''} (${subject.department || subject.branch || 'N/A'})`;
-                  return (
-                    <option key={subject.id} value={subject.id}>
-                      {label}
-                    </option>
-                  );
-                })}
-                </select>
-                <label style={{ fontSize: '0.875rem', fontWeight: '600', color: '#d1d5db', whiteSpace: 'nowrap' }}>Select Section:</label>
+        {activeTab === 'ctput' && (
+          <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', margin: '0 24px 24px 24px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: '1 1 300px' }}>
+                <label style={{ color: '#475569', fontWeight: '600', whiteSpace: 'nowrap' }}>Select Subject:</label>
                 <select
-                  value={theoryExamSection}
-                  onChange={(e) => setTheoryExamSection(e.target.value)}
+                  value={theoryExamSubject}
+                  onChange={handleTheoryExamSubjectChange}
                   style={{
-                    backgroundColor: '#11131f',
-                    border: '1px solid #2d314d',
-                    color: 'white',
-                    padding: '10px 12px',
+                    backgroundColor: '#f8fafc',
+                    border: '1px solid #cbd5e1',
+                    color: '#0f172a',
+                    padding: '10px 16px',
                     borderRadius: '8px',
-                    fontSize: '0.875rem',
                     outline: 'none',
-                    fontFamily: 'inherit',
+                    cursor: 'pointer',
+                    minWidth: '220px',
+                    marginLeft: '12px',
                   }}
                 >
-                  {availableSections.map((sec) => (
-                    <option key={sec} value={sec}>{sec}</option>
-                  ))}
-                </select>
-              </div>
+                 <option value="">-- Choose a subject --</option>
+                 {mySubjects.filter((subject) => {
+                   const name = (subject.name || subject.subject_name || '').toLowerCase();
+                   const isLab = subject.type === 'practical' || name.includes('lab');
+                   return !isLab;
+                 }).map((subject) => {
+                   const label = `${subject.name || subject.subject_name || 'Unnamed'} - ${subject.year || ''} (${subject.department || subject.branch || 'N/A'})`;
+                   return (
+                     <option key={subject.id} value={subject.id}>
+                       {label}
+                     </option>
+                   );
+                 })}
+                 </select>
+                 <label style={{ color: '#475569', fontWeight: '600', whiteSpace: 'nowrap' }}>Select Section:</label>
+                 <select
+                   value={theoryExamSection}
+                   onChange={(e) => setTheoryExamSection(e.target.value)}
+                   style={{
+                     backgroundColor: '#f8fafc',
+                     border: '1px solid #cbd5e1',
+                     color: '#0f172a',
+                     padding: '10px 16px',
+                     borderRadius: '8px',
+                     outline: 'none',
+                     cursor: 'pointer',
+                     minWidth: '220px',
+                     marginLeft: '12px',
+                   }}
+                 >
+                   {availableSections.map((sec) => (
+                     <option key={sec} value={sec}>{sec}</option>
+                   ))}
+                 </select>
+               </div>
              <div style={{ display: 'flex', gap: '10px' }}>
                 <button
                   type="button"
@@ -1633,241 +1645,240 @@ export default function FacultySessionalMarks() {
              </div>
            </div>
 
-           {!theoryExamSubject ? (
-             <div style={{ textAlign: 'center', padding: '48px', color: '#9ca3af' }}>
-               <p>Please select a subject to view the Theory Exam Register.</p>
-             </div>
-           ) : isTheoryExamLoading ? (
-             <div style={{ textAlign: 'center', padding: '48px', color: '#9ca3af' }}>
-               Loading theory exam data…
-             </div>
-           ) : theoryExamStudents.length === 0 ? (
-             <div style={{ textAlign: 'center', padding: '48px', color: '#9ca3af' }}>
-               <p>No students found for this subject.</p>
-             </div>
-           ) : (
-             <div style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: '70vh', borderRadius: '12px', border: '1px solid #2d314d' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', color: 'white', minWidth: '1250px' }}>
-                  <thead>
-                    <tr style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#1c1d2e' }}>
-                      <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', borderRight: '1px solid #2d314d', minWidth: '160px' }}>Student Name</th>
-                      <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '80px' }}>Roll Number</th>
-                      <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '60px' }}>CT1 (Max 30)</th>
-                      <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '60px' }}>CT2 (Max 30)</th>
-                       <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '70px' }}>PUT (Max 70)</th>
-                       <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.7rem', fontWeight: '600', color: '#34d399', borderBottom: '1px solid #2d314d', minWidth: '60px' }}>CT Conv. (10)</th>
-                       <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.7rem', fontWeight: '600', color: '#34d399', borderBottom: '1px solid #2d314d', minWidth: '60px' }}>PUT Conv. (10)</th>
-                       <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.7rem', fontWeight: '600', color: '#f59e0b', borderBottom: '1px solid #2d314d', minWidth: '90px' }}>Total Sessional (20)</th>
-                       <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '60px' }}>Total Classes</th>
-                       <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '60px' }}>Attended</th>
-                        <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.7rem', fontWeight: '600', color: '#34d399', borderBottom: '1px solid #2d314d', minWidth: '60px' }}>Att. Marks (5)</th>
-                        <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '60px' }}>GP (Max 5)</th>
-                        <th style={{ padding: '12px 8px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', borderBottom: '1px solid #2d314d', minWidth: '60px' }}>Benefit (F)</th>
-                     </tr>
-                  </thead>
-                  <tbody>
-                    {theoryExamStudents.length === 0 ? (
-                       <tr>
-                         <td colSpan="13" style={{ textAlign: 'center', padding: '32px', color: '#9ca3af' }}>
-                           No students found.
-                         </td>
-                       </tr>
-                   ) : (
-                      theoryExamStudents.filter((student) =>
-                        theoryExamSection === 'All' ? true : (student.section || '').toUpperCase() === theoryExamSection,
-                      ).map((student) => {
-                         const g = theoryExamGrades[student.id] || {};
-                        const ct1 = parseFloat(g.ct1) || 0;
-                        const ct2 = parseFloat(g.ct2) || 0;
-                        const put = parseFloat(g.put) || 0;
-                        const { ctInternal, putInternal, totalSessional } = getSessionalMarks(ct1, ct2, put);
-                        const attended = parseFloat(g.classes_attended) || 0;
-                        const totalClasses = parseFloat(g.total_classes_conducted) || 0;
-                        const attendanceMarks = calculateAttendanceMarks(attended, totalClasses);
-
-                        return (
-                          <tr key={student.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                            <td style={{ padding: '12px 24px', fontSize: '0.875rem', color: 'white', position: 'sticky', left: 0, backgroundColor: '#1c1d2e', zIndex: 10, fontWeight: '600' }}>
-                              {student.full_name}
-                            </td>
-                            <td style={{ padding: '12px 12px', textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8' }}>
-                              {student.roll_number || '—'}
-                            </td>
-                            <td style={{ padding: '12px 12px' }}>
-                              <input
-                                type="number"
-                                min="0"
-                                max="30"
-                                value={g.ct1 ?? ''}
-                                onChange={(e) => handleTheoryExamGradeChange(student.id, 'ct1', e.target.value)}
-                                onKeyDown={handleGridKeyDown}
-                                style={{ width: '70px', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '6px', borderRadius: '4px', textAlign: 'center' }}
-                              />
-                            </td>
-                            <td style={{ padding: '12px 12px' }}>
-                              <input
-                                type="number"
-                                min="0"
-                                max="30"
-                                value={g.ct2 ?? ''}
-                                onChange={(e) => handleTheoryExamGradeChange(student.id, 'ct2', e.target.value)}
-                                onKeyDown={handleGridKeyDown}
-                                style={{ width: '70px', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '6px', borderRadius: '4px', textAlign: 'center' }}
-                              />
-                            </td>
-                            <td style={{ padding: '12px 12px' }}>
-                              <input
-                                type="number"
-                                min="0"
-                                max="70"
-                                value={g.put ?? ''}
-                                onChange={(e) => handleTheoryExamGradeChange(student.id, 'put', e.target.value)}
-                                onKeyDown={handleGridKeyDown}
-                                style={{ width: '70px', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '6px', borderRadius: '4px', textAlign: 'center' }}
-                              />
-                            </td>
-                            <td style={{ padding: '12px 12px', fontWeight: 'bold', color: '#34d399', textAlign: 'center' }}>
-                              {ctInternal.toFixed(1)}
-                            </td>
-                            <td style={{ padding: '12px 12px', fontWeight: 'bold', color: '#34d399', textAlign: 'center' }}>
-                              {putInternal.toFixed(1)}
-                            </td>
-                            <td style={{ padding: '12px 24px', fontWeight: 'bold', color: '#f59e0b', textAlign: 'center' }}>
-                              {totalSessional.toFixed(1)}
-                            </td>
-                            <td style={{ padding: '12px 12px' }}>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  value={g.total_classes_conducted ?? ''}
-                                  onChange={(e) => handleTheoryExamGradeChange(student.id, 'total_classes_conducted', e.target.value)}
-                                  onKeyDown={handleGridKeyDown}
-                                  style={{ width: '70px', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '6px', borderRadius: '4px', textAlign: 'center' }}
-                                />
-                            </td>
-                            <td style={{ padding: '12px 12px' }}>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  value={g.classes_attended ?? ''}
-                                  onChange={(e) => handleTheoryExamGradeChange(student.id, 'classes_attended', e.target.value)}
-                                  onKeyDown={handleGridKeyDown}
-                                  style={{ width: '70px', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '6px', borderRadius: '4px', textAlign: 'center' }}
-                                />
-                            </td>
-                            <td style={{ padding: '12px 12px', fontWeight: 'bold', color: '#34d399', textAlign: 'center' }}>
-                              {attendanceMarks.toFixed(1)}
-                            </td>
-                            <td style={{ padding: '12px 12px' }}>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  max="5"
-                                  value={g.gp_marks ?? ''}
-                                  onChange={(e) => handleTheoryExamGradeChange(student.id, 'gp_marks', e.target.value)}
-                                  onKeyDown={handleGridKeyDown}
-                                  style={{ width: '70px', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '6px', borderRadius: '4px', textAlign: 'center' }}
-                                />
-                            </td>
-                            <td style={{ padding: '12px 12px' }}>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  value={g.benefit_marks ?? ''}
-                                  onChange={(e) => handleTheoryExamGradeChange(student.id, 'benefit_marks', e.target.value)}
-                                  onKeyDown={handleGridKeyDown}
-                                  style={{ width: '70px', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '6px', borderRadius: '4px', textAlign: 'center' }}
-                                />
-                            </td>
-                          </tr>
-                        );
-                      })
-                   )}
-                 </tbody>
-               </table>
-             </div>
-           )}
-         </div>
-          )}
-
-          {isExportModalOpen && (
-          <div
-            onClick={() => setIsExportModalOpen(false)}
-            style={{
-              position: 'fixed',
-              inset: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.6)',
-              backdropFilter: 'blur(8px)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 100,
-              padding: '20px',
-            }}
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                backgroundColor: '#1c1d2e',
-                border: '1px solid rgba(245, 158, 11, 0.3)',
-                borderRadius: '16px',
-                padding: '24px',
-                width: '100%',
-                maxWidth: '440px',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-              }}
-            >
-              <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'white', margin: '0 0 18px 0' }}>
-                {activeTab === 'les' ? 'Generate LES Sheet (Lab Evaluation)' : 'Generate TES Sheet (Tutorial/Assignment/Quiz)'}
-              </h3>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: '#d1d5db', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Subject
-              </label>
-               <select
-                 value={exportSubjectId}
-                 onChange={(e) => setExportSubjectId(e.target.value)}
-                 style={{ width: '100%', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '10px 12px', borderRadius: '8px', fontSize: '0.875rem', outline: 'none', fontFamily: 'inherit', marginBottom: '16px' }}
-               >
-                 <option value="">-- Select Subject --</option>
-                   {exportModalSubjects && exportModalSubjects.map((sub) => (
-                     <option key={sub.id} value={sub.id}>
-                       {`${sub.subject_name || sub.name} - ${String(sub.year || "").replace(" Year", "")} Year (${sub.department || sub.branch || ""})`}
-                     </option>
-                   ))}
-               </select>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: '#d1d5db', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Section
-              </label>
-              <select
-                value={exportSection}
-                onChange={(e) => setExportSection(e.target.value)}
-                style={{ width: '100%', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '10px 12px', borderRadius: '8px', fontSize: '0.875rem', outline: 'none', fontFamily: 'inherit', marginBottom: '24px' }}
-              >
-                {availableSections.map((sec, i) => (
-                  <option key={i} value={sec}>{sec}</option>
-                ))}
-              </select>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                <button
-                  type="button"
-                  onClick={() => setIsExportModalOpen(false)}
-                  style={{ padding: '10px 20px', borderRadius: '8px', fontWeight: '600', color: '#d1d5db', backgroundColor: '#2d314d', border: 'none', cursor: 'pointer', fontSize: '0.875rem' }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { if (activeTab === 'les') handleExportLES(); else handleExportTES(); setIsExportModalOpen(false); }}
-                  disabled={isExporting}
-                  style={{ padding: '10px 20px', borderRadius: '8px', fontWeight: '600', color: 'white', backgroundColor: isExporting ? '#4b5563' : '#f59e0b', border: 'none', cursor: isExporting ? 'not-allowed' : 'pointer', fontSize: '0.875rem', boxShadow: isExporting ? 'none' : '0 10px 15px -3px rgba(245, 158, 11, 0.3)' }}
-                >
-                  {isExporting ? 'Exporting…' : 'Download Excel'}
-                </button>
+            {!theoryExamSubject ? (
+              <div style={{ textAlign: 'center', padding: '48px', color: '#64748b' }}>
+                <p>Please select a subject to view the Theory Exam Register.</p>
               </div>
-            </div>
+            ) : isTheoryExamLoading ? (
+              <div style={{ textAlign: 'center', padding: '48px', color: '#64748b' }}>
+                Loading theory exam data…
+              </div>
+            ) : theoryExamStudents.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '48px', color: '#64748b' }}>
+                <p>No students found for this subject.</p>
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto', marginTop: '24px', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+                 <table style={{ width: '100%', borderCollapse: 'collapse', color: '#0f172a', minWidth: '1250px' }}>
+                   <thead>
+                     <tr style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#f8fafc' }}>
+                       <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'left', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '160px' }}>Student Name</th>
+                       <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '80px' }}>Roll Number</th>
+                       <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '60px' }}>CT1 (Max 30)</th>
+                       <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '60px' }}>CT2 (Max 30)</th>
+                        <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '70px' }}>PUT (Max 70)</th>
+                        <th style={{ padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0d9488', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '60px' }}>CT Conv. (10)</th>
+                        <th style={{ padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#2563eb', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '60px' }}>PUT Conv. (10)</th>
+                        <th style={{ padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#4f46e5', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '90px' }}>Total Sessional (20)</th>
+                        <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '60px' }}>Total Classes</th>
+                        <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '60px' }}>Attended</th>
+                         <th style={{ padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#7e22ce', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '60px' }}>Att. Marks (5)</th>
+                         <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '60px' }}>GP (Max 5)</th>
+                         <th style={{ backgroundColor: '#f8fafc', padding: '16px 12px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', minWidth: '60px' }}>Benefit (F)</th>
+                      </tr>
+                   </thead>
+                   <tbody>
+                     {theoryExamStudents.length === 0 ? (
+                        <tr>
+                          <td colSpan="13" style={{ textAlign: 'center', padding: '32px', color: '#64748b' }}>
+                            No students found.
+                          </td>
+                        </tr>
+                    ) : (
+                       theoryExamStudents.filter((student) =>
+                         theoryExamSection === 'All' ? true : (student.section || '').toUpperCase() === theoryExamSection,
+                       ).map((student) => {
+                          const g = theoryExamGrades[student.id] || {};
+                         const ct1 = parseFloat(g.ct1) || 0;
+                         const ct2 = parseFloat(g.ct2) || 0;
+                         const put = parseFloat(g.put) || 0;
+                         const { ctInternal, putInternal, totalSessional } = getSessionalMarks(ct1, ct2, put);
+                         const attended = parseFloat(g.classes_attended) || 0;
+                         const totalClasses = parseFloat(g.total_classes_conducted) || 0;
+                         const attendanceMarks = calculateAttendanceMarks(attended, totalClasses);
+
+                         return (
+                           <tr key={student.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                             <td style={{ padding: '12px', color: '#334155', fontSize: '0.875rem', fontWeight: '500', whiteSpace: 'nowrap', position: 'sticky', left: 0, backgroundColor: '#ffffff', zIndex: 10 }}>
+                               {student.full_name}
+                             </td>
+                             <td style={{ padding: '12px', color: '#334155', fontSize: '0.875rem', fontWeight: '500', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                               {student.roll_number || '—'}
+                             </td>
+                             <td style={{ padding: '12px 12px' }}>
+                               <input
+                                 type="number"
+                                 min="0"
+                                 max="30"
+                                 value={g.ct1 ?? ''}
+                                 onChange={(e) => handleTheoryExamGradeChange(student.id, 'ct1', e.target.value)}
+                                 onKeyDown={handleGridKeyDown}
+                                 style={{ width: '50px', padding: '8px', textAlign: 'center', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#0f172a', outline: 'none', fontWeight: '600', transition: 'border-color 0.2s' }}
+                               />
+                             </td>
+                             <td style={{ padding: '12px 12px' }}>
+                               <input
+                                 type="number"
+                                 min="0"
+                                 max="30"
+                                 value={g.ct2 ?? ''}
+                                 onChange={(e) => handleTheoryExamGradeChange(student.id, 'ct2', e.target.value)}
+                                 onKeyDown={handleGridKeyDown}
+                                 style={{ width: '50px', padding: '8px', textAlign: 'center', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#0f172a', outline: 'none', fontWeight: '600', transition: 'border-color 0.2s' }}
+                               />
+                             </td>
+                             <td style={{ padding: '12px 12px' }}>
+                               <input
+                                 type="number"
+                                 min="0"
+                                 max="70"
+                                 value={g.put ?? ''}
+                                 onChange={(e) => handleTheoryExamGradeChange(student.id, 'put', e.target.value)}
+                                 onKeyDown={handleGridKeyDown}
+                                 style={{ width: '50px', padding: '8px', textAlign: 'center', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#0f172a', outline: 'none', fontWeight: '600', transition: 'border-color 0.2s' }}
+                               />
+                             </td>
+                             <td style={{ padding: '12px', color: '#0d9488', fontWeight: '700', textAlign: 'center' }}>
+                               {ctInternal.toFixed(1)}
+                             </td>
+                             <td style={{ padding: '12px', color: '#2563eb', fontWeight: '700', textAlign: 'center' }}>
+                               {putInternal.toFixed(1)}
+                             </td>
+                             <td style={{ padding: '12px', color: '#4f46e5', fontWeight: '800', fontSize: '1rem', textAlign: 'center' }}>
+                               {totalSessional.toFixed(1)}
+                             </td>
+                             <td style={{ padding: '12px 12px' }}>
+                                 <input
+                                   type="number"
+                                   min="0"
+                                   value={g.total_classes_conducted ?? ''}
+                                   onChange={(e) => handleTheoryExamGradeChange(student.id, 'total_classes_conducted', e.target.value)}
+                                   onKeyDown={handleGridKeyDown}
+                                   style={{ width: '50px', padding: '8px', textAlign: 'center', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#0f172a', outline: 'none', fontWeight: '600', transition: 'border-color 0.2s' }}
+                                 />
+                             </td>
+                             <td style={{ padding: '12px 12px' }}>
+                                 <input
+                                   type="number"
+                                   min="0"
+                                   value={g.classes_attended ?? ''}
+                                   onChange={(e) => handleTheoryExamGradeChange(student.id, 'classes_attended', e.target.value)}
+                                   onKeyDown={handleGridKeyDown}
+                                   style={{ width: '50px', padding: '8px', textAlign: 'center', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#0f172a', outline: 'none', fontWeight: '600', transition: 'border-color 0.2s' }}
+                                 />
+                             </td>
+                             <td style={{ padding: '12px', color: '#7e22ce', fontWeight: '700', textAlign: 'center' }}>
+                               {attendanceMarks.toFixed(1)}
+                             </td>
+                             <td style={{ padding: '12px 12px' }}>
+                                 <input
+                                   type="number"
+                                   min="0"
+                                   max="5"
+                                   value={g.gp_marks ?? ''}
+                                   onChange={(e) => handleTheoryExamGradeChange(student.id, 'gp_marks', e.target.value)}
+                                   onKeyDown={handleGridKeyDown}
+                                   style={{ width: '50px', padding: '8px', textAlign: 'center', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#0f172a', outline: 'none', fontWeight: '600', transition: 'border-color 0.2s' }}
+                                 />
+                             </td>
+                             <td style={{ padding: '12px 12px' }}>
+                                 <input
+                                   type="number"
+                                   min="0"
+                                   value={g.benefit_marks ?? ''}
+                                   onChange={(e) => handleTheoryExamGradeChange(student.id, 'benefit_marks', e.target.value)}
+                                   onKeyDown={handleGridKeyDown}
+                                   style={{ width: '50px', padding: '8px', textAlign: 'center', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#0f172a', outline: 'none', fontWeight: '600', transition: 'border-color 0.2s' }}
+                                 />
+                             </td>
+                           </tr>
+                         );
+                       })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-        )}
+           )}
+
+           {isExportModalOpen && (
+           <div
+             onClick={() => setIsExportModalOpen(false)}
+             style={{
+               position: 'fixed',
+               inset: 0,
+               backgroundColor: 'rgba(15, 23, 42, 0.6)',
+               backdropFilter: 'blur(4px)',
+               display: 'flex',
+               flexDirection: 'column',
+               alignItems: 'center',
+               justifyContent: 'center',
+               zIndex: 100,
+               padding: '20px',
+             }}
+           >
+             <div
+               onClick={(e) => e.stopPropagation()}
+               style={{
+                 backgroundColor: '#ffffff',
+                 borderRadius: '16px',
+                 padding: '24px',
+                 width: '100%',
+                 maxWidth: '440px',
+                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+               }}
+             >
+               <h3 style={{ fontSize: '1.125rem', fontWeight: '700', color: '#0f172a', margin: '0 0 18px 0' }}>
+                 {activeTab === 'les' ? 'Generate LES Sheet (Lab Evaluation)' : 'Generate TES Sheet (Tutorial/Assignment/Quiz)'}
+               </h3>
+               <label style={{ color: '#475569', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', display: 'block' }}>
+                 Subject
+               </label>
+                <select
+                  value={exportSubjectId}
+                  onChange={(e) => setExportSubjectId(e.target.value)}
+                  style={{ width: '100%', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', color: '#0f172a', padding: '12px 16px', borderRadius: '8px', outline: 'none', fontFamily: 'inherit', marginBottom: '20px' }}
+                >
+                  <option value="">-- Select Subject --</option>
+                    {exportModalSubjects && exportModalSubjects.map((sub) => (
+                      <option key={sub.id} value={sub.id}>
+                        {`${sub.subject_name || sub.name} - ${String(sub.year || "").replace(" Year", "")} Year (${sub.department || sub.branch || ""})`}
+                      </option>
+                    ))}
+                </select>
+               <label style={{ color: '#475569', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', display: 'block' }}>
+                 Section
+               </label>
+               <select
+                 value={exportSection}
+                 onChange={(e) => setExportSection(e.target.value)}
+                 style={{ width: '100%', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', color: '#0f172a', padding: '12px 16px', borderRadius: '8px', outline: 'none', fontFamily: 'inherit', marginBottom: '24px' }}
+               >
+                 {availableSections.map((sec, i) => (
+                   <option key={i} value={sec}>{sec}</option>
+                 ))}
+               </select>
+               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                 <button
+                   type="button"
+                   onClick={() => setIsExportModalOpen(false)}
+                   style={{ backgroundColor: '#f1f5f9', color: '#475569', border: 'none', padding: '10px 24px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}
+                 >
+                   Cancel
+                 </button>
+                 <button
+                   type="button"
+                   onClick={() => { if (activeTab === 'les') handleExportLES(); else handleExportTES(); setIsExportModalOpen(false); }}
+                   disabled={isExporting}
+                   style={{ backgroundColor: '#f59e0b', color: '#ffffff', border: 'none', padding: '10px 24px', borderRadius: '8px', fontWeight: '600', cursor: isExporting ? 'not-allowed' : 'pointer', boxShadow: '0 2px 4px rgba(245, 158, 11, 0.2)' }}
+                 >
+                   {isExporting ? 'Exporting…' : 'Download Excel'}
+                 </button>
+               </div>
+             </div>
+           </div>
+         )}
       </>
     );
   }

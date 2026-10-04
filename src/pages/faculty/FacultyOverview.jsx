@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, FileText, Megaphone } from 'lucide-react';
+import { BookOpen, Calendar, FileText, LayoutDashboard, Megaphone } from 'lucide-react';
 import { supabase } from '../../lib/supabase.js';
 import '../student/StudentDashboard.css';
 import './FacultyOverview.css';
@@ -222,12 +222,19 @@ export default function FacultyOverview() {
       </section>
 
     <section className="student-section student-section--grow student-section--full faculty-schedule-section">
-      <h3 className="student-section__title">
-        📅 My Weekly Schedule <span className="st-header-sub">({selectedDay})</span>
+      <h3
+        className="student-section__title"
+        style={{ marginLeft: '24px', marginTop: '32px', display: 'flex', alignItems: 'center', fontSize: '1.125rem', fontWeight: '700', color: '#0f172a', marginBottom: '16px' }}
+      >
+        <Calendar size={20} style={{ color: '#4f46e5', marginRight: '8px' }} />
+        My Weekly Schedule <span className="st-header-sub">({selectedDay})</span>
       </h3>
 
       {uniqueBranches.length > 0 && (
-        <div className="faculty-filter-pills">
+        <div
+          className="faculty-filter-pills"
+          style={{ marginLeft: '24px', display: 'flex', gap: '12px', marginBottom: '24px', alignItems: 'center' }}
+        >
           <button
             type="button"
             className={`faculty-filter-pill ${activeFilter === 'All' ? 'active' : ''}`}
@@ -248,7 +255,7 @@ export default function FacultyOverview() {
         </div>
       )}
 
-      <div className="st-day-selector">
+      <div className="st-day-selector" style={{ marginLeft: '24px', display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
         {days.map((day) => (
           <button
             key={day}

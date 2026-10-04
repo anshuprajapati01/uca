@@ -136,7 +136,7 @@ export default function DirectorStudentDirectory() {
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
           <select
             className="broadcast-input manage-students-select"
-            style={{ maxWidth: '200px' }}
+            style={{ maxWidth: '200px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', color: '#0f172a', padding: '10px 16px', borderRadius: '8px', outline: 'none', fontSize: '0.875rem' }}
             value={filterYear}
             onChange={(e) => setFilterYear(e.target.value)}
           >
@@ -148,7 +148,7 @@ export default function DirectorStudentDirectory() {
 
           <select
             className="broadcast-input manage-students-select"
-            style={{ maxWidth: '200px' }}
+            style={{ maxWidth: '200px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', color: '#0f172a', padding: '10px 16px', borderRadius: '8px', outline: 'none', fontSize: '0.875rem' }}
             value={filterBranch}
             onChange={(e) => setFilterBranch(e.target.value)}
           >
@@ -158,12 +158,12 @@ export default function DirectorStudentDirectory() {
             ))}
           </select>
 
-          <div style={{ position: 'relative', flex: '1', minWidth: '250px' }}>
-            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
+          <div style={{ position: 'relative', width: '100%', flex: 1 }}>
+            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
             <input
               type="text"
               className="broadcast-input"
-              style={{ paddingLeft: '40px' }}
+              style={{ padding: '10px 16px 10px 40px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', color: '#0f172a', borderRadius: '8px', outline: 'none', fontSize: '0.875rem' }}
               placeholder="Search by Name, Email, or Roll No..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -172,7 +172,7 @@ export default function DirectorStudentDirectory() {
         </div>
       </div>
 
-      <div className="director-semester-card" style={{ padding: '0', overflow: 'hidden' }}>
+      <div className="director-semester-card" style={{ padding: '0', overflow: 'hidden', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', overflowX: 'auto', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
         {loading ? (
           <div className="pw-loading-subjects" style={{ gridColumn: '1 / -1' }}>Loading students...</div>
         ) : filteredStudents.length === 0 ? (
@@ -180,78 +180,84 @@ export default function DirectorStudentDirectory() {
             No students found. {filterYear !== 'All' || filterBranch !== 'All' || searchQuery.trim() ? 'Try adjusting your filters.' : ''}
           </div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: 'rgba(30, 41, 59, 0.5)' }}>
-                <th style={{ padding: '14px 16px', textAlign: 'left', color: '#94a3b8', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '2px solid rgba(255,255,255,0.1)' }}>
-                  Avatar
-                </th>
-                <th style={{ padding: '14px 16px', textAlign: 'left', color: '#94a3b8', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '2px solid rgba(255,255,255,0.1)' }}>
-                  Full Name
-                </th>
-                <th style={{ padding: '14px 16px', textAlign: 'left', color: '#94a3b8', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '2px solid rgba(255,255,255,0.1)' }}>
-                  Email / Roll No
-                </th>
-                <th style={{ padding: '14px 16px', textAlign: 'left', color: '#94a3b8', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '2px solid rgba(255,255,255,0.1)' }}>
-                  Branch
-                </th>
-<th style={{ padding: '14px 16px', textAlign: 'left', color: '#94a3b8', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '2px solid rgba(255,255,255,0.1)' }}>
-                  Year
-                </th>
-              </tr>
-            </thead>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  <th style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', padding: '16px 24px', borderBottom: '1px solid #e2e8f0', textAlign: 'left', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+                    Avatar
+                  </th>
+                  <th style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', padding: '16px 24px', borderBottom: '1px solid #e2e8f0', textAlign: 'left', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+                    Full Name
+                  </th>
+                  <th style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', padding: '16px 24px', borderBottom: '1px solid #e2e8f0', textAlign: 'left', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+                    Email / Roll No
+                  </th>
+                  <th style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', padding: '16px 24px', borderBottom: '1px solid #e2e8f0', textAlign: 'left', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+                    Branch
+                  </th>
+                  <th style={{ backgroundColor: '#f8fafc', color: '#64748b', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', padding: '16px 24px', borderBottom: '1px solid #e2e8f0', textAlign: 'left', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+                    Year
+                  </th>
+                </tr>
+              </thead>
 <tbody className="director-student-table">
               {filteredStudents.map((student) => (
-                <tr key={student.id} style={{ transition: 'background 0.2s', cursor: 'pointer' }} onClick={() => openActionModal(student)}>
-                  <td style={{ padding: '14px 16px' }}>
+                <tr key={student.id} style={{ transition: 'background 0.2s', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' }} onClick={() => openActionModal(student)}>
+                  <td style={{ padding: '16px 24px', verticalAlign: 'middle' }}>
                     <img
                       src={getAvatarUrl(student)}
                       alt={student.full_name || 'Student'}
                       style={{ width: '40px', height: '40px', borderRadius: '12px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }}
                     />
                   </td>
-                  <td style={{ padding: '14px 16px', color: '#f8fafc', fontSize: '0.95rem', fontWeight: '500' }}>
+                  <td style={{ padding: '16px 24px', verticalAlign: 'middle', color: '#0f172a', fontWeight: '700', fontSize: '0.95rem' }}>
                     {student.full_name || '—'}
                   </td>
-                  <td style={{ padding: '14px 16px', color: '#cbd5e1', fontSize: '0.85rem' }}>
+                  <td style={{ padding: '16px 24px', verticalAlign: 'middle', color: '#cbd5e1', fontSize: '0.85rem' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <Mail size={13} style={{ color: '#818cf8' }} />
-                        <span style={{ color: getStudentEmail(student) === 'N/A' ? '#9ca3af' : 'inherit' }}>
+                        <span style={{ color: getStudentEmail(student) === 'N/A' ? '#9ca3af' : '#4f46e5', fontSize: '0.875rem', fontWeight: '500' }}>
                           {getStudentEmail(student)}
                         </span>
                       </span>
-                      <span style={{ color: '#9ca3af', fontSize: '0.8rem' }}>
-                        {student.roll_number || <span style={{ color: '#6b7280' }}>N/A</span>}
+                      <span style={{ color: '#475569', fontSize: '0.8rem', fontWeight: '600', marginTop: '4px', letterSpacing: '0.025em' }}>
+                        {student.roll_number || <span style={{ color: '#475569' }}>N/A</span>}
                       </span>
                     </div>
                   </td>
-                  <td style={{ padding: '14px 16px', fontSize: '0.85rem' }}>
+                  <td style={{ padding: '16px 24px', verticalAlign: 'middle', fontSize: '0.85rem' }}>
                     <span style={{
-                      padding: '0.25rem 0.75rem',
+                      backgroundColor: '#eef2ff',
+                      color: '#4f46e5',
+                      border: '1px solid #c7d2fe',
+                      padding: '4px 12px',
                       borderRadius: '9999px',
                       fontSize: '0.75rem',
-                      fontWeight: '500',
-                      letterSpacing: '0.025em',
+                      fontWeight: '700',
                       display: 'inline-block',
+                      textAlign: 'center',
                       ...(student.selected_branch || student.branch
-                        ? { background: 'rgba(168, 85, 247, 0.2)', color: '#c084fc' }
-                        : { background: '#1f2937', color: '#9ca3af' })
+                        ? {}
+                        : { background: '#1f2937', color: '#9ca3af', border: '1px solid #374151' })
                     }}>
                       {student.selected_branch || student.branch || 'Unassigned'}
                     </span>
                   </td>
-                  <td style={{ padding: '14px 16px', fontSize: '0.85rem' }}>
+                  <td style={{ padding: '16px 24px', verticalAlign: 'middle', fontSize: '0.85rem' }}>
                     <span style={{
-                      padding: '0.25rem 0.75rem',
+                      backgroundColor: '#ecfdf5',
+                      color: '#059669',
+                      border: '1px solid #a7f3d0',
+                      padding: '4px 12px',
                       borderRadius: '9999px',
                       fontSize: '0.75rem',
-                      fontWeight: '500',
-                      letterSpacing: '0.025em',
+                      fontWeight: '700',
                       display: 'inline-block',
-                       ...(student.selected_year
-                         ? { background: 'rgba(16, 185, 129, 0.2)', color: '#34d399' }
-                         : { background: '#1f2937', color: '#9ca3af' })
+                      textAlign: 'center',
+                      ...(student.selected_year
+                        ? {}
+                        : { background: '#1f2937', color: '#9ca3af', border: '1px solid #374151' })
                     }}>
                        {student.selected_year || 'Unassigned'}
                     </span>

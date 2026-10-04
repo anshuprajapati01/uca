@@ -1931,16 +1931,18 @@ async function fetchAllMaterials() {
          </div>
        </aside>
 
-        <main className={`student-main ${isSidebarOpen ? "student-main--sidebar-open" : "student-main--sidebar-closed"}`}>
-         <header className="student-header">
-            <div className="student-header__lead">
-              <div className="student-header__title-wrap">
-                <h2 className="student-header__title">Student Dashboard</h2>
-                <span className="student-header__welcome">
-                  Welcome back, {displayName.split(" ")[0]}
-                </span>
-              </div>
-            </div>
+         <main className={`student-main ${isSidebarOpen ? "student-main--sidebar-open" : "student-main--sidebar-closed"}`}>
+          <header className="student-header">
+             <div className="student-header__lead">
+               <div className="dashboard-header-titles" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', marginLeft: '24px' }}>
+                 <span style={{ fontSize: '0.875rem', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '0.025em', textAlign: 'center' }}>
+                   Student Dashboard
+                 </span>
+                 <h1 style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.025em', textAlign: 'center' }}>
+                   Welcome back, {displayName}
+                 </h1>
+               </div>
+             </div>
 
            <div className="student-header__right">
              <div className="student-header__profile-anchor">

@@ -402,7 +402,7 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
   // 4. EARLY RETURN (strictly after ALL hooks)
   if (!semesterStartDate) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '50px', color: '#fff' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '50px', color: '#64748b' }}>
         Loading Academic Calendar...
       </div>
     );
@@ -721,7 +721,7 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
                     borderRadius: '999px',
                     border: isActive ? '1px solid #4f46e5' : '1px solid rgba(255, 255, 255, 0.22)',
                     background: isActive ? '#4f46e5' : 'transparent',
-                    color: isActive ? '#fff' : '#cbd5e1',
+                    color: isActive ? '#fff' : '#475569',
                     fontSize: '0.78rem',
                     fontWeight: '600',
                     cursor: 'pointer',
@@ -745,7 +745,7 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
                     if (!isActive) {
                       e.currentTarget.style.background = 'transparent';
                       e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.22)';
-                      e.currentTarget.style.color = '#cbd5e1';
+                      e.currentTarget.style.color = '#475569';
                     }
                   }}
                 >
@@ -771,21 +771,21 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
             <button
               key={day}
                 onClick={() => { setActiveDay(day); setIsExtraMode(false); setExtraStartTime(''); setExtraEndTime(''); resetAttendanceToDefault(); }}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '8px',
-                border: '1px solid rgba(255,255,255,0.1)',
-                background: activeDay === day ? '#4f46e5' : 'rgba(255,255,255,0.02)',
-                color: activeDay === day ? '#fff' : '#94a3b8',
-                cursor: 'pointer',
-                fontWeight: '600',
-                fontSize: '0.875rem',
-                transition: '0.3s',
-                boxShadow: activeDay === day ? '0 0 10px rgba(79, 70, 229, 0.3)' : 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-              }}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  background: activeDay === day ? '#4f46e5' : 'rgba(255,255,255,0.02)',
+                  color: activeDay === day ? '#fff' : '#475569',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '0.875rem',
+                  transition: '0.3s',
+                  boxShadow: activeDay === day ? '0 0 10px rgba(79, 70, 229, 0.3)' : 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
             >
               {day}
               {hasSession && <span style={{ color: '#22c55e', fontSize: '0.75rem' }}>✅</span>}
@@ -794,19 +794,18 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
         })}
       </div>
       {completedSessions.length > 0 && (
-        <div style={{ backgroundColor: '#1c1d2e', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <p style={{ color: '#fbbf24', fontSize: '0.875rem', fontWeight: '600', margin: '0 0 4px 0' }}>✅ Submitted Sessions for this Day</p>
-          <div style={{ color: '#9ca3af', fontSize: '0.75rem', marginBottom: '12px' }}>Date: {formatDate(calculatedExactDate)}</div>
+        <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '24px' }}>
+          <p style={{ color: '#0f172a', fontSize: '0.875rem', fontWeight: '700', margin: '0 0 4px 0' }}>Submitted Sessions for this Day</p>
+          <div style={{ color: '#64748b', fontSize: '0.75rem', marginBottom: '12px' }}>Date: {formatDate(calculatedExactDate)}</div>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {completedSessions.map((session, idx) => (
-              <div key={session.id || idx} style={{ padding: '6px 12px', borderRadius: '9999px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#f8fafc', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div key={session.id || idx} style={{ padding: '6px 12px', borderRadius: '9999px', background: '#ffffff', border: '1px solid #e2e8f0', color: '#0f172a', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 ✅ {formatTime(session.start_time)} - {formatTime(session.end_time)}
                 {session.is_extra_class === true && (
                   <span style={{ 
-                    background: 'rgba(250, 204, 21, 0.15)', 
-                    color: '#facc15', 
-                    border: '1px solid rgba(250, 204, 21, 0.4)', 
-                    boxShadow: '0 0 10px rgba(250, 204, 21, 0.1)',
+                    background: '#fef3c7', 
+                    color: '#92400e', 
+                    border: '1px solid #fde68a', 
                     fontSize: '0.7rem', 
                     padding: '3px 8px', 
                     borderRadius: '6px', 
@@ -817,15 +816,15 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
                     alignItems: 'center',
                     gap: '4px'
                   }}>
-                    <span style={{ fontSize: '0.8rem' }}>✨</span> EXTRA
+                    EXTRA
                   </span>
                 )}
                 <button
                   onClick={() => { setSessionToDelete(session.id); setDeleteModalOpen(true); }}
                   style={{
-                    background: 'rgba(239, 68, 68, 0.2)',
-                    border: '1px solid rgba(239, 68, 68, 0.4)',
-                    color: '#fca5a5',
+                    background: '#fef2f2',
+                    border: '1px solid #fecaca',
+                    color: '#ef4444',
                     borderRadius: '4px',
                     padding: '2px 6px',
                     cursor: 'pointer',
@@ -834,7 +833,7 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
                     marginLeft: '4px'
                   }}
                 >
-                  🗑️ Delete
+                  Delete
                 </button>
               </div>
             ))}
@@ -882,23 +881,23 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
               </button>
             )}
           </div>
-          <div style={{ backgroundColor: '#1c1d2e', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <h2 style={{ color: isExtraMode ? '#fbbf24' : '#f8fafc', fontSize: '1.125rem', fontWeight: '600', margin: '0 0 20px 0' }}>
+          <div style={{ backgroundColor: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '24px' }}>
+            <h2 style={{ color: '#0f172a', fontWeight: '700', fontSize: '1.125rem', margin: '0 0 16px 0', textAlign: 'center' }}>
               {isExtraMode ? 'Extra Class Details' : 'Session Details'}
             </h2>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
               <div>
-                <label style={{ display: 'block', color: '#9ca3af', fontSize: '0.875rem', marginBottom: '6px' }}>
+                <label style={{ display: 'block', color: '#64748b', fontSize: '0.875rem', marginBottom: '6px' }}>
                   Date
                 </label>
-                <p className="glass-text" style={{ padding: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', textAlign: 'center', color: '#f8fafc', fontSize: '0.95rem' }}>
+                <p style={{ padding: '10px 16px', background: '#ffffff', borderRadius: '8px', textAlign: 'center', color: '#0f172a', fontSize: '0.95rem', fontWeight: '500', border: '1px solid #cbd5e1', width: '100%' }}>
                   {selectedDateWithDay}
                 </p>
               </div>
 
               <div>
-                <label style={{ display: 'block', color: '#9ca3af', fontSize: '0.875rem', marginBottom: '6px' }}>
+                <label style={{ display: 'block', color: '#64748b', fontSize: '0.875rem', marginBottom: '6px' }}>
                   Start Time
                 </label>
                 {isExtraMode ? (
@@ -907,17 +906,17 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
                     value={extraStartTime}
                     onChange={(e) => setExtraStartTime(e.target.value)}
                     className="glass-input"
-                    style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', textAlign: 'center', color: '#f8fafc', fontSize: '0.95rem', border: '1px solid rgba(255,255,255,0.1)', outline: 'none' }}
+                    style={{ width: '100%', padding: '10px 16px', background: '#ffffff', borderRadius: '8px', textAlign: 'center', color: '#0f172a', fontSize: '0.95rem', fontWeight: '500', border: '1px solid #cbd5e1', outline: 'none' }}
                   />
                 ) : (
-                  <p className="glass-text" style={{ padding: '10px', background: 'rgba(99,102,241,0.1)', borderRadius: '8px', textAlign: 'center', color: '#a5b4fc', fontSize: '0.95rem', fontWeight: '600' }}>
+                  <p style={{ padding: '10px 16px', background: '#ffffff', borderRadius: '8px', textAlign: 'center', color: '#0f172a', fontSize: '0.95rem', fontWeight: '600', border: '1px solid #cbd5e1', width: '100%' }}>
                     {formatTime(activeSlot?.start_time)}
                   </p>
                 )}
               </div>
 
               <div>
-                <label style={{ display: 'block', color: '#9ca3af', fontSize: '0.875rem', marginBottom: '6px' }}>
+                <label style={{ display: 'block', color: '#64748b', fontSize: '0.875rem', marginBottom: '6px' }}>
                   End Time
                 </label>
                 {isExtraMode ? (
@@ -927,11 +926,11 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
                       value={extraEndTime}
                       onChange={(e) => setExtraEndTime(e.target.value)}
                       className="glass-input"
-                      style={{ flex: 1, padding: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', textAlign: 'center', color: '#f8fafc', fontSize: '0.95rem', border: '1px solid rgba(255,255,255,0.1)', outline: 'none' }}
+                      style={{ flex: 1, padding: '10px 16px', background: '#ffffff', borderRadius: '8px', textAlign: 'center', color: '#0f172a', fontSize: '0.95rem', fontWeight: '500', border: '1px solid #cbd5e1', outline: 'none' }}
                     />
                   </div>
                 ) : (
-                  <p className="glass-text" style={{ padding: '10px', background: 'rgba(99,102,241,0.1)', borderRadius: '8px', textAlign: 'center', color: '#a5b4fc', fontSize: '0.95rem', fontWeight: '600' }}>
+                  <p style={{ padding: '10px 16px', background: '#ffffff', borderRadius: '8px', textAlign: 'center', color: '#0f172a', fontSize: '0.95rem', fontWeight: '600', border: '1px solid #cbd5e1', width: '100%' }}>
                     {calculateDynamicEndTime(sessionStartTime, isLabActive)}
                   </p>
                 )}
@@ -945,14 +944,15 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
               disabled={isLockedView}
               style={{
                 flex: 1,
-                padding: '10px',
+                padding: '12px',
                 borderRadius: '8px',
-                backgroundColor: entryMode === 'manual' ? '#6366f1' : 'rgba(255,255,255,0.05)',
-                color: entryMode === 'manual' ? '#fff' : '#9ca3af',
-                border: '1px solid rgba(255,255,255,0.1)',
+                backgroundColor: entryMode === 'manual' ? '#4f46e5' : '#f1f5f9',
+                color: entryMode === 'manual' ? '#ffffff' : '#64748b',
+                border: 'none',
                 cursor: isLockedView ? 'not-allowed' : 'pointer',
                 fontWeight: '600',
-                fontSize: '0.875rem'
+                fontSize: '0.875rem',
+                textAlign: 'center'
               }}
             >
               Manual Entry
@@ -962,14 +962,15 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
               disabled={isLockedView}
               style={{
                 flex: 1,
-                padding: '10px',
+                padding: '12px',
                 borderRadius: '8px',
-                backgroundColor: entryMode === 'csv' ? '#6366f1' : 'rgba(255,255,255,0.05)',
-                color: entryMode === 'csv' ? '#fff' : '#9ca3af',
-                border: '1px solid rgba(255,255,255,0.1)',
+                backgroundColor: entryMode === 'csv' ? '#4f46e5' : '#f1f5f9',
+                color: entryMode === 'csv' ? '#ffffff' : '#64748b',
+                border: 'none',
                 cursor: isLockedView ? 'not-allowed' : 'pointer',
                 fontWeight: '600',
-                fontSize: '0.875rem'
+                fontSize: '0.875rem',
+                textAlign: 'center'
               }}
             >
               Upload CSV
@@ -977,7 +978,7 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
           </div>
 
           {entryMode === 'csv' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px', backgroundColor: '#151623', padding: '20px', borderRadius: '12px', border: '1px dashed rgba(255,255,255,0.2)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px', backgroundColor: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
               <input
                 type="file"
                 accept=".csv"
@@ -986,9 +987,9 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
                 style={{
                   padding: '10px',
                   borderRadius: '8px',
-                  backgroundColor: '#11131f',
-                  border: '1px solid #2d314d',
-                  color: '#fff',
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #cbd5e1',
+                  color: '#0f172a',
                   fontSize: '0.95rem',
                   outline: 'none',
                   cursor: isLockedView ? 'not-allowed' : 'pointer',
@@ -1005,23 +1006,17 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
                 <button
                   onClick={() => markAll('P')}
                   disabled={isLockedView}
-                  onMouseEnter={() => setPresentHover(true)}
-                  onMouseLeave={() => { setPresentHover(false); setPresentPress(false); }}
-                  onMouseDown={() => setPresentPress(true)}
-                  onMouseUp={() => setPresentPress(false)}
                   style={{
                     flex: 1,
+                    backgroundColor: '#10b981',
+                    color: '#ffffff',
+                    border: 'none',
                     padding: '12px',
                     borderRadius: '8px',
-                    backgroundColor: presentPress ? 'rgba(34, 197, 94, 0.35)' : presentHover ? 'rgba(34, 197, 94, 0.3)' : 'rgba(34, 197, 94, 0.15)',
-                    color: '#22c55e',
-                    border: `1px solid ${presentPress ? 'rgba(34, 197, 94, 0.8)' : presentHover ? 'rgba(34, 197, 94, 0.6)' : 'rgba(34, 197, 94, 0.3)'}`,
-                    cursor: isLockedView ? 'not-allowed' : 'pointer',
                     fontWeight: '600',
-                    fontSize: '0.875rem',
-                    boxShadow: presentHover ? '0 4px 15px rgba(34, 197, 94, 0.3)' : 'none',
-                    transform: presentPress ? 'scale(0.96)' : 'scale(1)',
-                    transition: 'all 0.2s ease-in-out'
+                    cursor: isLockedView ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)',
+                    width: '100%'
                   }}
                 >
                   Mark All Present
@@ -1029,23 +1024,17 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
                 <button
                   onClick={() => markAll('A')}
                   disabled={isLockedView}
-                  onMouseEnter={() => setAbsentHover(true)}
-                  onMouseLeave={() => { setAbsentHover(false); setAbsentPress(false); }}
-                  onMouseDown={() => setAbsentPress(true)}
-                  onMouseUp={() => setAbsentPress(false)}
                   style={{
                     flex: 1,
+                    backgroundColor: '#ef4444',
+                    color: '#ffffff',
+                    border: 'none',
                     padding: '12px',
                     borderRadius: '8px',
-                    backgroundColor: absentPress ? 'rgba(239, 68, 68, 0.35)' : absentHover ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.15)',
-                    color: '#ef4444',
-                    border: `1px solid ${absentPress ? 'rgba(239, 68, 68, 0.8)' : absentHover ? 'rgba(239, 68, 68, 0.6)' : 'rgba(239, 68, 68, 0.3)'}`,
-                    cursor: isLockedView ? 'not-allowed' : 'pointer',
                     fontWeight: '600',
-                    fontSize: '0.875rem',
-                    boxShadow: absentHover ? '0 4px 15px rgba(239, 68, 68, 0.3)' : 'none',
-                    transform: absentPress ? 'scale(0.96)' : 'scale(1)',
-                    transition: 'all 0.2s ease-in-out'
+                    cursor: isLockedView ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)',
+                    width: '100%'
                   }}
                 >
                   Mark All Absent
@@ -1055,11 +1044,11 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
               {isLoadingStudents ? (
                 <div style={{ color: '#9ca3af', textAlign: 'center', padding: '48px' }}>Loading students...</div>
               ) : students.length === 0 ? (
-                <div style={{ color: '#9ca3af', textAlign: 'center', padding: '48px', backgroundColor: '#151623', borderRadius: '16px' }}>No students found for this subject.</div>
+                <div style={{ color: '#64748b', textAlign: 'center', padding: '48px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>No students found for this subject.</div>
               ) : (
-                <div style={{ backgroundColor: '#1c1d2e', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+                <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                   {isLabActive && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '16px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '16px 20px', borderBottom: '1px solid #f1f5f9' }}>
                       <span style={{ color: '#9ca3af', fontSize: '0.8rem', fontWeight: '600' }}>Section:</span>
                       {['All', 'B1', 'B2'].map((section) => (
                         <button
@@ -1069,9 +1058,9 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
                           style={{
                             padding: '6px 14px',
                             borderRadius: '9999px',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            background: sectionFilter === section ? '#6366f1' : 'rgba(255,255,255,0.05)',
-                            color: sectionFilter === section ? '#fff' : '#9ca3af',
+                            border: '1px solid #e2e8f0',
+                            background: sectionFilter === section ? '#4f46e5' : '#ffffff',
+                            color: sectionFilter === section ? '#fff' : '#475569',
                             cursor: 'pointer',
                             fontSize: '0.78rem',
                             fontWeight: '600',
@@ -1087,14 +1076,14 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
                     {displayedStudents.map((student) => {
                       const status = attendanceState[student.id] || 'P';
                       return (
-                        <div key={student.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div key={student.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #f1f5f9' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, #818cf8, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#fff', fontSize: '0.875rem' }}>
                               {(student.full_name || student.email || '?')[0].toUpperCase()}
                             </div>
                             <div>
-                              <div style={{ color: '#f8fafc', fontWeight: '500', fontSize: '0.95rem' }}>{student.full_name || 'Unknown'}</div>
-                              <div style={{ color: '#9ca3af', fontSize: '0.8rem' }}>Roll: {student.roll_number || 'N/A'}</div>
+                              <div style={{ color: '#0f172a', fontWeight: '600', fontSize: '0.95rem' }}>{student.full_name || 'Unknown'}</div>
+                              <div style={{ color: '#64748b', fontSize: '0.8rem' }}>Roll: {student.roll_number || 'N/A'}</div>
                             </div>
                           </div>
 
@@ -1168,7 +1157,7 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
         </>
       ) : (
         <div style={{ textAlign: 'center', marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
-          <p className="glass-text" style={{ color: '#9ca3af' }}>
+          <p className="glass-text" style={{ color: '#64748b' }}>
             No scheduled classes today.
           </p>
           <button
@@ -1176,9 +1165,9 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
             style={{
               padding: '10px 20px',
               borderRadius: '8px',
-              border: '1px solid rgba(255,255,255,0.1)',
-              background: 'rgba(255,255,255,0.02)',
-              color: '#94a3b8',
+              border: '1px solid #e2e8f0',
+              background: '#ffffff',
+              color: '#475569',
               cursor: 'pointer',
               fontWeight: '600',
               fontSize: '0.875rem',
@@ -1203,25 +1192,25 @@ export default function TakeAttendance({ subjectId, subjectDetails, initialSecti
           zIndex: 9999,
         }}>
           <div style={{
-            background: '#1c1d2e',
+            background: '#ffffff',
             padding: '24px',
             borderRadius: '16px',
-            border: '1px solid rgba(255,255,255,0.15)',
+            border: '1px solid #e2e8f0',
             maxWidth: '360px',
             width: '90%',
             textAlign: 'center',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
           }}>
-            <p style={{ color: '#f8fafc', fontSize: '0.95rem', fontWeight: '600', margin: '0 0 16px 0' }}>Are you sure you want to delete this session?</p>
+            <p style={{ color: '#0f172a', fontSize: '0.95rem', fontWeight: '600', margin: '0 0 16px 0' }}>Are you sure you want to delete this session?</p>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
               <button
                 onClick={() => { setDeleteModalOpen(false); setSessionToDelete(null); }}
                 style={{
                   padding: '8px 16px',
                   borderRadius: '8px',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  background: 'rgba(255,255,255,0.05)',
-                  color: '#94a3b8',
+                  border: '1px solid #e2e8f0',
+                  background: '#ffffff',
+                  color: '#475569',
                   cursor: 'pointer',
                   fontWeight: '600',
                   fontSize: '0.875rem'

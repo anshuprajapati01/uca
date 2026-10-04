@@ -167,13 +167,41 @@ export default function MySubjects() {
       </div>
 
       <div className="my-subjects__filters flex flex-col gap-4">
-        <div className="my-subjects__year-pills pill-group">
+        <div className="my-subjects__year-pills pill-group" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '24px', marginLeft: '24px' }}>
           {availableYears.map((year) => (
             <button
               key={year}
               type="button"
-              className={`pill-btn ${activeYear === year ? 'pill-btn--active' : ''}`}
               onClick={() => setActiveYear(year)}
+              style={
+                activeYear === year
+                  ? {
+                      backgroundColor: '#4f46e5',
+                      color: '#ffffff',
+                      border: '1px solid #4f46e5',
+                      padding: '8px 24px',
+                      borderRadius: '9999px',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.2)',
+                      transition: 'all 0.2s ease',
+                      outline: 'none'
+                    }
+                  : {
+                      backgroundColor: '#ffffff',
+                      color: '#475569',
+                      border: '1px solid #cbd5e1',
+                      padding: '8px 24px',
+                      borderRadius: '9999px',
+                      fontSize: '0.875rem',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                      transition: 'all 0.2s ease',
+                      outline: 'none'
+                    }
+              }
             >
               {year}
             </button>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '../../lib/supabase.js';
-import { Trash2, Eye } from 'lucide-react';
+import { Megaphone, Trash2, Eye } from 'lucide-react';
 import { useHodContext } from '../../context/HodContext.jsx';
 import { AGGREGATE_DEPARTMENTS } from '../../config/constants.js';
 import './ManageAnnouncements.css';
@@ -238,7 +238,7 @@ export default function ManageAnnouncements() {
   return (
     <div className="manage-announcements">
       <header className="manage-announcements__header">
-        <h2>Manage Announcements</h2>
+        <h2 className="section-main-heading"><Megaphone size={24} className="text-brand mr-2 inline-block" /> Manage Announcements</h2>
       </header>
 
       {toast.message && (
@@ -372,44 +372,44 @@ export default function ManageAnnouncements() {
             />
           </div>
 
-          <div className="form-group">
-            <label>Attach Official Notice (Optional)</label>
-            <div className="file-upload-area">
-              <input
-                ref={fileInputRef}
-                type="file"
-                id="notice-file-upload"
-                onChange={handleFileChange}
-                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
-                className="file-input-hidden"
-              />
-              <button
-                type="button"
-                className="broadcast-upload-btn"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                📎 Choose File
-              </button>
-              {file && (
-                <>
-                  <span className="file-name-display" style={{ marginLeft: '12px', color: '#9ca3af', fontSize: '13px' }}>{file.name}</span>
-                  <button
-                    type="button"
-                    className="file-clear-btn"
-                    onClick={() => setFile(null)}
-                    aria-label="Clear file"
-                    style={{ marginLeft: '8px', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}
-                  >
-                    X
-                  </button>
-                </>
-              )}
+          <div className="form-bottom-action-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginTop: '32px', paddingTop: '20px', borderTop: '1px solid var(--border-subtle)' }}>
+            <div className="file-picker-wrapper">
+              <div className="file-upload-container">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  id="notice-file-upload"
+                  onChange={handleFileChange}
+                  accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                  className="file-input-hidden"
+                />
+                <button
+                  type="button"
+                  className="broadcast-upload-btn"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  📎 Choose File
+                </button>
+                {file && (
+                  <>
+                    <span className="file-name-display" style={{ marginLeft: '12px', color: '#9ca3af', fontSize: '13px' }}>{file.name}</span>
+                    <button
+                      type="button"
+                      className="file-clear-btn"
+                      onClick={() => setFile(null)}
+                      aria-label="Clear file"
+                      style={{ marginLeft: '8px', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}
+                    >
+                      X
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
+            <button type="submit" className="btn-primary create-announcement-btn" disabled={isSubmitting}>
+              {isSubmitting ? 'Creating...' : 'Create Announcement'}
+            </button>
           </div>
-
-          <button type="submit" className="submit-button" disabled={isSubmitting}>
-            {isSubmitting ? 'Creating...' : 'Create Announcement'}
-          </button>
         </form>
       </div>
 
@@ -433,24 +433,24 @@ export default function ManageAnnouncements() {
                   </time>
                 </div>
                 <div className="announcement-card__actions">
-                  {announcement.file_url || announcement.link ? (
-                    <button
-                      type="button"
-                      className="action-btn action-btn--view"
-                      onClick={() => window.open(announcement.file_url || announcement.link, '_blank')}
-                    >
-                      <Eye size={16} />
-                      View
-                    </button>
-                  ) : null}
-                  <button
-                    type="button"
-                    className="action-btn action-btn--delete"
-                    onClick={() => openDeleteModal(announcement.id)}
-                  >
-                    <Trash2 size={16} />
-                    Delete
-                  </button>
+                 {announcement.file_url || announcement.link ? (
+                   <button
+                     type="button"
+                     className="action-btn view-btn"
+                     onClick={() => window.open(announcement.file_url || announcement.link, '_blank')}
+                   >
+                     <Eye size={16} />
+                     View
+                   </button>
+                 ) : null}
+                 <button
+                   type="button"
+                   className="action-btn delete-btn"
+                   onClick={() => openDeleteModal(announcement.id)}
+                 >
+                   <Trash2 size={16} />
+                   Delete
+                 </button>
                 </div>
               </div>
             </div>

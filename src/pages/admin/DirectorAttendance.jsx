@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabase.js';
 import { AGGREGATE_DEPARTMENTS } from '../../config/constants.js';
-import { ArrowUpRight } from 'lucide-react';
+import { Download, ExternalLink, ChevronDown } from 'lucide-react';
 import * as XLSX from 'xlsx-js-style';
 import StudentAttendanceDetail from '../dashboard/StudentAttendanceDetail.jsx';
 import '../dashboard/HodDashboard.css';
@@ -44,7 +44,8 @@ export default function DirectorAttendance() {
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [extraAttendanceRecords, setExtraAttendanceRecords] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState(null);
   const [filterYear, setFilterYear] = useState('All');
   const [filterDepartment, setFilterDepartment] = useState('All');
   const [filterBranch, setFilterBranch] = useState('All');
@@ -255,12 +256,14 @@ export default function DirectorAttendance() {
     setIsHeadingLoading(false);
   };
 
-  const openStudentAttendanceDetail = (studentId, studentName) => {
-    setSelectedStudent({ id: studentId, name: studentName });
+  const openStudentAttendanceDetail = (studentId) => {
+    setSelectedStudentId(studentId);
+    setIsDetailOpen(true);
   };
 
   const closeStudentAttendanceDetail = () => {
-    setSelectedStudent(null);
+    setIsDetailOpen(false);
+    setSelectedStudentId(null);
   };
 
   useEffect(() => {
@@ -1065,53 +1068,30 @@ export default function DirectorAttendance() {
     setEndDate('');
   };
 
-  const filterSelectStyle = {
-    appearance: 'none',
-    WebkitAppearance: 'none',
-    MozAppearance: 'none',
-    background: 'rgba(15, 23, 42, 0.6)',
-    border: '1px solid rgba(255, 255, 255, 0.12)',
-    borderRadius: '10px',
-    padding: '0.6rem 2.2rem 0.6rem 0.9rem',
-    color: '#e2e8f0',
-    fontSize: '0.85rem',
-    outline: 'none',
-    minWidth: '200px',
-    cursor: 'pointer',
-  };
-
-  const selectChevronStyle = {
-    position: 'absolute',
-    right: '0.8rem',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    pointerEvents: 'none',
-    color: '#94a3b8',
-    fontSize: '0.7rem',
-  };
-
   return (
     <div className="hod-dashboard">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-          <div style={{ position: 'relative' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', display: 'inline-block' }}>
             <select
               value={filterYear}
               onChange={(e) => setFilterYear(e.target.value)}
-              style={filterSelectStyle}
+              style={{ appearance: 'none', padding: '8px 32px 8px 12px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', color: '#334155', outline: 'none', cursor: 'pointer', minWidth: '140px', fontSize: '0.875rem' }}
             >
               <option value="All">All Years</option>
               {availableYearsList.map((y) => (
                 <option key={y} value={y}>{y}</option>
               ))}
             </select>
-            <span style={selectChevronStyle}>▼</span>
+            <div style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#64748b', display: 'flex' }}>
+              <ChevronDown size={16} />
+            </div>
           </div>
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative', display: 'inline-block' }}>
             <select
               value={filterDepartment}
               onChange={(e) => setFilterDepartment(e.target.value)}
-              style={filterSelectStyle}
+              style={{ appearance: 'none', padding: '8px 32px 8px 12px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', color: '#334155', outline: 'none', cursor: 'pointer', minWidth: '140px', fontSize: '0.875rem' }}
               disabled={filterYear === 'All'}
             >
               <option value="All">All Departments</option>
@@ -1119,13 +1099,15 @@ export default function DirectorAttendance() {
                 <option key={dept} value={dept}>{dept}</option>
               ))}
             </select>
-            <span style={selectChevronStyle}>▼</span>
+            <div style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#64748b', display: 'flex' }}>
+              <ChevronDown size={16} />
+            </div>
           </div>
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative', display: 'inline-block' }}>
             <select
               value={filterBranch}
               onChange={(e) => setFilterBranch(e.target.value)}
-              style={filterSelectStyle}
+              style={{ appearance: 'none', padding: '8px 32px 8px 12px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', color: '#334155', outline: 'none', cursor: 'pointer', minWidth: '140px', fontSize: '0.875rem' }}
               disabled={filterYear === 'All' || filterDepartment === 'All'}
             >
               <option value="All">All Branches</option>
@@ -1133,13 +1115,15 @@ export default function DirectorAttendance() {
                 <option key={b} value={b}>{b}</option>
               ))}
             </select>
-            <span style={selectChevronStyle}>▼</span>
+            <div style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#64748b', display: 'flex' }}>
+              <ChevronDown size={16} />
+            </div>
           </div>
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative', display: 'inline-block' }}>
             <select
               value={filterSection}
               onChange={(e) => setFilterSection(e.target.value)}
-              style={{ ...filterSelectStyle, opacity: (filterYear === 'All' || filterBranch === 'All' || availableSections.length === 0) ? 0.5 : 1 }}
+              style={{ appearance: 'none', padding: '8px 32px 8px 12px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', color: '#334155', outline: 'none', cursor: 'pointer', minWidth: '140px', fontSize: '0.875rem', opacity: (filterYear === 'All' || filterBranch === 'All' || availableSections.length === 0) ? 0.5 : 1 }}
               disabled={filterYear === 'All' || filterBranch === 'All' || availableSections.length === 0}
             >
               <option value="All">All Sections</option>
@@ -1147,19 +1131,20 @@ export default function DirectorAttendance() {
                 <option key={sec} value={sec}>{sec}</option>
               ))}
             </select>
-            <span style={selectChevronStyle}>▼</span>
+            <div style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#64748b', display: 'flex' }}>
+              <ChevronDown size={16} />
+            </div>
           </div>
         </div>
 
         <button
           type="button"
-          className="hod-export-btn"
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#4f46e5', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
           onClick={() => setIsExportModalOpen(true)}
           disabled={isExporting}
           title="Export the current selection to Excel"
         >
-          <span aria-hidden="true">⬇️</span>
-          {isExporting ? 'Exporting…' : 'Export Excel'}
+          <Download size={16} /> Export Excel
         </button>
       </div>
 
@@ -1202,7 +1187,7 @@ export default function DirectorAttendance() {
             <tbody>
               {studentStats.length === 0 ? (
                 <tr>
-                  <td colSpan="5" style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '14px', border: '1px dashed rgba(148, 163, 184, 0.25)' }}>
+                  <td colSpan="5" className="text-center py-12 text-slate-500 bg-slate-50/50" style={{ borderRadius: '14px', border: '1px dashed #e2e8f0' }}>
                     {isFilterActive
                       ? 'No students found for this selection'
                       : 'No attendance records found.'}
@@ -1210,161 +1195,89 @@ export default function DirectorAttendance() {
                 </tr>
               ) : (
                 studentStats.map((s) => {
-                  const status = getAttendanceStatus(s.percentage);
-                  return (
-                    <tr
-                      key={s.id}
-                      onClick={() => openStudentAttendanceDetail(s.id, s.full_name)}
-                      style={{ cursor: 'pointer' }}
-                      className="hod-attendance-row"
-                    >
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                          <div style={{
-                            width: '36px',
-                            height: '36px',
-                            borderRadius: '50%',
-                            background: 'linear-gradient(135deg, #818cf8, #6366f1)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 'bold',
-                            color: '#fff',
-                            fontSize: '0.8rem',
-                            flexShrink: 0,
-                          }}>
-                            {getInitials(s.full_name)}
-                          </div>
-                          <strong>{s.full_name}</strong>
-                        </div>
-                      </td>
-                      <td style={{ color: '#cbd5e1', fontSize: '0.85rem' }}>{s.roll_number}</td>
-                      <td>
-                        <span style={{
-                          fontWeight: '900',
-                          color: status.color,
-                          fontSize: '0.95rem',
+                const attValue = parseFloat(s.percentage || 0);
+                let badgeClass = 'status-badge-defaulter';
+                let pctColor = '#ef4444';
+                let statusText = 'Defaulter';
+
+                if (attValue >= 75) {
+                  badgeClass = 'status-badge-safe';
+                  pctColor = '#10b981';
+                  statusText = 'Safe';
+                } else if (attValue >= 60) {
+                  badgeClass = 'status-badge-warning';
+                  pctColor = '#f59e0b';
+                  statusText = 'Warning';
+                }
+                return (
+                  <tr
+                    key={s.id}
+                    onClick={(e) => {
+                      if(e.stopPropagation) e.stopPropagation();
+                      const actualId = s.id || s.user_id || s.roll_number;
+                      console.log("Opening details for:", actualId, s);
+                      setSelectedStudentId(actualId);
+                      setIsDetailOpen(true);
+                    }}
+                    style={{ cursor: 'pointer' }}
+                    className="hod-attendance-row"
+                  >
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <div style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '50%',
+                          background: 'linear-gradient(135deg, #818cf8, #6366f1)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: 'bold',
+                          color: '#fff',
+                          fontSize: '0.8rem',
+                          flexShrink: 0,
                         }}>
-                          {s.percentage}%
+                          {getInitials(s.full_name)}
+                        </div>
+                        <strong>{s.full_name}</strong>
+                      </div>
+                    </td>
+                    <td className="roll-number-col">{s.roll_number}</td>
+                    <td>
+                      <span style={{ color: pctColor, fontWeight: '900' }}>
+                        {s.percentage}%
+                      </span>
+                    </td>
+                    <td className="pr-8">
+                        <span className={badgeClass}>
+                          {statusText}
                         </span>
                       </td>
-                      <td className="pr-8">
-                          <span style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            padding: '0.28rem 0.68rem',
-                            border: `1px solid ${status.border}`,
-                            borderRadius: '999px',
-                            color: status.color,
-                            background: status.bg,
-                            fontSize: '0.78rem',
-                            fontWeight: '900',
-                          }}>
-                            {status.label}
-                          </span>
-                        </td>
-                        <td>
-                          <span
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openStudentAttendanceDetail(s.id, s.full_name);
-                            }}
-                            title="View attendance details"
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              width: '30px',
-                              height: '30px',
-                              borderRadius: '8px',
-                              border: '1px solid rgba(99, 102, 241, 0.35)',
-                              background: 'rgba(99, 102, 241, 0.12)',
-                              color: '#c7d2fe',
-                              cursor: 'pointer',
-                              transition: 'all 0.15s ease',
-                            }}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.28)'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.12)'; }}
-                          >
-                            <ArrowUpRight size={16} strokeWidth={2.4} />
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })
+                      <td>
+                        <button
+                          type="button"
+                          className="detail-action-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const actualId = s.id || s.user_id || s.roll_number;
+                            console.log("Opening details for:", actualId, s);
+                            setSelectedStudentId(actualId);
+                            setIsDetailOpen(true);
+                          }}
+                          title="View attendance details"
+                        >
+                          <ExternalLink size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
                 )}
               </tbody>
             </table>
           </div>
         </div>
       </>
-      )}
-
-      {selectedStudent && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(5, 7, 15, 0.65)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 1000,
-            display: 'flex',
-            justifyContent: 'flex-end',
-          }}
-          onClick={closeStudentAttendanceDetail}
-        >
-          <div
-            style={{
-              width: 'min(680px, 100%)',
-              height: '100%',
-              background: '#0c0e1a',
-              borderLeft: '1px solid rgba(255,255,255,0.08)',
-              boxShadow: '-20px 0 50px rgba(0,0,0,0.5)',
-              overflowY: 'auto',
-              padding: '1.5rem 1.75rem',
-              animation: 'hod-drawer-in 0.25s ease',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-              <div>
-                <h3 style={{ margin: 0, color: '#fff', fontSize: '1.2rem', fontWeight: '900' }}>
-                  {selectedStudent.name}
-                </h3>
-                <p style={{ margin: '0.25rem 0 0', color: '#94a3b8', fontSize: '0.85rem' }}>
-                  Subject-wise & Week-wise Attendance Breakdown
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={closeStudentAttendanceDetail}
-                title="Close"
-                style={{
-                  width: '34px',
-                  height: '34px',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  background: 'rgba(255,255,255,0.05)',
-                  color: '#e2e8f0',
-                  cursor: 'pointer',
-                  fontSize: '1rem',
-                  display: 'grid',
-                  placeItems: 'center',
-                }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <StudentAttendanceDetail
-              studentId={selectedStudent.id}
-              studentName={selectedStudent.name}
-              branch={filterBranch !== 'All' ? filterBranch : undefined}
-              year={filterYear !== 'All' ? filterYear : undefined}
-              enrolledSubjects={sectionSubjects}
-            />
-          </div>
-        </div>
       )}
 
       {isExportModalOpen && (
@@ -1521,6 +1434,27 @@ export default function DirectorAttendance() {
               >
                 {isExporting ? 'Generating…' : 'Download Report'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isDetailOpen && selectedStudentId && (
+        <div className="side-drawer-overlay" onClick={() => setIsDetailOpen(false)}>
+          <div className="side-drawer-content" onClick={(e) => e.stopPropagation()}>
+            <div className="side-drawer-header">
+              <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 'bold', color: '#0f172a' }}>
+                Student Attendance Details
+              </h2>
+              <button
+                onClick={() => setIsDetailOpen(false)}
+                style={{ cursor: 'pointer', padding: '6px 12px', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '6px', fontWeight: 'bold' }}
+              >
+                ✕ Close
+              </button>
+            </div>
+            <div className="side-drawer-body">
+              <StudentAttendanceDetail studentId={selectedStudentId} />
             </div>
           </div>
         </div>

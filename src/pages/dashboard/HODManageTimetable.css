@@ -1,12 +1,13 @@
 .timetable-container {
   min-height: 100%;
   padding: 1.5rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
+  font-family: var(--sans);
 }
 
 .timetable-toast {
   padding: 0.85rem 1.25rem;
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   font-size: 0.9rem;
   font-weight: 700;
   margin-bottom: 1.5rem;
@@ -14,15 +15,15 @@
 }
 
 .timetable-toast--success {
-  background: rgba(34, 197, 94, 0.15);
-  border: 1px solid rgba(34, 197, 94, 0.35);
-  color: #4ade80;
+  background: var(--success-subtle);
+  border: 1px solid var(--success-border);
+  color: var(--success-text);
 }
 
 .timetable-toast--error {
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  color: #f87171;
+  background: var(--danger-subtle);
+  border: 1px solid var(--danger-border);
+  color: var(--danger-text);
 }
 
 .timetable-slots-list {
@@ -37,60 +38,61 @@
   flex-direction: column;
   gap: 0.2rem;
   padding: 0.6rem 0.85rem;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   font-size: 0.82rem;
   font-weight: 600;
   min-width: 140px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
 }
 
 .timetable-slot-card--theory {
-  background: rgba(59, 130, 246, 0.15);
-  border-color: rgba(59, 130, 246, 0.3);
-  color: #93c5fd;
+  background: var(--info-subtle);
+  border-color: var(--info-border);
+  color: var(--info-text);
 }
 
 .timetable-slot-card--lab {
-  background: rgba(168, 85, 247, 0.15);
-  border-color: rgba(168, 85, 247, 0.3);
-  color: #d8b4fe;
+  background: var(--brand-subtle);
+  border-color: var(--border-brand);
+  color: var(--text-brand);
 }
 
 .timetable-slot-card--lunch {
-  background: rgba(234, 179, 8, 0.15);
-  border-color: rgba(234, 179, 8, 0.3);
-  color: #fde047;
+  background: var(--warning-subtle);
+  border-color: var(--warning-border);
+  color: var(--warning-text);
 }
 
 .timetable-slot-card--break {
-  background: rgba(148, 163, 184, 0.15);
-  border-color: rgba(148, 163, 184, 0.3);
-  color: #cbd5e1;
+  background: var(--bg-muted);
+  border-color: var(--border);
+  color: var(--text-secondary);
 }
 
 .timetable-slot-subject {
   font-weight: 700;
-  color: #f8fafc;
+  color: var(--text-primary);
 }
 
 .timetable-slot-time {
   font-size: 0.78rem;
-  opacity: 0.85;
+  color: var(--text-secondary);
 }
 
 .timetable-slot-room {
   font-size: 0.75rem;
-  opacity: 0.75;
+  color: var(--text-muted);
 }
 
 .timetable-slot-batch {
   font-size: 0.7rem;
   font-weight: 800;
   text-transform: uppercase;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-muted);
   padding: 0.15rem 0.4rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   align-self: flex-start;
+  color: var(--text-secondary);
 }
 
 .timetable-header {
@@ -104,17 +106,17 @@
   margin: 0 0 0.5rem;
   font-size: 1.75rem;
   font-weight: 800;
-  color: #f8fafc;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
 }
 
 .timetable-title svg {
-  color: #8b5cf6;
+  color: var(--brand);
 }
 
 .timetable-subtitle {
   margin: 0;
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 0.95rem;
   font-weight: 500;
 }
@@ -125,10 +127,11 @@
   flex-wrap: wrap;
   align-items: flex-end;
   padding: 1.25rem;
-  border-radius: 18px;
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius-xl);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .timetable-filter-group {
@@ -141,7 +144,7 @@
 .timetable-filter-label {
   font-size: 0.82rem;
   font-weight: 700;
-  color: #cbd5e1;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -149,10 +152,10 @@
 .timetable-filter-select {
   width: 100%;
   padding: 0.75rem 1rem;
-  border-radius: 12px;
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #f8fafc;
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
   font-size: 0.9rem;
   font-family: inherit;
   appearance: none;
@@ -162,8 +165,8 @@
 
 .timetable-filter-select:focus {
   outline: none;
-  border-color: rgba(139, 92, 246, 0.55);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+  border-color: var(--brand);
+  box-shadow: var(--shadow-focus);
 }
 
 .timetable-filter-select:disabled {
@@ -172,8 +175,8 @@
 }
 
 .timetable-filter-select option {
-  background: #0f172a;
-  color: #f8fafc;
+  color: var(--text-primary);
+  background: var(--bg-card);
 }
 
 .timetable-load-btn {
@@ -183,19 +186,20 @@
   min-height: 2.75rem;
   padding: 0.72rem 1.5rem;
   border: 1px solid transparent;
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   color: #fff;
   font: inherit;
   font-size: 0.9rem;
   font-weight: 800;
   cursor: pointer;
-  background: linear-gradient(135deg, #8b5cf6, #2563eb);
-  box-shadow: 0 18px 38px rgba(99, 102, 241, 0.28);
+  background: var(--brand);
+  box-shadow: var(--shadow-sm);
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
 .timetable-load-btn:hover:not(:disabled) {
   transform: translateY(-2px);
+  background: var(--brand-hover);
 }
 
 .timetable-load-btn:disabled {
@@ -208,10 +212,10 @@
   align-items: center;
   gap: 0.4rem;
   padding: 0.4rem 0.9rem;
-  border-radius: 999px;
-  background: rgba(245, 158, 11, 0.15);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  color: #fbbf24;
+  border-radius: var(--radius-full);
+  background: var(--warning-subtle);
+  border: 1px solid var(--warning-border);
+  color: var(--warning-text);
   font-size: 0.78rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -225,20 +229,20 @@
   justify-content: center;
   min-height: 2.75rem;
   padding: 0.72rem 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 14px;
-  color: #cbd5e1;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
   font: inherit;
   font-size: 0.9rem;
   font-weight: 800;
   cursor: pointer;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--bg-card);
   transition: all 0.2s ease;
 }
 
 .timetable-sync-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  color: #f8fafc;
+  background: var(--bg-hover);
+  color: var(--text-primary);
   transform: translateY(-2px);
 }
 
@@ -254,20 +258,21 @@
   min-height: 2.75rem;
   padding: 0.72rem 1.5rem;
   border: 1px solid transparent;
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   color: #fff;
   font: inherit;
   font-size: 0.9rem;
   font-weight: 800;
   cursor: pointer;
-  background: linear-gradient(135deg, #10b981, #059669);
-  box-shadow: 0 18px 38px rgba(16, 185, 129, 0.28);
+  background: var(--success);
+  box-shadow: var(--shadow-sm);
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
 .timetable-publish-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 22px 45px rgba(16, 185, 129, 0.35);
+  background: #059669;
+  box-shadow: var(--shadow-md);
 }
 
 .timetable-publish-btn:disabled {
@@ -277,10 +282,10 @@
 
 .timetable-reset-btn {
   padding: 0.75rem 1.25rem;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.05);
-  color: #94a3b8;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
   font-size: 0.88rem;
   font-weight: 700;
   cursor: pointer;
@@ -288,8 +293,9 @@
 }
 
 .timetable-reset-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #e2e8f0;
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
 }
 
 .timetable-grid-section {
@@ -309,19 +315,20 @@
   min-height: 2.75rem;
   padding: 0.72rem 1.5rem;
   border: 1px solid transparent;
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   color: #fff;
   font: inherit;
   font-size: 0.9rem;
   font-weight: 800;
   cursor: pointer;
-  background: linear-gradient(135deg, #2563eb, #10b981);
-  box-shadow: 0 18px 38px rgba(16, 185, 129, 0.28);
+  background: var(--info);
+  box-shadow: var(--shadow-sm);
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
 .timetable-download-btn:hover {
   transform: translateY(-2px);
+  background: #2563eb;
 }
 
 .timetable-download-btn:active {
@@ -329,8 +336,8 @@
 }
 
 .timetable-capture {
-  background: #0f172a;
-  border-radius: 0 0 18px 18px;
+  background: var(--bg-card);
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -343,9 +350,9 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 1.25rem 1.5rem;
-  border-radius: 18px 18px 0 0;
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
   border-bottom: none;
 }
 
@@ -353,7 +360,7 @@
   margin: 0;
   font-size: 1.25rem;
   font-weight: 700;
-  color: #f8fafc;
+  color: var(--text-primary);
   letter-spacing: -0.01em;
 }
 
@@ -372,7 +379,7 @@
 .timetable-meta-label {
   font-size: 0.72rem;
   font-weight: 700;
-  color: #cbd5e1;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -380,42 +387,90 @@
 .timetable-meta-input {
   width: 150px;
   box-sizing: border-box;
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  border-radius: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   outline: none;
   padding: 0.5rem 0.7rem;
-  color: #ffffff;
-  opacity: 1;
-  background: rgba(15, 23, 42, 0.85);
+  color: var(--text-primary);
+  background: var(--bg-card);
   font: inherit;
   font-size: 0.85rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .timetable-meta-input:focus {
-  border-color: rgba(139, 92, 246, 0.72);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.14);
+  border-color: var(--brand);
+  box-shadow: var(--shadow-focus);
 }
 
 .timetable-meta-input::placeholder {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
-.tt-reference-section { margin-top: 30px; border-top: 2px dashed rgba(255,255,255,0.1); padding-top: 20px; }
-.tt-reference-title { font-size: 1.1rem; color: #fbbf24; font-weight: 600; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-.tt-reference-table { width: 100%; border-collapse: collapse; background: #111827; border: 1px solid #374151; font-size: 0.9rem; }
-.tt-reference-table th { background: #1f2937; color: #ffffff; font-weight: 700; font-size: 0.95rem; padding: 12px; text-align: left; letter-spacing: 0.5px; border: 1px solid #374151; }
-.tt-reference-table td { color: #ffffff; font-weight: 500; font-size: 0.95rem; padding: 12px; border: 1px solid #374151; }
+.tt-reference-section {
+  margin-top: 30px;
+  border-top: 2px dashed var(--border);
+  padding-top: 20px;
+}
+.tt-reference-title {
+  font-size: 1.1rem;
+  color: var(--warning-text);
+  font-weight: 600;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.tt-reference-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+.tt-reference-table th {
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 12px;
+  text-align: left;
+  letter-spacing: 0.5px;
+  border: 1px solid var(--border);
+}
+.tt-reference-table td {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 0.95rem;
+  padding: 12px;
+  border: 1px solid var(--border);
+}
 
-.tt-ref-toggle-container { text-align: center; margin-top: 20px; }
-.tt-ref-toggle-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fbbf24; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; }
-.tt-ref-toggle-btn:hover { background: rgba(255, 255, 255, 0.1); }
+.tt-ref-toggle-container {
+  text-align: center;
+  margin-top: 20px;
+}
+.tt-ref-toggle-btn {
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  color: var(--warning-text);
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.tt-ref-toggle-btn:hover {
+  background: var(--bg-hover);
+}
 
 .timetable-matrix-wrap {
   overflow-x: auto;
-  border-radius: 0 0 18px 18px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  background: rgba(15, 23, 42, 0.6);
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+  border: 1px solid var(--border);
+  border-top: none;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
 }
 
 .timetable-matrix {
@@ -428,7 +483,7 @@
 
 .timetable-matrix th,
 .timetable-matrix td {
-  border: 1px solid #4b5563;
+  border: 1px solid var(--border);
   text-align: center;
   vertical-align: middle;
   padding: 0;
@@ -442,14 +497,14 @@
   position: relative;
   padding: 0 !important;
   height: 80px;
-  border: 1px solid #4b5563;
+  border: 1px solid var(--border);
   text-align: center;
   vertical-align: middle;
 }
 
 .tt-matrix-corner {
-  background: rgba(15, 23, 42, 0.9);
-  color: #cbd5e1;
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -458,8 +513,8 @@
 }
 
 .tt-matrix-period-header {
-  background: rgba(30, 41, 59, 0.9);
-  color: #e2e8f0;
+  background: var(--bg-muted);
+  color: var(--text-primary);
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -468,8 +523,8 @@
 }
 
 .tt-matrix-break-header {
-  background: rgba(202, 138, 4, 0.22);
-  color: #fde68a;
+  background: var(--warning-subtle);
+  color: var(--warning-text);
   font-size: 0.72rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -478,8 +533,8 @@
 }
 
 .tt-matrix-day-cell {
-  background: rgba(15, 23, 42, 0.9);
-  color: #f8fafc;
+  background: var(--bg-subtle);
+  color: var(--text-primary);
   font-size: 0.9rem;
   font-weight: 700;
   width: 130px;
@@ -488,13 +543,13 @@
 .tt-matrix-cell {
   height: 4.5rem;
   cursor: pointer;
-  background: rgba(15, 23, 42, 0.4);
+  background: var(--bg-muted);
   transition: background 0.15s ease;
   position: relative;
 }
 
 .tt-matrix-cell:hover {
-  background: rgba(139, 92, 246, 0.16);
+  background: var(--brand-subtle);
 }
 
 .tt-matrix-cell:hover .tt-matrix-add {
@@ -507,7 +562,7 @@
   justify-content: center;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #c7d2fe;
+  color: var(--text-brand);
   opacity: 0.15;
   transition: opacity 0.2s ease;
   user-select: none;
@@ -516,29 +571,29 @@
 .tt-matrix-cell--filled {
   cursor: pointer;
   padding: 0.3rem 0.4rem;
-  background: rgba(30, 41, 59, 0.85);
-  border: 1px solid #4b5563;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
 }
 
 .tt-matrix-cell--theory {
-  background: rgba(59, 130, 246, 0.18);
-  border-color: rgba(59, 130, 246, 0.4);
+  background: var(--info-subtle);
+  border-color: var(--info-border);
 }
 
 .tt-matrix-cell--lab {
-  background: rgba(168, 85, 247, 0.18);
-  border-color: rgba(168, 85, 247, 0.4);
+  background: var(--brand-subtle);
+  border-color: var(--border-brand);
 }
 
 .tt-matrix-cell--skill {
-  background: rgba(20, 184, 166, 0.18);
-  border-color: rgba(20, 184, 166, 0.4);
+  background: var(--success-subtle);
+  border-color: var(--success-border);
 }
 
 .tt-matrix-cell--lunch,
 .tt-matrix-cell--break {
-  background: rgba(234, 179, 8, 0.16);
-  border-color: rgba(234, 179, 8, 0.38);
+  background: var(--warning-subtle);
+  border-color: var(--warning-border);
 }
 
 .tt-matrix-cell--span {
@@ -553,7 +608,7 @@
   right: 3px;
   width: auto;
   height: auto;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -565,11 +620,11 @@
 }
 
 .tt-slot-stack--split {
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border);
 }
 
 .tt-slot-stack > div:first-child {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-bottom: 1px solid var(--border) !important;
 }
 
 .tt-slot-row {
@@ -580,7 +635,7 @@
   right: 3px;
   width: auto;
   height: auto;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -593,25 +648,46 @@
 }
 
 .tt-slot-stack--split .tt-slot-row + .tt-slot-row {
-  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-top: 1px solid var(--border);
 }
 
 .tt-slot-row--theory {
-  background: #3730a3;
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  color: #ffffff;
+  background: #e0e7ff;
+  border: 1px solid #c7d2fe;
+  color: #3730a3;
+  transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.tt-slot-row--theory:hover {
+  filter: brightness(0.96);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
 }
 
 .tt-slot-row--lab {
-  background: #831843;
-  border: 1px solid rgba(244, 114, 182, 0.2);
-  color: #ffffff;
+  background: #ffe4e6;
+  border: 1px solid #fecdd3;
+  color: #9f1239;
+  transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.tt-slot-row--lab:hover {
+  filter: brightness(0.96);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
 }
 
 .tt-slot-row--skill {
-  background: #065f46;
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  color: #ffffff;
+  background: #d1fae5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.tt-slot-row--skill:hover {
+  filter: brightness(0.96);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
 }
 
 .tt-slot-nonacademic {
@@ -622,7 +698,7 @@
   right: 3px;
   width: auto;
   height: auto;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -632,13 +708,13 @@
   margin: 0;
   padding: 4px;
   text-align: center;
-  background: #3f3f46;
-  border: 1px solid rgba(161, 161, 170, 0.2);
-  color: #ffffff;
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
 }
 
 .tt-slot-nonacademic .tt-slot-subj {
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 .tt-slot-allbatch {
@@ -649,7 +725,7 @@
   right: 3px;
   width: auto;
   height: auto;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -671,38 +747,38 @@
   padding: 4px;
   box-sizing: border-box;
   position: relative;
-  color: #ffffff;
+  color: inherit;
 }
 
 .tt-slot-allbatch-inner--theory {
-  background: #3730a3;
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  color: #ffffff;
+  background: #e0e7ff;
+  border: 1px solid #c7d2fe;
+  color: #3730a3;
 }
 
 .tt-slot-allbatch-inner--lab {
-  background: #831843;
-  border: 1px solid rgba(244, 114, 182, 0.2);
-  color: #ffffff;
+  background: #ffe4e6;
+  border: 1px solid #fecdd3;
+  color: #9f1239;
 }
 
 .tt-slot-allbatch-inner--skill {
-  background: #065f46;
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  color: #ffffff;
+  background: #d1fae5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
 }
 
 .tt-slot-allbatch-inner--non-academic {
-  background: #3f3f46;
-  border: 1px solid rgba(161, 161, 170, 0.2);
-  color: #ffffff;
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
 }
 
 .tt-slot-allbatch-text {
   font-size: 0.82rem;
   font-weight: 800;
   line-height: 1.2;
-  color: #ffffff;
+  color: inherit;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
@@ -713,7 +789,7 @@
   font-size: 0.74rem;
   font-weight: 800;
   line-height: 1.2;
-  color: #ffffff;
+  color: #9f1239;
   text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -734,14 +810,14 @@
   font-size: 0.8rem;
   font-weight: 800;
   line-height: 1.2;
-  color: #f8fafc;
+  color: var(--text-primary);
 }
 
 .tt-slot-fac {
   font-size: 0.66rem;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.2;
-  color: #cbd5e1;
+  color: var(--text-secondary);
 }
 
 .tt-slot-tag {
@@ -751,13 +827,12 @@
   font-size: 0.58rem;
   font-weight: 800;
   text-transform: uppercase;
-  background: rgba(255, 255, 255, 0.16);
+  background: var(--bg-muted);
   padding: 0.06rem 0.3rem;
-  border-radius: 5px;
-  color: #e2e8f0;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
 }
 
-/* Strict Lab / Skill split-cell: always two 50% rows (B1 top, B2 bottom) */
 .tt-slot-lab-split {
   position: absolute;
   top: 3px;
@@ -766,7 +841,7 @@
   right: 3px;
   width: auto;
   height: auto;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   box-sizing: border-box;
   display: flex;
@@ -785,20 +860,26 @@
   padding: 2px;
   box-sizing: border-box;
   position: relative;
-  background: #831843;
-  border: 1px solid rgba(244, 114, 182, 0.2);
-  color: #ffffff;
+  background: #ffe4e6;
+  border: 1px solid #fecdd3;
+  color: #9f1239;
+  transition: all 0.2s;
+}
+
+.tt-slot-lab-half:hover {
+  filter: brightness(0.96);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06);
 }
 
 .tt-slot-lab-split > .tt-slot-lab-half:first-child {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-bottom: 1px solid var(--border) !important;
 }
 
 .tt-slot-lab-text {
   font-size: 0.72rem;
   font-weight: 800;
   line-height: 1.2;
-  color: #ffffff;
+  color: #9f1239;
   text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -806,7 +887,7 @@
 }
 
 .tt-slot-lab-half--empty {
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-muted);
   font-style: italic;
 }
 
@@ -828,9 +909,9 @@
   width: 20px;
   height: 20px;
   border: none;
-  border-radius: 6px;
-  background: rgba(239, 68, 68, 0.28);
-  color: #fca5a5;
+  border-radius: var(--radius-sm);
+  background: var(--danger-subtle);
+  color: var(--danger-text);
   cursor: pointer;
   opacity: 0;
   transform: scale(0.9);
@@ -843,8 +924,8 @@
 }
 
 .tt-slot-delete:hover {
-  background: rgba(239, 68, 68, 0.5);
-  color: #fecaca;
+  background: var(--danger-border);
+  color: var(--danger-text);
 }
 
 .timetable-radio-group {
@@ -858,10 +939,10 @@
   align-items: center;
   gap: 0.45rem;
   padding: 0.6rem 1rem;
-  border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  background: rgba(15, 23, 42, 0.7);
-  color: #cbd5e1;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
   font-size: 0.88rem;
   font-weight: 700;
   cursor: pointer;
@@ -869,22 +950,22 @@
 }
 
 .timetable-radio input {
-  accent-color: #8b5cf6;
+  accent-color: var(--brand);
   cursor: pointer;
 }
 
 .timetable-radio--active {
-  border-color: rgba(139, 92, 246, 0.7);
-  background: rgba(139, 92, 246, 0.16);
-  color: #f8fafc;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+  border-color: var(--border-brand);
+  background: var(--brand-subtle);
+  color: var(--text-brand);
+  box-shadow: var(--shadow-xs);
 }
 
 .tt-matrix-break-cell {
-  background: #78350f;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  color: #fbbf24;
-  font-weight: 600;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #b45309;
+  font-weight: 700;
   letter-spacing: 1.5px;
   width: 45px !important;
   min-width: 45px !important;
@@ -910,6 +991,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 0.5rem 0;
+  color: var(--text-secondary);
 }
 
 .tt-print-safe-rotate {
@@ -920,7 +1002,7 @@
   white-space: nowrap;
   margin: 0;
   padding: 0;
-  color: #fbbf24;
+  color: #b45309;
   font-weight: bold;
   letter-spacing: 1px;
 }
@@ -940,9 +1022,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: var(--bg-overlay);
   padding: 1rem;
   animation: fadeIn 0.25s ease;
 }
@@ -950,12 +1030,10 @@
 .timetable-modal {
   width: 100%;
   max-width: 520px;
-  border-radius: 22px;
-  background: rgba(15, 23, 42, 0.92);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+  border-radius: var(--radius-xl);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-xl);
   animation: modalFadeIn 0.3s ease;
   display: flex;
   flex-direction: column;
@@ -967,14 +1045,14 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 1.5rem 1.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--border);
 }
 
 .timetable-modal-title {
   margin: 0;
   font-size: 1.3rem;
   font-weight: 800;
-  color: #f8fafc;
+  color: var(--text-primary);
 }
 
 .timetable-modal-close {
@@ -983,18 +1061,18 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   border: none;
-  background: rgba(255, 255, 255, 0.06);
-  color: #cbd5e1;
+  background: var(--bg-muted);
+  color: var(--text-secondary);
   font-size: 1.5rem;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .timetable-modal-close:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #f8fafc;
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
 
 .timetable-modal-body {
@@ -1013,33 +1091,33 @@
 .timetable-field-label {
   font-size: 0.82rem;
   font-weight: 700;
-  color: #cbd5e1;
+  color: var(--text-secondary);
 }
 
 .timetable-field-input,
 .timetable-field-select {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   outline: none;
   padding: 0.85rem 0.95rem;
-  color: #fff;
-  background: rgba(15, 23, 42, 0.7);
+  color: var(--text-primary);
+  background: var(--bg-card);
   font: inherit;
   font-size: 0.9rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .timetable-field-input::placeholder {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .timetable-field-input:focus,
 .timetable-field-select:focus {
-  border-color: rgba(139, 92, 246, 0.72);
-  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.14);
-  background: rgba(15, 23, 42, 0.85);
+  border-color: var(--brand);
+  box-shadow: var(--shadow-focus);
+  background: var(--bg-card);
 }
 
 .timetable-field-input:disabled {
@@ -1048,8 +1126,8 @@
 }
 
 .timetable-field-select option {
-  color: #e2e8f0;
-  background: #111827;
+  color: var(--text-primary);
+  background: var(--bg-card);
 }
 
 .tt-combobox {
@@ -1060,12 +1138,12 @@
 .tt-combobox__input {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   outline: none;
   padding: 0.85rem 0.95rem;
-  color: #fff;
-  background: rgba(15, 23, 42, 0.7);
+  color: var(--text-primary);
+  background: var(--bg-card);
   font: inherit;
   font-size: 0.9rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
@@ -1073,9 +1151,9 @@
 }
 
 .tt-combobox__input:focus {
-  border-color: rgba(139, 92, 246, 0.72);
-  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.14);
-  background: rgba(15, 23, 42, 0.85);
+  border-color: var(--brand);
+  box-shadow: var(--shadow-focus);
+  background: var(--bg-card);
 }
 
 .tt-combobox__input:disabled {
@@ -1084,7 +1162,7 @@
 }
 
 .tt-combobox__input::placeholder {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .tt-combobox__menu {
@@ -1098,36 +1176,34 @@
   margin: 0;
   padding: 0.35rem;
   list-style: none;
-  border-radius: 12px;
-  background: rgba(15, 23, 42, 0.97);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
 }
 
 .tt-combobox__option {
   padding: 0.6rem 0.75rem;
-  border-radius: 8px;
-  color: #e2e8f0;
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
   font-size: 0.88rem;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
 .tt-combobox__option:hover {
-  background: rgba(139, 92, 246, 0.22);
-  color: #f8fafc;
+  background: var(--brand-subtle);
+  color: var(--text-brand);
 }
 
 .tt-combobox__option--active {
-  background: rgba(139, 92, 246, 0.32);
-  color: #fff;
+  background: var(--brand-subtle);
+  color: var(--text-brand);
 }
 
 .tt-combobox__empty {
   padding: 0.6rem 0.75rem;
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 0.85rem;
   text-align: center;
 }
@@ -1143,7 +1219,7 @@
   gap: 1rem;
   justify-content: flex-end;
   padding: 1.25rem 1.75rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--border);
 }
 
 .timetable-modal-btn {
@@ -1152,7 +1228,7 @@
   justify-content: center;
   min-height: 2.5rem;
   padding: 0.65rem 1.25rem;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
@@ -1161,36 +1237,37 @@
 }
 
 .timetable-modal-btn--cancel {
-  border-color: rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.06);
-  color: #cbd5e1;
+  border-color: var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
 }
 
 .timetable-modal-btn--cancel:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #f8fafc;
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
 
 .timetable-modal-btn--save {
-  background: linear-gradient(135deg, #8b5cf6, #2563eb);
-  color: #fff;
-  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.25);
+  background: var(--brand);
+  color: var(--brand-on);
+  box-shadow: var(--shadow-sm);
 }
 
 .timetable-modal-btn--save:hover {
   transform: translateY(-2px);
-  box-shadow: 0 15px 35px rgba(99, 102, 241, 0.35);
+  background: var(--brand-hover);
+  box-shadow: var(--shadow-md);
 }
 
 .timetable-modal-btn--delete {
-  background: #ef4444;
-  color: #fff;
-  box-shadow: 0 10px 25px rgba(239, 68, 68, 0.25);
+  background: var(--danger);
+  color: var(--danger-on);
+  box-shadow: var(--shadow-sm);
 }
 
 .timetable-modal-btn--delete:hover {
   transform: translateY(-2px);
-  box-shadow: 0 15px 35px rgba(239, 68, 68, 0.35);
+  box-shadow: var(--shadow-md);
 }
 
 @keyframes fadeIn {

@@ -790,3 +790,64 @@
   .att-subject-panel__meta { width: 100%; }
   .att-extra-grid { grid-template-columns: 1fr; }
 }
+
+/* ============================================================
+   STATUS BADGES — Defaulter / Warning / Safe
+   ============================================================ */
+.status-badge-defaulter {
+  background: #fee2e2 !important;
+  color: #dc2626 !important;
+  border: 1px solid #fecaca !important;
+  padding: 4px 12px !important;
+  border-radius: 999px !important;
+  font-weight: 600 !important;
+  font-size: 0.75rem !important;
+}
+
+.status-badge-warning {
+  background: #fef3c7 !important;
+  color: #d97706 !important;
+  border: 1px solid #fde68a !important;
+  padding: 4px 12px !important;
+  border-radius: 999px !important;
+  font-weight: 600 !important;
+  font-size: 0.75rem !important;
+}
+
+.status-badge-safe {
+  background: #d1fae5 !important;
+  color: #059669 !important;
+  border: 1px solid #a7f3d0 !important;
+  padding: 4px 12px !important;
+  border-radius: 999px !important;
+  font-weight: 600 !important;
+  font-size: 0.75rem !important;
+}
+
+/* ============================================================
+   STUDENT DETAIL MODAL / DRAWER — Overflow & Subject Pills
+   ============================================================ */
+.student-detail-modal,
+.attendance-drawer {
+  max-height: 90vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  background: var(--bg-card) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-xl) !important;
+}
+
+.student-detail-body,
+.drawer-scrollable-content {
+  overflow-y: auto !important;
+  padding: 24px !important;
+  max-height: calc(90vh - 100px) !important;
+}
+
+.subject-attendance-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+  gap: 12px !important;
+  margin-top: 16px !important;
+}

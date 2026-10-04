@@ -129,7 +129,7 @@ export default function AnnouncementsTab({ subjectId }) {
     <>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* COMPOSER CARD */}
-      <div style={{ backgroundColor: '#1c1d2e', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
+      <div style={{ backgroundColor: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '24px' }}>
         <form onSubmit={handleSubmit}>
           <textarea
             rows="4"
@@ -138,15 +138,16 @@ export default function AnnouncementsTab({ subjectId }) {
             onChange={(e) => setContent(e.target.value)}
             style={{
               width: '100%',
-              backgroundColor: '#11131f',
-              border: '1px solid #2d314d',
-              color: 'white',
+              backgroundColor: '#ffffff',
+              border: '1px solid #cbd5e1',
+              color: '#0f172a',
               padding: '12px',
               borderRadius: '8px',
               marginBottom: '0',
-              resize: 'none',
+              resize: 'vertical',
               fontSize: '0.95rem',
               fontFamily: 'inherit',
+              outline: 'none',
             }}
           />
           <input
@@ -159,14 +160,14 @@ export default function AnnouncementsTab({ subjectId }) {
           <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginTop: '12px' }}>
             <input
               type="text"
-              placeholder="🔗 Optional: Paste a link here..."
+              placeholder="Optional: Paste a link here..."
               value={linkInput}
               onChange={(e) => setLinkInput(e.target.value)}
               style={{
                 flex: 1,
-                backgroundColor: '#11131f',
-                border: '1px solid rgba(255,255,255,0.1)',
-                color: 'white',
+                backgroundColor: '#ffffff',
+                border: '1px solid #cbd5e1',
+                color: '#0f172a',
                 padding: '10px 12px',
                 borderRadius: '8px',
                 fontSize: '0.875rem',
@@ -180,11 +181,11 @@ export default function AnnouncementsTab({ subjectId }) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  backgroundColor: '#2d314d',
+                  backgroundColor: '#f1f5f9',
                   padding: '8px 14px',
                   borderRadius: '24px',
                   fontSize: '0.85rem',
-                  color: '#e5e7eb',
+                  color: '#64748b',
                   fontWeight: 500,
                 }}
               >
@@ -195,7 +196,7 @@ export default function AnnouncementsTab({ subjectId }) {
                 <button
                   type="button"
                   onClick={() => setSelectedFile(null)}
-                  style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }}
+                  style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }}
                 >
                   <X size={14} />
                 </button>
@@ -207,9 +208,9 @@ export default function AnnouncementsTab({ subjectId }) {
                 style={{
                   padding: '10px 16px',
                   borderRadius: '8px',
-                  backgroundColor: '#2d314d',
-                  color: '#e5e7eb',
-                  border: 'none',
+                  backgroundColor: '#f1f5f9',
+                  color: '#475569',
+                  border: '1px solid #e2e8f0',
                   cursor: 'pointer',
                   fontWeight: 'bold',
                   display: 'flex',
@@ -250,8 +251,8 @@ export default function AnnouncementsTab({ subjectId }) {
 
       {/* FEED */}
       {announcements.length === 0 ? (
-        <div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af', backgroundColor: '#151623', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.1)' }}>
-          <Plus size={48} strokeWidth={1} style={{ marginBottom: '12px', opacity: 0.5 }} />
+        <div style={{ padding: '40px 20px', textAlign: 'center', color: '#64748b', backgroundColor: '#ffffff', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
+          <Plus size={32} color="#94a3b8" />
           <p>No announcements yet. Post the first one above.</p>
         </div>
       ) : (
@@ -260,29 +261,29 @@ export default function AnnouncementsTab({ subjectId }) {
             <div
               key={ann.id}
               style={{
-                backgroundColor: '#1c1d2e',
+                backgroundColor: '#ffffff',
                 padding: '20px',
-                borderRadius: '16px',
-                border: '1px solid rgba(255,255,255,0.1)',
-                boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)',
+                borderRadius: '12px',
+                border: '1px solid #e2e8f0',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ color: '#818cf8', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <span style={{ color: '#4f46e5', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   {ann.type || 'Class'}
                 </span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span style={{ color: '#9ca3af', fontSize: '0.75rem' }}>{formatDate(ann.created_at)}</span>
+                  <span style={{ color: '#64748b', fontSize: '0.75rem' }}>{formatDate(ann.created_at)}</span>
                   <button
                     onClick={() => setDeleteModal({ isOpen: true, id: ann.id })}
-                    style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', padding: '4px' }}
+                    style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }}
                     title="Delete announcement"
                   >
                     <Trash2 size={16} />
                   </button>
                 </div>
               </div>
-              <p style={{ color: '#e5e7eb', fontSize: '0.95rem', lineHeight: '1.6', margin: '0 0 12px 0', whiteSpace: 'pre-wrap' }}>
+              <p style={{ color: '#0f172a', fontSize: '0.95rem', lineHeight: '1.6', margin: '0 0 12px 0', whiteSpace: 'pre-wrap' }}>
                 {ann.content}
               </p>
               {ann.file_url && (
@@ -290,7 +291,7 @@ export default function AnnouncementsTab({ subjectId }) {
                   href={ann.file_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ color: '#818cf8', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.875rem' }}
+                  style={{ color: '#4f46e5', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.875rem' }}
                 >
                   <ExternalLink size={14} /> View Attachment
                 </a>
@@ -306,15 +307,15 @@ export default function AnnouncementsTab({ subjectId }) {
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999 }}>
           
           {/* Modal Card */}
-          <div style={{ backgroundColor: '#1c1d2e', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '16px', padding: '24px', width: '100%', maxWidth: '400px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', textAlign: 'center' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white', margin: '0 0 8px 0' }}>Delete Announcement?</h3>
-            <p style={{ color: '#9ca3af', fontSize: '0.875rem', margin: '0 0 24px 0', lineHeight: '1.5' }}>Are you sure you want to delete this announcement? This action cannot be undone.</p>
+          <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', width: '100%', maxWidth: '400px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.1)', textAlign: 'center' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#0f172a', margin: '0 0 8px 0' }}>Delete Announcement?</h3>
+            <p style={{ color: '#64748b', fontSize: '0.875rem', margin: '0 0 24px 0', lineHeight: '1.5' }}>Are you sure you want to delete this announcement? This action cannot be undone.</p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
               <button 
                 onClick={() => setDeleteModal({ isOpen: false, id: null })}
-                style={{ padding: '10px 20px', borderRadius: '8px', fontWeight: '600', color: '#d1d5db', backgroundColor: '#2d314d', border: 'none', cursor: 'pointer', transition: 'background-color 0.2s' }}
-                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#3b4063'}
-                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2d314d'}
+                style={{ padding: '10px 20px', borderRadius: '8px', fontWeight: '600', color: '#475569', backgroundColor: '#f1f5f9', border: '1px solid #e2e8f0', cursor: 'pointer', transition: 'background-color 0.2s' }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e2e8f0'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
               >
                 Cancel
               </button>

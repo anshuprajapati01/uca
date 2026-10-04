@@ -25,12 +25,10 @@
 
 .director-dashboard {
   min-height: 100vh;
-  background: radial-gradient(ellipse 80% 60% at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 60%),
-              radial-gradient(ellipse 60% 50% at 85% 80%, rgba(139, 92, 246, 0.07) 0%, transparent 55%),
-              #0a0a13;
+  background: var(--bg-app);
   background-attachment: fixed;
   font-family: 'Inter', system-ui, sans-serif;
-  color: #e2e8f0;
+  color: var(--text-primary);
   padding: 1rem 1.5rem;
 }
 
@@ -49,20 +47,13 @@
   font-size: 2rem;
   font-weight: 800;
   letter-spacing: -0.01em;
-  color: #f1f5f9;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
-}
-
-.director-header__highlight {
-  background: linear-gradient(135deg, #c7d2fe 0%, #ddd6fe 50%, #f3e8ff 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .director-header__subtitle {
   font-size: 0.9rem;
-  color: #64748b;
+  color: var(--text-secondary);
   font-weight: 500;
   letter-spacing: 0.02em;
 }
@@ -83,18 +74,16 @@
   gap: 1rem;
   padding: 1.75rem 1.5rem;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
   transition: all 0.3s ease;
 }
 
 .director-stat-card:hover {
   transform: translateY(-3px);
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(138, 43, 226, 0.3);
+  background: var(--bg-hover);
+  border-color: var(--border-brand);
 }
 
 .director-stat-card__glow {
@@ -118,7 +107,7 @@
   justify-content: center;
   color: #fff;
   flex-shrink: 0;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-sm);
 }
 
 .director-stat-card__content {
@@ -130,14 +119,14 @@
 .director-stat-card__value {
   font-size: 1.8rem;
   font-weight: 800;
-  color: #f1f5f9;
+  color: var(--text-primary);
   letter-spacing: -0.01em;
   font-family: 'Inter', sans-serif;
 }
 
 .director-stat-card__label {
   font-size: 0.8rem;
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -156,11 +145,11 @@
 .director-section__header h2 {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #e2e8f0;
+  color: var(--text-primary);
   letter-spacing: -0.01em;
 }
 .director-section__header svg {
-  color: #818cf8;
+  color: var(--brand);
 }
 
 /* --- ACADEMIC HUB YEARS (MEDIUM, HORIZONTAL & GLASSMORPHIC) --- */
@@ -176,19 +165,17 @@
   gap: 1.25rem;
   padding: 1.25rem;
   border-radius: 16px;
-  background: rgba(15, 23, 42, 0.4);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .director-year-card:hover {
   transform: translateY(-3px);
-  background: rgba(30, 41, 59, 0.6);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
 }
 
 .director-year-card__icon {
@@ -222,21 +209,21 @@
 .director-year-card__title {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .director-year-card__subtitle {
   font-size: 0.8rem;
-  color: #94a3b8;
+  color: var(--text-secondary);
   margin-top: 0.15rem;
 }
 
 .director-year-card__meta {
   margin-top: 0.6rem;
   font-size: 0.7rem;
-  color: #cbd5e1;
-  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+  background: var(--bg-muted);
   padding: 0.25rem 0.6rem;
   border-radius: 999px;
   width: fit-content;
@@ -246,14 +233,11 @@
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
   padding: 0.65rem 1.05rem;
   border-radius: 999px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.035));
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: var(--bg-card);
   font-size: 0.88rem;
   font-weight: 800;
   cursor: pointer;
@@ -265,7 +249,7 @@
   color: #fff;
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.24), rgba(59, 130, 246, 0.14));
   border-color: rgba(139, 92, 246, 0.45);
-  box-shadow: 0 16px 34px rgba(99, 102, 241, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: 0 16px 34px rgba(99, 102, 241, 0.18), inset 0 1px 0 var(--border-subtle);
 }
 
 .director-back-btn:focus-visible {
@@ -280,11 +264,9 @@
   margin: 1.25rem 0 1.5rem;
   padding: 0.35rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: 0 12px 30px var(--shadow-md), inset 0 1px 0 var(--border-subtle);
 }
 
 .director-branch-subtab {
@@ -293,7 +275,7 @@
   border: 0;
   border-radius: 999px;
   background: transparent;
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 0.88rem;
   font-weight: 800;
   letter-spacing: 0.01em;
@@ -301,8 +283,8 @@
 }
 
 .director-branch-subtab:hover {
-  color: #e2e8f0;
-  background: rgba(255, 255, 255, 0.07);
+  color: var(--text-primary);
+  background: var(--bg-muted);
 }
 
 .director-branch-subtab--active {
@@ -319,16 +301,14 @@
 .director-branch-announcements-placeholder {
   padding: 2rem;
   border-radius: 24px;
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.72));
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: 0 18px 45px var(--shadow-md), inset 0 1px 0 var(--border-subtle);
 }
 
 .director-branch-announcements-placeholder h3 {
   margin: 0;
-  color: #f8fafc;
+  color: var(--text-primary);
   font-size: 1.25rem;
   font-weight: 900;
   letter-spacing: -0.03em;
@@ -336,7 +316,7 @@
 
 .director-branch-announcements-placeholder p {
   margin: 0.6rem 0 0;
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 0.95rem;
   font-weight: 600;
 }
@@ -349,20 +329,18 @@
 }
 
 .director-dept-card {
-  background: rgba(18, 18, 34, 0.78);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 18px;
   padding: 1.5rem;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow: var(--shadow-sm);
   transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
 }
 
 .director-dept-card:hover {
   transform: translateY(-3px);
   border-color: rgba(139, 92, 246, 0.3);
-  box-shadow: 0 12px 36px rgba(99, 102, 241, 0.1), 0 4px 20px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 12px 36px rgba(99, 102, 241, 0.1), var(--shadow-md);
 }
 
 .director-dept-card__header {
@@ -375,7 +353,7 @@
 .director-dept-card__name {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--text-primary);
   letter-spacing: -0.01em;
 }
 
@@ -385,7 +363,7 @@
   padding: 0.25rem 0.7rem;
   border-radius: 999px;
   background: rgba(139, 92, 246, 0.12);
-  color: #c7d2fe;
+  color: var(--text-brand);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -402,13 +380,13 @@
 }
 
 .director-dept-card__hod svg {
-  color: #818cf8;
+  color: var(--brand);
   flex-shrink: 0;
 }
 
 .director-dept-card__hod span {
   font-size: 0.85rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
@@ -447,14 +425,14 @@
 
 .director-announcement-card {
   padding: 1.25rem;
-  background: rgba(15, 23, 42, 0.6);
+  background: var(--bg-card);
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
   transition: background 0.2s;
 }
 
 .director-announcement-card:hover {
-  background: rgba(15, 23, 42, 0.9);
+  background: var(--bg-card);
   border-color: rgba(139, 92, 246, 0.2);
 }
 
@@ -468,7 +446,7 @@
 .director-announcement-card__header h4 {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #f8fafc;
+  color: var(--text-primary);
   line-height: 1.4;
 }
 
@@ -477,20 +455,20 @@
   align-items: center;
   gap: 0.3rem;
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
 .director-announcement-card__excerpt {
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: var(--text-secondary);
   line-height: 1.5;
 }
 
 /* --- BROADCAST COMMAND CENTER --- */
 .broadcast-title {
   margin: 0 0 1.5rem;
-  color: #f8fafc;
+  color: var(--text-primary);
   font-size: 1.5rem;
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -506,23 +484,23 @@
 .broadcast-tab {
   cursor: pointer;
   padding: 0.6rem 1.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
-  color: #94a3b8;
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
   font-size: 0.88rem;
   font-weight: 700;
   transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .broadcast-tab:hover {
-  color: #e2e8f0;
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.18);
+  color: var(--text-primary);
+  background: var(--bg-muted);
+  border-color: var(--border);
 }
 
 .broadcast-tab--active {
-  color: #f8fafc;
+  color: var(--text-primary);
   background: rgba(139, 92, 246, 0.2);
   border-color: rgba(139, 92, 246, 0.45);
   box-shadow: 0 8px 22px rgba(139, 92, 246, 0.18);
@@ -538,11 +516,9 @@
   gap: 1rem;
   border-radius: 16px;
   padding: 1.5rem;
-  background: rgba(15, 23, 42, 0.4);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
 }
 
 .broadcast-form-row {
@@ -556,9 +532,9 @@
   width: 100%;
   padding: 0.85rem 1rem;
   border-radius: 12px;
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #f8fafc;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
   font-size: 0.95rem;
   font-family: inherit;
   resize: vertical;
@@ -567,7 +543,7 @@
 
 .broadcast-input::placeholder,
 .broadcast-textarea::placeholder {
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .broadcast-input:focus,
@@ -582,8 +558,8 @@
 }
 
 select option {
-  background-color: #0f172a;
-  color: #e2e8f0;
+  background-color: var(--bg-card);
+  color: var(--text-primary);
   padding: 10px;
 }
 
@@ -594,9 +570,9 @@ select option {
   align-self: flex-start;
   padding: 0.65rem 1rem;
   border-radius: 12px;
-  border: 1px dashed rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.03);
-  color: #94a3b8;
+  border: 1px dashed var(--border-strong);
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -604,9 +580,9 @@ select option {
 }
 
 .broadcast-upload-btn:hover {
-  background: rgba(255, 255, 255, 0.07);
-  color: #e2e8f0;
-  border-color: rgba(255, 255, 255, 0.28);
+  background: var(--bg-muted);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
 }
 
 .broadcast-form-actions {
@@ -646,7 +622,7 @@ select option {
   flex-shrink: 0;
   font-size: 0.85rem;
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--text-secondary);
   padding-top: 0.35rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -662,21 +638,21 @@ select option {
   cursor: pointer;
   padding: 0.45rem 0.9rem;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.04);
-  color: #94a3b8;
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
   font-size: 0.8rem;
   font-weight: 700;
   transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .pill-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #e2e8f0;
+  background: var(--bg-muted);
+  color: var(--text-primary);
 }
 
 .pill-btn--active {
-  color: #f8fafc;
+  color: var(--text-primary);
   background: rgba(139, 92, 246, 0.22);
   border-color: rgba(139, 92, 246, 0.45);
   box-shadow: 0 6px 16px rgba(139, 92, 246, 0.18);
@@ -705,11 +681,9 @@ select option {
 .broadcast-placeholder {
   border-radius: 16px;
   padding: 2rem;
-  background: rgba(15, 23, 42, 0.4);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  color: #94a3b8;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
   font-size: 1rem;
   font-weight: 600;
   text-align: center;
@@ -717,7 +691,7 @@ select option {
 
 /* --- SKELETON LOADERS --- */
 .director-skeleton-line {
-  background: linear-gradient(90deg, #14142a 25%, #1e1e36 50%, #14142a 75%);
+  background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-card) 50%, var(--bg-card) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 8px;
@@ -730,7 +704,7 @@ select option {
 .director-skeleton-tags { display: flex; gap: 0.5rem; }
 .director-skeleton-tag {
   height: 1.1rem; width: 4rem; border-radius: 999px;
-  background: linear-gradient(90deg, #14142a 25%, #1e1e36 50%, #14142a 75%);
+  background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-card) 50%, var(--bg-card) 75%);
   background-size: 200% 100%; animation: shimmer 1.5s infinite;
 }
 
@@ -773,13 +747,11 @@ select option {
 }
 
 .director-semester-card {
-    background: rgba(18, 18, 34, 0.78);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
     border-radius: 18px;
     padding: 1.5rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--shadow-sm);
 }
 
 .director-semester-header {
@@ -792,7 +764,7 @@ select option {
 .director-semester-header h3 {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #f1f5f9;
+    color: var(--text-primary);
 }
 
 .director-live-tag {
@@ -806,7 +778,7 @@ select option {
     padding: 0.25rem 0.65rem;
     border-radius: 999px;
     background: rgba(16, 185, 129, 0.15);
-    color: #34d399;
+    color: var(--success);
     border: 1px solid rgba(16, 185, 129, 0.3);
     animation: director-live-pulse 2s ease-in-out infinite;
 }
@@ -828,28 +800,26 @@ select option {
 }
 
 .director-semester-subject {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-subtle);
     padding: 0.75rem 1rem;
     border-radius: 10px;
     font-size: 0.85rem;
     font-weight: 500;
-    color: #cbd5e1;
-    border: 1px solid rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
     transition: background 0.2s ease;
 }
 
 .director-semester-subject:hover {
-    background: rgba(255, 255, 255, 0.09);
+    background: var(--bg-muted);
 }
 
 .director-branch-announcements {
-    background: rgba(18, 18, 34, 0.78);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
     border-radius: 18px;
     padding: 1.5rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--shadow-sm);
     position: sticky;
     top: 5rem;
 }
@@ -857,7 +827,7 @@ select option {
 .director-branch-announcements__title {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #f1f5f9;
+    color: var(--text-primary);
     margin: 0 0 1.25rem 0;
     letter-spacing: -0.01em;
 }
@@ -870,28 +840,28 @@ select option {
 
 .director-announcement-card {
     padding: 1.1rem;
-    background: rgba(15, 23, 42, 0.6);
+    background: var(--bg-card);
     border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-subtle);
     transition: background 0.2s, border-color 0.2s;
 }
 
 .director-announcement-card:hover {
-    background: rgba(15, 23, 42, 0.9);
+    background: var(--bg-card);
     border-color: rgba(139, 92, 246, 0.2);
 }
 
 .director-announcement-card h4 {
     font-size: 0.95rem;
     font-weight: 600;
-    color: #f8fafc;
+    color: var(--text-primary);
     line-height: 1.4;
     margin-bottom: 0.35rem;
 }
 
 .director-announcement-card__date {
     font-size: 0.8rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
     line-height: 1.4;
 }
 
@@ -916,7 +886,7 @@ select option {
 
 /* Exact gradient card design from your image */
 .sem-card-glass {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9)) !important;
+    background: var(--bg-card) !important;
     border: 1px solid rgba(139, 92, 246, 0.3) !important;
     border-radius: 20px !important;
     padding: 35px 25px !important;
@@ -926,7 +896,7 @@ select option {
     justify-content: center;
     align-items: flex-start; /* Align text to the left like in the image */
     min-height: 200px;
-    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5), inset 0 2px 10px rgba(255, 255, 255, 0.05) !important;
+    box-shadow: var(--shadow-lg) !important;
     position: relative;
     overflow: hidden;
 }
@@ -934,26 +904,14 @@ select option {
 /* Subtle glow effect on hover */
 .sem-card-glass:hover {
     transform: translateY(-8px);
-    box-shadow: 0 15px 35px -5px rgba(139, 92, 246, 0.2), inset 0 2px 10px rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 15px 35px -5px rgba(139, 92, 246, 0.2) !important;
     border-color: rgba(139, 92, 246, 0.6) !important;
-}
-
-/* Top accent line inside the card */
-.sem-card-glass::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #8b5cf6, #3b82f6);
-    opacity: 0.8;
 }
 
 .sem-title {
     font-size: 1.8rem !important;
     font-weight: 800 !important;
-    color: #f8fafc !important;
+    color: var(--text-primary) !important;
     margin-bottom: 15px !important;
     letter-spacing: -0.02em;
 }
@@ -961,7 +919,7 @@ select option {
 /* Adjusted Live Badge */
 .live-badge {
     background: rgba(16, 185, 129, 0.15) !important;
-    color: #34d399 !important;
+    color: var(--success) !important;
     padding: 6px 16px !important;
     border-radius: 9999px !important;
     font-size: 0.8rem !important;
@@ -976,11 +934,9 @@ select option {
     margin-top: 1.5rem;
     padding: 1.5rem;
     border-radius: 24px;
-    background: rgba(15, 23, 42, 0.58);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
 }
 
 .director-subject-view__header {
@@ -993,7 +949,7 @@ select option {
 
 .director-subject-view__eyebrow {
     margin: 0 0 0.35rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.8rem;
     font-weight: 600;
     letter-spacing: 0.04em;
@@ -1002,7 +958,7 @@ select option {
 
 .director-subject-view__title {
     margin: 0;
-    color: #f8fafc;
+    color: var(--text-primary);
     font-size: 1.65rem;
     font-weight: 800;
     letter-spacing: -0.03em;
@@ -1010,7 +966,7 @@ select option {
 
 .director-subject-view__subtitle {
     margin: 0.35rem 0 0;
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.9rem;
     font-weight: 500;
 }
@@ -1032,37 +988,48 @@ select option {
     padding: 0.35rem;
     margin-bottom: 1.25rem;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
 }
 
 .subject-tab-btn {
-    flex: 1;
-    border: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    padding: 0.75rem 1.5rem;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 50px;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
     cursor: pointer;
-    padding: 0.72rem 1rem;
-    border-radius: 999px;
-    background: transparent;
-    color: #94a3b8;
-    font-size: 0.88rem;
-    font-weight: 800;
+    transition: all 0.2s ease !important;
     letter-spacing: 0.01em;
-    transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .subject-tab-btn:hover:not(.subject-tab-btn--active) {
-    background: rgba(255, 255, 255, 0.08);
-    color: #e2e8f0;
+    background: #f8fafc !important;
+    color: #0f172a !important;
 }
 
 .subject-tab-btn--active {
-    background: linear-gradient(135deg, #8b5cf6, #3b82f6);
-    color: #fff;
-    box-shadow: 0 10px 24px rgba(99, 102, 241, 0.28);
+    background: #4f46e5 !important;
+    color: #ffffff !important;
+    border-color: #4f46e5 !important;
+}
+
+.subject-tab-btn--active:hover {
+    background: #4f46e5 !important;
+    color: #ffffff !important;
+    border-color: #4f46e5 !important;
+    filter: brightness(1.08) !important;
 }
 
 .subject-tab-btn:focus-visible {
-    outline: 2px solid rgba(139, 92, 246, 0.55);
+    outline: 2px solid rgba(79, 70, 229, 0.55);
     outline-offset: 2px;
 }
 
@@ -1072,7 +1039,7 @@ select option {
 
 .subject-section-title {
     margin: 0 0 1rem;
-    color: #e2e8f0;
+    color: var(--text-primary);
     font-size: 1rem;
     font-weight: 800;
     letter-spacing: 0.02em;
@@ -1080,8 +1047,9 @@ select option {
 
 .pw-subject-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+    width: 100%;
 }
 
 .subject-detail-grid {
@@ -1094,11 +1062,9 @@ select option {
 .subject-detail-materials,
 .subject-detail-announcements {
     border-radius: 24px;
-    background: rgba(15, 23, 42, 0.58);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
 }
 
 .subject-detail-materials {
@@ -1107,12 +1073,12 @@ select option {
 
 .subject-detail-header {
     padding-bottom: 1.25rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    border-bottom: 1px solid var(--border);
 }
 
 .subject-detail-kicker {
     margin: 0 0 0.5rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.78rem;
     font-weight: 700;
     letter-spacing: 0.04em;
@@ -1121,7 +1087,7 @@ select option {
 
 .subject-detail-name {
     margin: 0;
-    color: #f8fafc;
+    color: var(--text-primary);
     font-size: 1.75rem;
     line-height: 1.15;
     font-weight: 900;
@@ -1152,9 +1118,9 @@ select option {
     cursor: pointer;
     padding: 0.85rem 1rem;
     border-radius: 16px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #e2e8f0;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
     font-size: 0.88rem;
     font-weight: 800;
     transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
@@ -1162,7 +1128,7 @@ select option {
 
 .subject-material-category:hover {
     transform: translateY(-3px);
-    background: rgba(255, 255, 255, 0.09);
+    background: var(--bg-muted);
     border-color: rgba(139, 92, 246, 0.38);
     box-shadow: 0 12px 28px rgba(99, 102, 241, 0.16);
 }
@@ -1181,12 +1147,12 @@ select option {
 .subject-detail-announcements__header {
     padding-bottom: 1rem;
     margin-bottom: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    border-bottom: 1px solid var(--border);
 }
 
 .subject-detail-announcements__header h3 {
     margin: 0;
-    color: #f8fafc;
+    color: var(--text-primary);
     font-size: 1.05rem;
     font-weight: 900;
     letter-spacing: -0.02em;
@@ -1194,7 +1160,7 @@ select option {
 
 .subject-detail-announcements__header p {
     margin: 0.25rem 0 0;
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.78rem;
     font-weight: 700;
     letter-spacing: 0.04em;
@@ -1212,8 +1178,8 @@ select option {
     gap: 0.8rem;
     padding: 0.95rem;
     border-radius: 16px;
-    background: rgba(2, 6, 23, 0.38);
-    border: 1px solid rgba(255, 255, 255, 0.045);
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
 }
 
 .subject-announcement-item__indicator {
@@ -1228,7 +1194,7 @@ select option {
 
 .subject-announcement-item__content h4 {
     margin: 0;
-    color: #f8fafc;
+    color: var(--text-primary);
     font-size: 0.9rem;
     font-weight: 800;
     line-height: 1.3;
@@ -1236,7 +1202,7 @@ select option {
 
 .subject-announcement-item__content p {
     margin: 0.4rem 0 0;
-    color: #cbd5e1;
+    color: var(--text-secondary);
     font-size: 0.78rem;
     line-height: 1.45;
 }
@@ -1250,14 +1216,12 @@ select option {
     display: inline-flex;
     align-items: center;
     gap: 0.55rem;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: #e2e8f0;
+    border: 1px solid var(--border);
+    color: var(--text-primary);
     padding: 0.65rem 1.25rem;
     border-radius: 999px;
     background: linear-gradient(135deg, rgba(139, 92, 246, 0.22), rgba(59, 130, 246, 0.16));
-    box-shadow: 0 10px 26px rgba(99, 102, 241, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 10px 26px rgba(99, 102, 241, 0.18), inset 0 1px 0 var(--border-subtle);
     font-size: 0.88rem;
     font-weight: 800;
     cursor: pointer;
@@ -1269,7 +1233,7 @@ select option {
     color: #fff;
     background: linear-gradient(135deg, rgba(139, 92, 246, 0.34), rgba(59, 130, 246, 0.24));
     border-color: rgba(139, 92, 246, 0.5);
-    box-shadow: 0 16px 34px rgba(99, 102, 241, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    box-shadow: 0 16px 34px rgba(99, 102, 241, 0.22), inset 0 1px 0 var(--border-subtle);
 }
 
 .premium-back-btn:focus-visible {
@@ -1293,11 +1257,9 @@ select option {
     gap: 1rem;
     padding: 2rem 1.5rem;
     border-radius: 22px;
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.78));
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    box-shadow: 0 12px 32px var(--shadow-md), inset 0 1px 0 var(--border-subtle);
     cursor: pointer;
     transition: transform 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease;
     text-align: center;
@@ -1316,7 +1278,7 @@ select option {
 .material-category-card:hover {
     transform: translateY(-5px);
     border-color: rgba(139, 92, 246, 0.4);
-    box-shadow: 0 18px 40px rgba(99, 102, 241, 0.16), 0 6px 22px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 18px 40px rgba(99, 102, 241, 0.16), var(--shadow-md);
 }
 
 .material-category-card:focus-visible {
@@ -1331,13 +1293,13 @@ select option {
     height: 64px;
     border-radius: 18px;
     background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(59, 130, 246, 0.22));
-    color: #c7d2fe;
+    color: var(--text-brand);
     box-shadow: 0 8px 22px rgba(99, 102, 241, 0.2);
 }
 
 .material-category-card__title {
     margin: 0;
-    color: #f1f5f9;
+    color: var(--text-primary);
     font-size: 1rem;
     font-weight: 800;
     letter-spacing: -0.01em;
@@ -1347,11 +1309,11 @@ select option {
 .material-category-card__count {
     font-size: 0.8rem;
     font-weight: 700;
-    color: #94a3b8;
+    color: var(--text-secondary);
     padding: 0.3rem 0.7rem;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--bg-muted);
+    border: 1px solid var(--border);
 }
 
 @keyframes fadeSlideIn {
@@ -1372,26 +1334,23 @@ select option {
 }
 
 .director-filter-pill {
-    padding: 0.45rem 0.9rem;
-    border-radius: 999px;
-    font-size: 0.75rem;
+    padding: 8px 20px;
+    border-radius: 9999px;
+    font-size: 0.875rem;
     font-weight: 500;
-    letter-spacing: 0.02em;
     cursor: pointer;
-    border: 1px solid rgba(139, 92, 246, 0.25);
-    color: #a5b4fc;
-    background: rgba(20, 20, 40, 0.5);
-    backdrop-filter: blur(10px) saturate(160%);
-    -webkit-backdrop-filter: blur(10px) saturate(160%);
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    background: #ffffff;
     transition: all 0.2s ease;
     font-family: inherit;
     white-space: nowrap;
 }
 .director-filter-pill--active {
-    background: #8b5cf6;
-    border-color: #8b5cf6;
-    color: #fff;
-    box-shadow: 0 2px 10px rgba(139, 92, 246, 0.35);
+    background: #4f46e5;
+    border: none;
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
 }
 
 .director-material-card__badge--lecture { background: rgba(96, 165, 250, 0.14); color: #bfdbfe; border-color: rgba(96, 165, 250, 0.24); }
@@ -1399,78 +1358,97 @@ select option {
 .director-material-card__badge--assignment { background: rgba(251, 191, 36, 0.14); color: #fde68a; border-color: rgba(251, 191, 36, 0.24); }
 .director-material-card__badge--tutorial { background: rgba(168, 85, 247, 0.14); color: #d8b4fe; border-color: rgba(168, 85, 247, 0.24); }
 .director-material-card__badge--pyq { background: rgba(248, 113, 113, 0.14); color: #fecaca; border-color: rgba(248, 113, 113, 0.24); }
-.director-material-card__badge--syllabus { background: rgba(129, 140, 248, 0.14); color: #c7d2fe; border-color: rgba(129, 140, 248, 0.24); }
-.director-material-card__badge--resource { background: rgba(148, 163, 179, 0.14); color: #cbd5e1; border-color: rgba(148, 163, 179, 0.24); }
+.director-material-card__badge--syllabus { background: rgba(129, 140, 248, 0.14); color: var(--text-brand); border-color: rgba(129, 140, 248, 0.24); }
+.director-material-card__badge--resource { background: rgba(148, 163, 179, 0.14); color: var(--text-secondary); border-color: rgba(148, 163, 179, 0.24); }
 .director-material-card__badge--toppers-notes { background: rgba(251, 191, 36, 0.14); color: #fde68a; border-color: rgba(251, 191, 36, 0.24); }
 .director-material-card__badge--reference-books { background: rgba(96, 165, 250, 0.14); color: #bfdbfe; border-color: rgba(96, 165, 250, 0.24); }
 .director-material-card__badge--exam-cheatsheets { background: rgba(52, 211, 153, 0.14); color: #a7f3d0; border-color: rgba(52, 211, 153, 0.24); }
 .director-material-card__badge--class-notes { background: rgba(52, 211, 153, 0.14); color: #a7f3d0; border-color: rgba(52, 211, 153, 0.24); }
 
 .pw-subject-card {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    height: 100% !important;
+    min-height: 210px !important;
     position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    min-height: 155px;
-    padding: 1.15rem;
-    overflow: hidden;
-    border-radius: 18px;
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.82), rgba(15, 23, 42, 0.76));
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
-}
-
-.pw-subject-card::before {
-    content: '';
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 4px;
-    background: linear-gradient(180deg, #8b5cf6, #3b82f6);
-    opacity: 0.85;
+    padding: 20px !important;
+    text-align: left;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+    transition: all 0.2s ease !important;
 }
 
 .pw-subject-card__content {
-    padding-left: 0.35rem;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+    width: 100% !important;
+    margin-bottom: 12px !important;
+}
+
+.pw-subject-card__title-area {
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
+.pw-subject-card__actions {
+    display: none !important;
 }
 
 .pw-subject-card__name {
     margin: 0;
-    color: #f8fafc;
-    font-size: 1.02rem;
-    line-height: 1.25;
-    font-weight: 800;
+    color: #0f172a;
+    font-size: 1.15rem;
+    font-weight: 700;
     letter-spacing: -0.01em;
+    padding-right: 0;
+    line-height: 1.3;
 }
 
 .pw-subject-card__code {
-    display: inline-flex;
-    margin-top: 0.55rem;
-    padding: 0.25rem 0.55rem;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.06);
-    color: #a5b4fc;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.03em;
+    font-size: 0.88rem;
+    color: #475569;
+    margin: 0;
+    font-weight: 600;
+    letter-spacing: 0.02em;
 }
 
 .pw-subject-card__faculty {
     display: flex;
     align-items: center;
-    gap: 0.55rem;
-    margin-top: 1.1rem;
-    padding-left: 0.35rem;
-    color: #cbd5e1;
-    font-size: 0.82rem;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e2e8f0;
+    color: #475569;
+    font-size: 0.9rem;
     font-weight: 600;
+    letter-spacing: -0.01em;
 }
 
 .pw-subject-card__avatar {
-    width: 30px;
-    height: 30px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    object-fit: cover;
+    border: 2px solid #cbd5e1;
+    background: #f8fafc;
+    flex-shrink: 0;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.pw-subject-card:hover {
+    transform: translateY(-2px);
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+}
+
+.pw-subject-card:active {
+    transform: scale(0.98);
 }
 
 .pw-announcements-section {
@@ -1486,16 +1464,16 @@ select option {
     .pw-announcement-card {
         padding: 1.25rem;
         border-radius: 18px;
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.82), rgba(15, 23, 42, 0.76));
-        border: 1px solid rgba(255, 255, 255, 0.07);
-        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-sm);
         transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
     .pw-announcement-card:hover {
         transform: translateY(-3px);
         border-color: rgba(139, 92, 246, 0.3);
-        box-shadow: 0 16px 36px rgba(99, 102, 241, 0.16), 0 6px 22px rgba(0, 0, 0, 0.35);
+        box-shadow: 0 16px 36px rgba(99, 102, 241, 0.16), var(--shadow-md);
     }
 
     .pw-announcement-card__header {
@@ -1507,7 +1485,7 @@ select option {
 
     .pw-announcement-card__title {
         margin: 0;
-        color: #f8fafc;
+        color: var(--text-primary);
         font-size: 1rem;
         font-weight: 700;
         letter-spacing: -0.01em;
@@ -1527,7 +1505,7 @@ select option {
     }
 
     .pw-announcement-card__content {
-        color: #cbd5e1;
+        color: var(--text-secondary);
         font-size: 0.85rem;
         line-height: 1.5;
         margin-bottom: 1rem;
@@ -1538,17 +1516,17 @@ select option {
         align-items: center;
         justify-content: space-between;
         padding-top: 0.75rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        border-top: 1px solid var(--border-subtle);
     }
 
     .pw-announcement-card__sender {
-        color: #94a3b8;
+        color: var(--text-secondary);
         font-size: 0.8rem;
         font-weight: 600;
     }
 
     .pw-announcement-card__date {
-        color: #94a3b8;
+        color: var(--text-secondary);
         font-size: 0.78rem;
         font-weight: 500;
     }
@@ -1557,8 +1535,8 @@ select option {
      grid-column: 1 / -1;
      padding: 1rem;
      border-radius: 14px;
-     color: #94a3b8;
-     background: rgba(255, 255, 255, 0.04);
+     color: var(--text-secondary);
+     background: var(--bg-subtle);
      border: 1px dashed rgba(148, 163, 184, 0.25);
    }
 
@@ -1566,8 +1544,8 @@ select option {
     grid-column: 1 / -1;
     padding: 1.5rem;
     border-radius: 14px;
-    color: #94a3b8;
-    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+    background: var(--bg-subtle);
     border: 1px dashed rgba(148, 163, 184, 0.25);
     font-weight: 600;
 }
@@ -1576,7 +1554,7 @@ select option {
     grid-column: 1 / -1;
     padding: 1.5rem;
     border-radius: 14px;
-    color: #fda4af;
+    color: var(--danger-text);
     background: rgba(244, 63, 94, 0.08);
     border: 1px dashed rgba(244, 63, 94, 0.3);
     font-weight: 600;
@@ -1602,11 +1580,9 @@ select option {
     overflow: hidden;
     padding: 1.15rem;
     border-radius: 20px;
-    background: rgba(15, 23, 42, 0.4);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-lg);
 }
 
 .pw-branch-announcements__header {
@@ -1619,7 +1595,7 @@ select option {
 
 .pw-branch-announcements__title {
     margin: 0;
-    color: #f8fafc;
+    color: var(--text-primary);
     font-size: 1rem;
     font-weight: 800;
     letter-spacing: -0.02em;
@@ -1627,7 +1603,7 @@ select option {
 
 .pw-branch-announcements__subtitle {
     margin: 0.2rem 0 0;
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.76rem;
     font-weight: 600;
 }
@@ -1639,17 +1615,17 @@ select option {
     display: grid;
     place-items: center;
     cursor: pointer;
-    color: #cbd5e1;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    color: var(--text-secondary);
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
     border-radius: 12px;
     transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .pw-branch-announcements__filter:hover {
     color: #fff;
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.12);
+    background: var(--bg-muted);
+    border-color: var(--border);
 }
 
 .pw-branch-announcements__filter:focus-visible {
@@ -1664,8 +1640,8 @@ select option {
     padding: 0.25rem;
     margin-bottom: 1rem;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.045);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-subtle);
 }
 
 .pw-branch-announcement-tab {
@@ -1674,19 +1650,19 @@ select option {
     border: 0;
     border-radius: 999px;
     background: transparent;
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.72rem;
     font-weight: 800;
     transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .pw-branch-announcement-tab:hover {
-    color: #e2e8f0;
-    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-primary);
+    background: var(--bg-muted);
 }
 
 .pw-branch-announcement-tab--active {
-    color: #f8fafc;
+    color: var(--text-primary);
     background: rgba(139, 92, 246, 0.22);
     box-shadow: 0 8px 18px rgba(139, 92, 246, 0.16);
 }
@@ -1699,7 +1675,7 @@ select option {
     overflow-y: auto;
     padding-right: 0.25rem;
     scrollbar-width: thin;
-    scrollbar-color: rgba(139, 92, 246, 0.55) rgba(255, 255, 255, 0.04);
+    scrollbar-color: rgba(139, 92, 246, 0.55) var(--bg-muted);
 }
 
 .pw-branch-announcements__list::-webkit-scrollbar {
@@ -1707,7 +1683,7 @@ select option {
 }
 
 .pw-branch-announcements__list::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--bg-subtle);
     border-radius: 999px;
 }
 
@@ -1721,8 +1697,8 @@ select option {
     gap: 0.75rem;
     padding: 0.85rem;
     border-radius: 16px;
-    background: rgba(2, 6, 23, 0.38);
-    border: 1px solid rgba(255, 255, 255, 0.045);
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
 }
 
 .pw-branch-announcement-item__indicator {
@@ -1748,7 +1724,7 @@ select option {
 
 .pw-branch-announcement-item__topline h4 {
     margin: 0;
-    color: #f8fafc;
+    color: var(--text-primary);
     font-size: 0.9rem;
     font-weight: 800;
     line-height: 1.3;
@@ -1759,7 +1735,7 @@ select option {
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.72rem;
     font-weight: 700;
     white-space: nowrap;
@@ -1767,7 +1743,7 @@ select option {
 
 .pw-branch-announcement-item__content p {
     margin: 0.4rem 0 0;
-    color: #cbd5e1;
+    color: var(--text-secondary);
     font-size: 0.78rem;
     line-height: 1.45;
 }
@@ -1834,11 +1810,9 @@ select option {
 
 .manage-roles-card {
     border-radius: 20px;
-    background: rgba(15, 23, 42, 0.58);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
     padding: 1.75rem;
     transition: transform 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease;
 }
@@ -1846,14 +1820,14 @@ select option {
 .manage-roles-card:hover {
     transform: translateY(-4px);
     border-color: rgba(139, 92, 246, 0.3);
-    box-shadow: 0 24px 50px rgba(99, 102, 241, 0.12), 0 6px 25px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 24px 50px rgba(99, 102, 241, 0.12), var(--shadow-md);
 }
 
 .manage-roles-card__title {
     margin: 0 0 1.5rem;
     font-size: 1.35rem;
     font-weight: 800;
-    color: #f8fafc;
+    color: var(--text-primary);
     letter-spacing: -0.02em;
 }
 
@@ -1872,7 +1846,7 @@ select option {
 .manage-roles-label {
     font-size: 0.85rem;
     font-weight: 700;
-    color: #cbd5e1;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
@@ -1882,16 +1856,16 @@ select option {
     width: 100%;
     padding: 0.85rem 1rem;
     border-radius: 12px;
-    background: rgba(15, 23, 42, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #f8fafc;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
     font-size: 0.95rem;
     font-family: inherit;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .manage-roles-input::placeholder {
-    color: #64748b;
+    color: var(--text-secondary);
 }
 
 .manage-roles-input:focus,
@@ -1902,8 +1876,8 @@ select option {
 }
 
 .manage-roles-select option {
-    background: #0f172a;
-    color: #f8fafc;
+    background: var(--bg-card);
+    color: var(--text-primary);
 }
 
 .manage-roles-select {
@@ -1913,16 +1887,16 @@ select option {
 
 /* Manage Students select styling */
 .manage-students-select {
-    background: rgba(15, 23, 42, 0.6) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    color: #f8fafc !important;
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text-primary) !important;
     appearance: none;
     cursor: pointer;
 }
 
 .manage-students-select option {
-    background-color: #0f172a !important;
-    color: #e2e8f0 !important;
+    background-color: var(--bg-card) !important;
+    color: var(--text-primary) !important;
     padding: 10px;
 }
 
@@ -1936,17 +1910,17 @@ select option {
     cursor: pointer;
     padding: 0.5rem 1rem;
     border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.04);
-    color: #94a3b8;
+    border: 1px solid var(--border);
+    background: var(--bg-subtle);
+    color: var(--text-secondary);
     font-size: 0.85rem;
     font-weight: 700;
     transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .manage-roles-year-pill:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #e2e8f0;
+    background: var(--bg-muted);
+    color: var(--text-primary);
 }
 
 .manage-roles-year-pill--active {
@@ -2000,13 +1974,13 @@ select option {
     justify-content: space-between;
     padding: 1.1rem 1.25rem;
     border-radius: 16px;
-    background: rgba(2, 6, 23, 0.38);
-    border: 1px solid rgba(255, 255, 255, 0.045);
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
     transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .manage-roles-hod-item:hover {
-    background: rgba(2, 6, 23, 0.55);
+    background: var(--bg-hover);
     border-color: rgba(139, 92, 246, 0.2);
 }
 
@@ -2019,13 +1993,13 @@ select option {
 .manage-roles-hod-name {
     font-size: 1rem;
     font-weight: 700;
-    color: #f8fafc;
+    color: var(--text-primary);
     letter-spacing: -0.01em;
 }
 
 .manage-roles-hod-dept {
     font-size: 0.85rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-weight: 500;
 }
 
@@ -2042,7 +2016,7 @@ select option {
     border-radius: 999px;
     background: rgba(59, 130, 246, 0.12);
     border: 1px solid rgba(59, 130, 246, 0.25);
-    color: #a5b4fc;
+    color: var(--text-brand);
     font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.02em;
@@ -2062,11 +2036,9 @@ select option {
     margin: 1.5rem 0 0;
     padding: 0.35rem;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    box-shadow: 0 12px 30px var(--shadow-md), inset 0 1px 0 var(--border-subtle);
     width: fit-content;
     margin-left: auto;
     margin-right: auto;
@@ -2078,7 +2050,7 @@ select option {
     border: 0;
     border-radius: 999px;
     background: transparent;
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.92rem;
     font-weight: 800;
     letter-spacing: 0.01em;
@@ -2086,8 +2058,8 @@ select option {
 }
 
 .manage-faculty-tab:hover {
-    color: #e2e8f0;
-    background: rgba(255, 255, 255, 0.07);
+    color: var(--text-primary);
+    background: var(--bg-muted);
 }
 
 .manage-faculty-tab--active {
@@ -2109,11 +2081,9 @@ select option {
 
 .manage-faculty-card {
     border-radius: 20px;
-    background: rgba(15, 23, 42, 0.58);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
     padding: 1.75rem;
     transition: transform 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease;
     width: 100%;
@@ -2131,7 +2101,7 @@ select option {
     max-height: 75vh;
     overflow-y: auto;
     scrollbar-width: thin;
-    scrollbar-color: rgba(139, 92, 246, 0.55) rgba(255, 255, 255, 0.04);
+    scrollbar-color: rgba(139, 92, 246, 0.55) var(--bg-muted);
     animation: fadeSlideIn 0.3s ease;
 }
 
@@ -2140,7 +2110,7 @@ select option {
 }
 
 .manage-faculty-card--directory::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--bg-subtle);
     border-radius: 999px;
 }
 
@@ -2152,14 +2122,14 @@ select option {
 .manage-faculty-card:hover {
     transform: translateY(-4px);
     border-color: rgba(139, 92, 246, 0.3);
-    box-shadow: 0 24px 50px rgba(99, 102, 241, 0.12), 0 6px 25px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 24px 50px rgba(99, 102, 241, 0.12), var(--shadow-md);
 }
 
 .manage-faculty-card__title {
     margin: 0 0 1.5rem;
     font-size: 1.35rem;
     font-weight: 800;
-    color: #f8fafc;
+    color: var(--text-primary);
     letter-spacing: -0.02em;
 }
 
@@ -2178,7 +2148,7 @@ select option {
 .manage-faculty-label {
     font-size: 0.85rem;
     font-weight: 700;
-    color: #cbd5e1;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
@@ -2193,11 +2163,9 @@ select option {
 
 .director-manage-depts-card {
     border-radius: 20px;
-    background: rgba(15, 23, 42, 0.58);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
     padding: 1.75rem;
     transition: transform 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease;
 }
@@ -2205,7 +2173,7 @@ select option {
 .director-manage-depts-card:hover {
     transform: translateY(-4px);
     border-color: rgba(139, 92, 246, 0.3);
-    box-shadow: 0 24px 50px rgba(99, 102, 241, 0.12), 0 6px 25px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 24px 50px rgba(99, 102, 241, 0.12), var(--shadow-md);
 }
 
 .director-manage-depts-card--form {
@@ -2216,7 +2184,7 @@ select option {
     margin: 0 0 1.5rem;
     font-size: 1.35rem;
     font-weight: 800;
-    color: #f8fafc;
+    color: var(--text-primary);
     letter-spacing: -0.02em;
 }
 
@@ -2235,7 +2203,7 @@ select option {
 .director-manage-depts-label {
     font-size: 0.85rem;
     font-weight: 700;
-    color: #cbd5e1;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
@@ -2244,16 +2212,16 @@ select option {
     width: 100%;
     padding: 0.85rem 1rem;
     border-radius: 12px;
-    background: rgba(15, 23, 42, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #f8fafc;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
     font-size: 0.95rem;
     font-family: inherit;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .director-manage-depts-input::placeholder {
-    color: #64748b;
+    color: var(--text-secondary);
 }
 
 .director-manage-depts-input:focus {
@@ -2307,7 +2275,7 @@ select option {
   .section-title {
      font-size: 1.1rem;
      font-weight: 700;
-     color: #e2e8f0;
+     color: var(--text-primary);
      margin: 0;
   }
 
@@ -2328,16 +2296,16 @@ select option {
     justify-content: space-between;
     padding: 1rem 1.25rem;
     border-radius: 16px;
-    background: rgba(15, 23, 42, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
     transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .director-manage-dept-item:hover {
     transform: translateY(-2px);
     border-color: rgba(139, 92, 246, 0.35);
-    box-shadow: 0 10px 28px rgba(99, 102, 241, 0.12), 0 4px 16px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 10px 28px rgba(99, 102, 241, 0.12), var(--shadow-sm);
 }
 
 .director-manage-dept-item__glow {
@@ -2363,14 +2331,14 @@ select option {
 .director-manage-dept-item__name {
     font-size: 1rem;
     font-weight: 800;
-    color: #f8fafc;
+    color: var(--text-primary);
     letter-spacing: -0.01em;
 }
 
 .director-manage-dept-item__code {
     font-size: 0.8rem;
     font-weight: 700;
-    color: #a5b4fc;
+    color: var(--text-brand);
     letter-spacing: 0.03em;
     text-transform: uppercase;
 }
@@ -2379,7 +2347,7 @@ select option {
      grid-column: 1 / -1;
      padding: 2rem;
      text-align: center;
-     color: #94a3b8;
+     color: var(--text-secondary);
      font-size: 0.95rem;
      font-weight: 600;
  }
@@ -2394,7 +2362,7 @@ select option {
      border-radius: 10px;
      border: 1px solid rgba(244, 63, 94, 0.3);
      background: rgba(244, 63, 94, 0.12);
-     color: #f43f5e;
+     color: var(--danger);
      cursor: pointer;
      transition: all 0.2s ease;
      z-index: 2;
@@ -2414,7 +2382,7 @@ select option {
      right: 1.5rem;
      z-index: 1000;
      background: rgba(16, 185, 129, 0.2);
-     color: #10b981;
+     color: var(--success);
      border: 1px solid rgba(16, 185, 129, 0.5);
      backdrop-filter: blur(10px);
      padding: 1rem 1.5rem;
@@ -2436,7 +2404,7 @@ select option {
  }
 
   .dept-toast__message {
-      color: #10b981;
+      color: var(--success);
       font-size: 0.9rem;
       font-weight: 500;
   }
@@ -2447,7 +2415,7 @@ select option {
       right: 1.5rem;
       z-index: 1000;
       background: rgba(16, 185, 129, 0.2);
-      color: #10b981;
+      color: var(--success);
       border: 1px solid rgba(16, 185, 129, 0.5);
       backdrop-filter: blur(10px);
       padding: 1rem 1.5rem;
@@ -2458,13 +2426,13 @@ select option {
    }
 
   .faculty-toast__message {
-      color: #10b981;
+      color: var(--success);
       font-size: 0.9rem;
       font-weight: 500;
   }
 
  .dept-card {
-     background: rgba(18, 18, 34, 0.78);
+     background: var(--bg-card);
      border-radius: 12px;
      padding: 1rem;
      transition: transform 0.2s ease, border-color 0.2s ease;
@@ -2477,16 +2445,14 @@ select option {
  .dept-card h4 {
      font-size: 1rem;
      font-weight: 600;
-     color: #f1f5f9;
+     color: var(--text-primary);
      margin: 0 0 0.5rem 0;
  }
 
  .premium-glass-card {
-     background: rgba(20, 20, 40, 0.75);
-     backdrop-filter: blur(16px);
-     -webkit-backdrop-filter: blur(16px);
-     border: 1px solid rgba(255, 255, 255, 0.07);
-     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+background: var(--bg-card);
+      border: 1px solid var(--border);
+     box-shadow: var(--shadow-sm);
  }
 
  .dept-delete-btn {
@@ -2498,7 +2464,7 @@ select option {
      border-radius: 10px;
      border: 1px solid rgba(244, 63, 94, 0.3);
      background: rgba(244, 63, 94, 0.12);
-     color: #f43f5e;
+     color: var(--danger);
      cursor: pointer;
      transition: all 0.2s ease;
  }
@@ -2518,7 +2484,7 @@ select option {
      display: flex;
      align-items: center;
      justify-content: center;
-     background: rgba(0, 0, 0, 0.5);
+     background: var(--bg-overlay);
      backdrop-filter: blur(8px);
      -webkit-backdrop-filter: blur(8px);
  }
@@ -2526,11 +2492,11 @@ select option {
 .dept-modal {
      padding: 2rem;
      border-radius: 20px;
-     background: rgba(15, 23, 42, 0.85);
+     background: var(--bg-card);
      backdrop-filter: blur(20px);
      -webkit-backdrop-filter: blur(20px);
-     border: 1px solid rgba(255, 255, 255, 0.15);
-     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(139, 92, 246, 0.3);
+     border: 1px solid var(--border-strong);
+     box-shadow: var(--shadow-lg), 0 0 0 1px rgba(139, 92, 246, 0.3);
      max-width: 400px;
      width: 90%;
      animation: modalFadeIn 0.3s ease;
@@ -2551,7 +2517,7 @@ select option {
      margin: 0 0 1.5rem;
      font-size: 1.15rem;
      font-weight: 700;
-     color: #f8fafc;
+     color: var(--text-primary);
      text-align: center;
  }
 
@@ -2573,21 +2539,21 @@ select option {
  }
 
  .dept-modal__btn--cancel {
-     border-color: rgba(255, 255, 255, 0.2);
-     background: rgba(255, 255, 255, 0.08);
-     color: #cbd5e1;
+     border-color: var(--border);
+     background: var(--bg-muted);
+     color: var(--text-secondary);
  }
 
  .dept-modal__btn--cancel:hover {
-     background: rgba(255, 255, 255, 0.15);
-     color: #f8fafc;
-     border-color: rgba(255, 255, 255, 0.3);
+     background: var(--bg-active);
+     color: var(--text-primary);
+     border-color: var(--border-strong);
  }
 
  .dept-modal__btn--delete {
      border-color: rgba(244, 63, 94, 0.4);
      background: rgba(244, 63, 94, 0.15);
-     color: #f43f5e;
+     color: var(--danger);
  }
 
  .dept-modal__btn--delete:hover {
@@ -2609,16 +2575,16 @@ select option {
     width: 100%;
     padding: 0.85rem 1rem;
     border-radius: 12px;
-    background: rgba(15, 23, 42, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #f8fafc;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
     font-size: 0.95rem;
     font-family: inherit;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .manage-faculty-input::placeholder {
-    color: #64748b;
+    color: var(--text-secondary);
 }
 
 .manage-faculty-input:focus,
@@ -2629,8 +2595,8 @@ select option {
 }
 
 .manage-faculty-select option {
-    background: #0f172a;
-    color: #f8fafc;
+    background: var(--bg-card);
+    color: var(--text-primary);
 }
 
 .manage-faculty-select {
@@ -2642,11 +2608,9 @@ select option {
     position: relative;
     width: 100%;
     border-radius: 18px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.72), rgba(30, 41, 59, 0.42));
-    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    box-shadow: var(--shadow-md);
     overflow: hidden;
     transition: border-color 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
 }
@@ -2663,7 +2627,7 @@ select option {
 
 .manage-faculty-expertise-input:focus-within {
     border-color: rgba(139, 92, 246, 0.62);
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12), 0 18px 42px rgba(99, 102, 241, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12), 0 18px 42px rgba(99, 102, 241, 0.12), inset 0 1px 0 var(--border-subtle);
 }
 
 .manage-faculty-expertise-input:focus-within::before {
@@ -2680,7 +2644,7 @@ select option {
     padding: 0.75rem 0.85rem 0.5rem;
     overflow-y: auto;
     scrollbar-width: thin;
-    scrollbar-color: rgba(139, 92, 246, 0.55) rgba(255, 255, 255, 0.04);
+    scrollbar-color: rgba(139, 92, 246, 0.55) var(--bg-muted);
 }
 
 .manage-faculty-expertise-tags::-webkit-scrollbar {
@@ -2688,7 +2652,7 @@ select option {
 }
 
 .manage-faculty-expertise-tags::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--bg-subtle);
     border-radius: 999px;
 }
 
@@ -2698,7 +2662,7 @@ select option {
 }
 
 .manage-faculty-expertise-placeholder {
-    color: #64748b;
+    color: var(--text-secondary);
     font-size: 0.82rem;
     font-weight: 600;
     letter-spacing: 0.01em;
@@ -2712,9 +2676,7 @@ select option {
     border-radius: 999px;
     background: linear-gradient(135deg, rgba(139, 92, 246, 0.28), rgba(59, 130, 246, 0.16));
     color: #f5f3ff;
-    box-shadow: 0 0 18px rgba(139, 92, 246, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 0 18px rgba(139, 92, 246, 0.16), inset 0 1px 0 var(--border-subtle);
     cursor: pointer;
     font-size: 0.78rem;
     font-weight: 800;
@@ -2741,15 +2703,15 @@ select option {
     width: 18px;
     height: 18px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.1);
-    color: #ddd6fe;
+    background: var(--bg-hover);
+    color: var(--text-brand);
     font-size: 0.82rem;
     line-height: 1;
     transition: background 0.18s ease, color 0.18s ease;
 }
 
 .manage-faculty-expertise-tag:hover .manage-faculty-expertise-tag__remove {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--bg-active);
     color: #fff;
 }
 
@@ -2766,9 +2728,9 @@ select option {
     gap: 0.5rem;
     padding: 2rem;
     border-radius: 16px;
-    border: 2px dashed rgba(255, 255, 255, 0.18);
-    background: rgba(255, 255, 255, 0.03);
-    color: #94a3b8;
+    border: 2px dashed var(--border-strong);
+    background: var(--bg-subtle);
+    color: var(--text-secondary);
     font-size: 0.88rem;
     font-weight: 600;
     cursor: pointer;
@@ -2776,9 +2738,9 @@ select option {
 }
 
 .manage-faculty-upload-zone:hover {
-    background: rgba(255, 255, 255, 0.07);
-    color: #e2e8f0;
-    border-color: rgba(255, 255, 255, 0.28);
+    background: var(--bg-muted);
+    color: var(--text-primary);
+    border-color: var(--border-strong);
 }
 
 .manage-faculty-upload-zone:focus-visible {
@@ -2800,7 +2762,7 @@ select option {
 
 .manage-faculty-upload-hint {
     font-size: 0.78rem;
-    color: #64748b;
+    color: var(--text-secondary);
     font-weight: 500;
 }
 
@@ -2844,7 +2806,7 @@ select option {
     overflow-y: auto;
     padding-right: 0.5rem;
     scrollbar-width: thin;
-    scrollbar-color: rgba(139, 92, 246, 0.55) rgba(255, 255, 255, 0.04);
+    scrollbar-color: rgba(139, 92, 246, 0.55) var(--bg-muted);
 }
 
 .faculty-directory-grid::-webkit-scrollbar {
@@ -2852,7 +2814,7 @@ select option {
 }
 
 .faculty-directory-grid::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--bg-subtle);
     border-radius: 999px;
 }
 
@@ -2870,11 +2832,9 @@ select option {
     padding: 1.35rem;
     min-width: 0;
     border-radius: 24px;
-    background: linear-gradient(145deg, rgba(15, 23, 42, 0.78), rgba(30, 41, 59, 0.52));
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border: 1px solid rgba(255, 255, 255, 0.075);
-    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
     transition: all 0.3s ease;
 }
 
@@ -2914,7 +2874,7 @@ select option {
 
 .faculty-directory-card:hover {
      border-color: rgba(167, 139, 250, 0.46);
-     box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+     box-shadow: var(--shadow-sm);
  }
 
 .faculty-directory-card:hover::before {
@@ -2935,8 +2895,8 @@ select option {
     height: 34px;
     border-radius: 10px;
     border: 1px solid rgba(239, 68, 68, 0.22);
-    background: rgba(15, 23, 42, 0.75);
-    color: #f87171;
+    background: var(--bg-card);
+    color: var(--danger);
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -2956,7 +2916,7 @@ select option {
 
 .faculty-directory-card__empty-tags,
 .faculty-directory-empty {
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.78rem;
     font-weight: 600;
 }
@@ -2966,7 +2926,7 @@ select option {
     padding: 2rem 1rem;
     text-align: center;
     border-radius: 18px;
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--bg-subtle);
     border: 1px dashed rgba(148, 163, 184, 0.22);
 }
 
@@ -2979,7 +2939,7 @@ select option {
     font-weight: 700;
     letter-spacing: 0.02em;
     background: linear-gradient(135deg, rgba(99, 102, 241, 0.18), rgba(139, 92, 246, 0.12));
-    color: #e2e8f0;
+    color: var(--text-primary);
     border: 1px solid rgba(139, 92, 246, 0.24);
 }
 
@@ -2990,7 +2950,7 @@ select option {
     border-radius: 999px;
     font-size: 12px;
     font-weight: 600;
-    color: #94a3b8;
+    color: var(--text-secondary);
 }
 
 .tags-container {
@@ -3013,7 +2973,7 @@ select option {
     border-radius: 24px;
     object-fit: cover;
     border: 1px solid rgba(167, 139, 250, 0.42);
-    box-shadow: 0 10px 28px rgba(99, 102, 241, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 28px rgba(99, 102, 241, 0.22), inset 0 1px 0 var(--border-subtle);
 }
 
 .faculty-directory-card__identity {
@@ -3027,7 +2987,7 @@ select option {
     margin: 0;
     font-size: 1.02rem;
     font-weight: 800;
-    color: #f8fafc;
+    color: var(--text-primary);
     letter-spacing: -0.01em;
     line-height: 1.2;
 }
@@ -3045,7 +3005,7 @@ select option {
 }
 
 .faculty-directory-card__section-title {
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.68rem;
     font-weight: 800;
     letter-spacing: 0.08em;
@@ -3069,9 +3029,7 @@ select option {
     border-radius: 999px;
     background: linear-gradient(135deg, rgba(139, 92, 246, 0.24), rgba(59, 130, 246, 0.16));
     color: #ede9fe;
-    box-shadow: 0 0 16px rgba(139, 92, 246, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 0 16px rgba(139, 92, 246, 0.12), inset 0 1px 0 var(--border-subtle);
     font-size: 0.68rem;
     font-weight: 900;
     letter-spacing: 0.02em;
@@ -3088,11 +3046,9 @@ select option {
     max-width: 100%;
     border: 1px solid rgba(125, 211, 252, 0.28);
     border-radius: 999px;
-    background: rgba(15, 23, 42, 0.48);
-    color: #cbd5e1;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    box-shadow: inset 0 1px 0 var(--border-subtle);
     font-size: 0.68rem;
     font-weight: 700;
     letter-spacing: 0.01em;
@@ -3118,14 +3074,14 @@ select option {
     border-radius: 999px;
     background: rgba(139, 92, 246, 0.12);
     border: 1px solid rgba(139, 92, 246, 0.24);
-    color: #c7d2fe;
+    color: var(--text-brand);
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
 
 .faculty-directory-card__email {
     font-size: 0.78rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-weight: 500;
     overflow-wrap: anywhere;
 }
@@ -3152,18 +3108,16 @@ select option {
     align-items: center;
     padding: 1.75rem 1.5rem;
     border-radius: 22px;
-    background: linear-gradient(145deg, rgba(15, 23, 42, 0.82), rgba(30, 41, 59, 0.56));
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
     transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .premium-faculty-card:hover {
     transform: translateY(-6px);
     border-color: rgba(167, 139, 250, 0.45);
-    box-shadow: 0 18px 40px rgba(99, 102, 241, 0.16), 0 8px 24px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 18px 40px rgba(99, 102, 241, 0.16), var(--shadow-md);
 }
 
 .premium-faculty-card__glow {
@@ -3202,7 +3156,7 @@ select option {
     margin: 0 0 0.5rem;
     font-size: 1.25rem;
     font-weight: 800;
-    color: #f8fafc;
+    color: var(--text-primary);
     letter-spacing: -0.01em;
     line-height: 1.2;
 }
@@ -3220,7 +3174,7 @@ select option {
     align-items: center;
     gap: 0.4rem;
     font-size: 0.85rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-weight: 500;
 }
 
@@ -3228,12 +3182,12 @@ select option {
 .premium-faculty-card__phone svg {
     width: 14px;
     height: 14px;
-    color: #818cf8;
+    color: var(--brand);
     flex-shrink: 0;
 }
 
 .premium-faculty-card__email {
-    color: #cbd5e1;
+    color: var(--text-secondary);
 }
 
 .premium-faculty-card__expertise {
@@ -3245,7 +3199,7 @@ select option {
     display: block;
     font-size: 0.7rem;
     font-weight: 800;
-    color: #818cf8;
+    color: var(--brand);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     margin-bottom: 0.5rem;
@@ -3266,7 +3220,7 @@ select option {
     font-size: 0.75rem;
     font-weight: 700;
     background: linear-gradient(135deg, rgba(139, 92, 246, 0.22), rgba(59, 130, 246, 0.16));
-    color: #e2e8f0;
+    color: var(--text-primary);
     border: 1px solid rgba(139, 92, 246, 0.3);
     transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
@@ -3278,7 +3232,7 @@ select option {
 }
 
 .premium-faculty-card__no-tags {
-    color: #64748b;
+    color: var(--text-secondary);
     font-size: 0.78rem;
     font-weight: 600;
 }
@@ -3320,7 +3274,7 @@ select option {
     font-size: 0.75rem;
     font-weight: 700;
     background: linear-gradient(135deg, rgba(139, 92, 246, 0.22), rgba(59, 130, 246, 0.16));
-    color: #e2e8f0;
+    color: var(--text-primary);
     border: 1px solid rgba(139, 92, 246, 0.3);
     transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
@@ -3336,9 +3290,9 @@ select option {
     padding: 3rem 1rem;
     text-align: center;
     border-radius: 20px;
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--bg-subtle);
     border: 1px dashed rgba(148, 163, 184, 0.25);
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 1rem;
     font-weight: 600;
 }
@@ -3359,18 +3313,16 @@ select option {
     align-items: center;
     padding: 1.75rem 1.5rem;
     border-radius: 22px;
-    background: linear-gradient(145deg, rgba(15, 23, 42, 0.82), rgba(30, 41, 59, 0.56));
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
     transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .premium-dept-card:hover {
     transform: translateY(-6px);
     border-color: rgba(167, 139, 250, 0.45);
-    box-shadow: 0 18px 40px rgba(99, 102, 241, 0.16), 0 8px 24px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 18px 40px rgba(99, 102, 241, 0.16), var(--shadow-md);
 }
 
 .premium-dept-card__glow {
@@ -3396,7 +3348,7 @@ select option {
     margin: 0;
     font-size: 1.35rem;
     font-weight: 800;
-    color: #f8fafc;
+    color: var(--text-primary);
     letter-spacing: -0.01em;
 }
 
@@ -3407,7 +3359,7 @@ select option {
 .premium-dept-card__code-text {
     font-size: 0.85rem;
     font-weight: 700;
-    color: #a5b4fc;
+    color: var(--text-brand);
     padding: 0.35rem 0.85rem;
     border-radius: 999px;
     background: rgba(139, 92, 246, 0.12);
@@ -3427,14 +3379,14 @@ select option {
 }
 
 .premium-dept-card__hod-icon {
-    color: #818cf8;
+    color: var(--brand);
     flex-shrink: 0;
 }
 
 .premium-dept-card__hod-name {
     font-size: 0.9rem;
     font-weight: 600;
-    color: #e2e8f0;
+    color: var(--text-primary);
 }
 
 .premium-depts-empty {
@@ -3442,9 +3394,9 @@ select option {
     padding: 3rem 1rem;
     text-align: center;
     border-radius: 20px;
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--bg-subtle);
     border: 1px dashed rgba(148, 163, 184, 0.25);
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 1rem;
     font-weight: 600;
 }
@@ -3468,7 +3420,7 @@ select option {
 .faculty-header__title {
     font-size: 1.5rem;
     font-weight: 800;
-    color: #f8fafc;
+    color: var(--text-primary);
     letter-spacing: -0.02em;
 }
 
@@ -3507,7 +3459,7 @@ select option {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.6);
+    background: var(--bg-overlay);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     padding: 1rem;
@@ -3527,11 +3479,11 @@ select option {
     overflow-y: auto;
     padding: 2rem;
     border-radius: 24px;
-    background: rgba(15, 23, 42, 0.88);
+    background: var(--bg-card);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(139, 92, 246, 0.3);
+    border: 1px solid var(--border-strong);
+    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(139, 92, 246, 0.3);
     animation: modalFadeIn 0.3s ease;
 }
 
@@ -3540,7 +3492,7 @@ select option {
 }
 
 .add-faculty-modal::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--bg-subtle);
     border-radius: 999px;
 }
 
@@ -3558,24 +3510,24 @@ select option {
     width: 36px;
     height: 36px;
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.06);
-    color: #cbd5e1;
+    border: 1px solid var(--border);
+    background: var(--bg-muted);
+    color: var(--text-secondary);
     cursor: pointer;
     transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .add-faculty-modal__close:hover {
-    background: rgba(255, 255, 255, 0.12);
+    background: var(--bg-hover);
     color: #fff;
-    border-color: rgba(255, 255, 255, 0.22);
+    border-color: var(--border);
 }
 
 .add-faculty-modal__title {
     margin: 0 0 1.5rem;
     font-size: 1.35rem;
     font-weight: 800;
-    color: #f8fafc;
+    color: var(--text-primary);
     letter-spacing: -0.02em;
 }
 
@@ -3594,7 +3546,7 @@ select option {
 .add-faculty-label {
     font-size: 0.82rem;
     font-weight: 700;
-    color: #cbd5e1;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
@@ -3603,16 +3555,16 @@ select option {
     width: 100%;
     padding: 0.85rem 1rem;
     border-radius: 12px;
-    background: rgba(15, 23, 42, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #f8fafc;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
     font-size: 0.95rem;
     font-family: inherit;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .add-faculty-input::placeholder {
-    color: #64748b;
+    color: var(--text-secondary);
 }
 
 .add-faculty-input:focus {
@@ -3625,9 +3577,9 @@ select option {
     width: 100%;
     padding: 0.85rem 1rem;
     border-radius: 12px;
-    background: rgba(15, 23, 42, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #f8fafc;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
     font-size: 0.95rem;
     font-family: inherit;
     appearance: none;
@@ -3642,8 +3594,8 @@ select option {
 }
 
 .add-faculty-select option {
-    background: #0f172a;
-    color: #f8fafc;
+    background: var(--bg-card);
+    color: var(--text-primary);
 }
 
 .add-faculty-form__actions {
@@ -3697,7 +3649,7 @@ select option {
 
 .faculty-toast--success {
     background: rgba(16, 185, 129, 0.2);
-    color: #10b981;
+    color: var(--success);
     border: 1px solid rgba(16, 185, 129, 0.5);
 }
 
@@ -3717,10 +3669,8 @@ select option {
     gap: 0.75rem;
     padding: 2rem 1.5rem;
     border-radius: 18px;
-    border: 2px dashed rgba(255, 255, 255, 0.18);
+    border: 2px dashed var(--border-strong);
     background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(59, 130, 246, 0.06));
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     cursor: pointer;
     transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -3748,7 +3698,7 @@ select option {
     flex-direction: column;
     align-items: center;
     gap: 0.5rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
@@ -3756,7 +3706,7 @@ select option {
 }
 
 .add-faculty-upload-label svg {
-    color: #818cf8;
+    color: var(--brand);
     filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.4));
 }
 
@@ -3790,8 +3740,8 @@ select option {
     height: 20px;
     border-radius: 6px;
     border: 1px solid rgba(239, 68, 68, 0.4);
-    background: rgba(15, 23, 42, 0.9);
-    color: #f87171;
+    background: var(--bg-card);
+    color: var(--danger);
     font-size: 0.75rem;
     line-height: 1;
     cursor: pointer;
@@ -3820,10 +3770,8 @@ select option {
     border: 1px solid rgba(139, 92, 246, 0.4);
     border-radius: 999px;
     background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.14));
-    color: #e2e8f0;
-    box-shadow: 0 0 14px rgba(139, 92, 246, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    color: var(--text-primary);
+    box-shadow: 0 0 14px rgba(139, 92, 246, 0.1), inset 0 1px 0 var(--border-subtle);
     font-size: 0.78rem;
     font-weight: 700;
     line-height: 1;
@@ -3844,8 +3792,8 @@ select option {
     width: 18px;
     height: 18px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.1);
-    color: #cbd5e1;
+    background: var(--bg-hover);
+    color: var(--text-secondary);
     font-size: 0.78rem;
     line-height: 1;
     cursor: pointer;
@@ -3868,7 +3816,7 @@ select option {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.6);
+    background: var(--bg-overlay);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     padding: 1rem;
@@ -3881,11 +3829,11 @@ select option {
     max-width: 420px;
     padding: 2.5rem 2rem;
     border-radius: 24px;
-    background: rgba(15, 23, 42, 0.88);
+    background: var(--bg-card);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(244, 63, 94, 0.3);
+    border: 1px solid var(--border-strong);
+    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(244, 63, 94, 0.3);
     animation: modalFadeIn 0.3s ease;
     display: flex;
     flex-direction: column;
@@ -3901,7 +3849,7 @@ select option {
     height: 80px;
     border-radius: 50%;
     background: rgba(244, 63, 94, 0.15);
-    color: #f43f5e;
+    color: var(--danger);
     margin-bottom: 1.25rem;
 }
 
@@ -3913,7 +3861,7 @@ select option {
     margin: 0 0 2rem;
     font-size: 1.1rem;
     font-weight: 600;
-    color: #f8fafc;
+    color: var(--text-primary);
     letter-spacing: -0.01em;
     line-height: 1.5;
 }
@@ -3936,21 +3884,21 @@ select option {
 }
 
 .delete-faculty-modal__btn--cancel {
-    border-color: rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.08);
-    color: #cbd5e1;
+    border-color: var(--border);
+    background: var(--bg-muted);
+    color: var(--text-secondary);
 }
 
 .delete-faculty-modal__btn--cancel:hover {
-    background: rgba(255, 255, 255, 0.15);
-    color: #f8fafc;
-    border-color: rgba(255, 255, 255, 0.3);
+    background: var(--bg-active);
+    color: var(--text-primary);
+    border-color: var(--border-strong);
 }
 
 .delete-faculty-modal__btn--delete {
     border-color: rgba(244, 63, 94, 0.4);
     background: rgba(244, 63, 94, 0.15);
-    color: #f43f5e;
+    color: var(--danger);
 }
 
 .delete-faculty-modal__btn--delete:hover {
@@ -3967,7 +3915,7 @@ select option {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.65);
+    background: var(--bg-overlay);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     padding: 1rem;
@@ -3978,11 +3926,11 @@ select option {
     width: 100%;
     max-width: 420px;
     border-radius: 22px;
-    background: linear-gradient(160deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.78));
+    background: var(--bg-card);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.09);
-    box-shadow: 0 22px 50px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
     padding: 1.75rem;
     display: flex;
     flex-direction: column;
@@ -4011,14 +3959,14 @@ select option {
     margin: 0;
     font-size: 1.2rem;
     font-weight: 800;
-    color: #f8fafc;
+    color: var(--text-primary);
     letter-spacing: -0.01em;
 }
 
 .delete-dept-modal__text {
     margin: 0;
     font-size: 0.9rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
     line-height: 1.5;
 }
 
@@ -4041,13 +3989,13 @@ select option {
 }
 
 .delete-dept-modal__btn--cancel {
-    background: rgba(255, 255, 255, 0.06);
-    color: #e2e8f0;
-    border-color: rgba(255, 255, 255, 0.12);
+    background: var(--bg-muted);
+    color: var(--text-primary);
+    border-color: var(--border);
 }
 
 .delete-dept-modal__btn--cancel:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bg-hover);
     transform: translateY(-1px);
 }
 
@@ -4068,11 +4016,9 @@ select option {
     position: relative;
     padding: 1.75rem 1.5rem;
     border-radius: 22px;
-    background: rgba(15, 23, 42, 0.65);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
     margin-bottom: 2rem;
 }
 
@@ -4082,7 +4028,7 @@ select option {
     gap: 0.6rem;
     font-size: 1.15rem;
     font-weight: 800;
-    color: #f8fafc;
+    color: var(--text-primary);
     margin: 0 0 1.25rem;
     letter-spacing: -0.01em;
 }
@@ -4101,7 +4047,7 @@ select option {
 .dept-label {
     font-size: 0.82rem;
     font-weight: 600;
-    color: #cbd5e1;
+    color: var(--text-secondary);
     letter-spacing: 0.02em;
 }
 
@@ -4109,16 +4055,16 @@ select option {
     width: 100%;
     padding: 0.85rem 1.1rem;
     border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border);
     background: rgba(20, 28, 48, 0.85);
-    color: #f1f5f9;
+    color: var(--text-primary);
     font-size: 0.95rem;
     outline: none;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .dept-input::placeholder {
-    color: #64748b;
+    color: var(--text-secondary);
 }
 
 .dept-input:focus {
@@ -4166,14 +4112,14 @@ select option {
 .dept-list-header__title {
     font-size: 1.05rem;
     font-weight: 700;
-    color: #e2e8f0;
+    color: var(--text-primary);
     margin: 0;
 }
 
 .dept-list-header__count {
     font-size: 0.8rem;
     font-weight: 700;
-    color: #a5b4fc;
+    color: var(--text-brand);
     padding: 0.35rem 0.75rem;
     border-radius: 999px;
     background: rgba(139, 92, 246, 0.12);
@@ -4181,8 +4127,8 @@ select option {
 }
 
 .dept-input option {
-    background: #0f172a;
-    color: #f8fafc;
+    background: var(--bg-card);
+    color: var(--text-primary);
 }
 
 .department-year-filter {
@@ -4192,11 +4138,9 @@ select option {
     margin: 0 0 1.25rem;
     padding: 0.45rem;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    box-shadow: 0 12px 30px var(--shadow-md), inset 0 1px 0 var(--border-subtle);
 }
 
 .department-year-filter__button {
@@ -4204,8 +4148,8 @@ select option {
     cursor: pointer;
     padding: 0.65rem 1rem;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.04);
-    color: #94a3b8;
+    background: var(--bg-subtle);
+    color: var(--text-secondary);
     font-size: 0.86rem;
     font-weight: 800;
     letter-spacing: 0.01em;
@@ -4213,8 +4157,8 @@ select option {
 }
 
 .department-year-filter__button:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #e2e8f0;
+    background: var(--bg-muted);
+    color: var(--text-primary);
 }
 
 .department-year-filter__button--active {
@@ -4244,18 +4188,16 @@ select option {
     gap: 1rem;
     padding: 1.5rem;
     border-radius: 20px;
-    background: linear-gradient(145deg, rgba(15, 23, 42, 0.82), rgba(30, 41, 59, 0.56));
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
     transition: transform 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
 }
 
 .dept-card:hover {
     transform: translateY(-5px);
     border-color: rgba(167, 139, 250, 0.45);
-    box-shadow: 0 20px 44px rgba(99, 102, 241, 0.16), 0 8px 24px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 20px 44px rgba(99, 92, 246, 0.16), var(--shadow-md);
 }
 
 .dept-card__glow {
@@ -4286,7 +4228,7 @@ select option {
     height: 40px;
     border-radius: 12px;
     background: rgba(139, 92, 246, 0.18);
-    color: #c7d2fe;
+    color: var(--text-brand);
     flex-shrink: 0;
 }
 
@@ -4299,7 +4241,7 @@ select option {
     border-radius: 10px;
     border: 1px solid rgba(244, 63, 94, 0.3);
     background: rgba(244, 63, 94, 0.1);
-    color: #f43f5e;
+    color: var(--danger);
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -4321,14 +4263,14 @@ select option {
     margin: 0;
     font-size: 1.2rem;
     font-weight: 800;
-    color: #f8fafc;
+    color: var(--text-primary);
     letter-spacing: -0.01em;
 }
 
 .dept-card__desc {
     margin: 0;
     font-size: 0.88rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
     line-height: 1.4;
 }
 
@@ -4337,9 +4279,9 @@ select option {
     padding: 2.5rem 1rem;
     text-align: center;
     border-radius: 20px;
-    background: rgba(255, 255, 255, 0.038);
+    background: var(--bg-subtle);
     border: 1px dashed rgba(148, 163, 184, 0.25);
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.95rem;
     font-weight: 600;
 }
@@ -4351,7 +4293,7 @@ select option {
     right: 1.5rem;
     z-index: 1000;
     background: rgba(16, 185, 129, 0.18);
-    color: #10b981;
+    color: var(--success);
     border: 1px solid rgba(16, 185, 129, 0.55);
     backdrop-filter: blur(12px);
     padding: 0.9rem 1.35rem;
@@ -4362,19 +4304,17 @@ select option {
 }
 
 .dept-toast__message {
-    color: #10b981;
+    color: var(--success);
     font-size: 0.9rem;
 }
 
 /* --- SEMESTER ANNOUNCEMENTS VIEW --- */
 .director-semester-announcements-view {
-    background: rgba(18, 18, 34, 0.78);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
     border-radius: 18px;
     padding: 1.5rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--shadow-sm);
 }
 
 .director-semester-announcements-header {
@@ -4383,7 +4323,7 @@ select option {
 
 .director-semester-announcements-header h3 {
     margin: 0 0 0.25rem;
-    color: #f8fafc;
+    color: var(--text-primary);
     font-size: 1.25rem;
     font-weight: 800;
     letter-spacing: -0.02em;
@@ -4391,7 +4331,7 @@ select option {
 
 .director-announcements-context {
     margin: 0;
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.85rem;
     font-weight: 600;
 }
@@ -4403,15 +4343,15 @@ select option {
 }
 
 .director-semester-announcement-card {
-    background: rgba(30, 41, 59, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
     border-radius: 14px;
     padding: 1.25rem;
     transition: all 0.2s ease;
 }
 
 .director-semester-announcement-card:hover {
-    background: rgba(30, 41, 59, 0.8);
+    background: var(--bg-hover);
     border-color: rgba(139, 92, 246, 0.2);
 }
 
@@ -4424,7 +4364,7 @@ select option {
 
 .director-semester-announcement-title {
     margin: 0;
-    color: #f8fafc;
+    color: var(--text-primary);
     font-size: 1rem;
     font-weight: 700;
     letter-spacing: -0.01em;
@@ -4438,12 +4378,12 @@ select option {
     text-transform: uppercase;
     letter-spacing: 0.04em;
     background: rgba(139, 92, 246, 0.15);
-    color: #c7d2fe;
+    color: var(--text-brand);
 }
 
 .director-semester-announcement-content {
     margin: 0 0 1rem;
-    color: #cbd5e1;
+    color: var(--text-secondary);
     font-size: 0.9rem;
     line-height: 1.5;
 }
@@ -4457,13 +4397,13 @@ select option {
 }
 
 .director-semester-announcement-date {
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.8rem;
     font-weight: 600;
 }
 
 .director-semester-announcement-sender {
-    color: #a5b4fc;
+    color: var(--text-brand);
     font-size: 0.8rem;
     font-weight: 600;
 }
@@ -4491,14 +4431,14 @@ select option {
 .director-semester-announcements-loading {
     padding: 2rem;
     text-align: center;
-    color: #94a3b8;
+    color: var(--text-secondary);
 }
 
 .director-semester-announcements-empty {
     padding: 2rem;
     text-align: center;
-    color: #94a3b8;
-    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-secondary);
+    background: var(--bg-subtle);
     border-radius: 14px;
     border: 1px dashed rgba(148, 163, 184, 0.25);
 }
@@ -4506,7 +4446,7 @@ select option {
 .director-semester-announcements-back {
     margin-top: 1.5rem;
     padding-top: 1rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid var(--border-subtle);
 }
 
 /* --- MASTER SYLLABUS (CONTROL CENTER) --- */
@@ -4518,11 +4458,9 @@ select option {
   margin-bottom: 1.75rem;
   padding: 1.25rem 1.5rem;
   border-radius: 20px;
-  background: rgba(15, 23, 42, 0.55);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
 }
 
 .master-syllabus-filter-group {
@@ -4534,7 +4472,7 @@ select option {
 .master-syllabus-filter-label {
   font-size: 0.78rem;
   font-weight: 700;
-  color: #cbd5e1;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -4573,7 +4511,7 @@ select option {
   border-radius: 14px;
   background: rgba(244, 63, 94, 0.12);
   border: 1px solid rgba(244, 63, 94, 0.35);
-  color: #fda4af;
+  color: var(--danger-text);
   font-size: 0.9rem;
   font-weight: 600;
 }
@@ -4581,7 +4519,7 @@ select option {
 .master-syllabus-loading {
   padding: 2.5rem 1rem;
   text-align: center;
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 0.95rem;
   font-weight: 600;
 }
@@ -4600,18 +4538,16 @@ select option {
   gap: 1rem;
   padding: 1.5rem;
   border-radius: 20px;
-  background: linear-gradient(145deg, rgba(15, 23, 42, 0.82), rgba(30, 41, 59, 0.56));
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
   transition: transform 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
 }
 
 .master-subject-card:hover {
   transform: translateY(-5px);
   border-color: rgba(167, 139, 250, 0.45);
-  box-shadow: 0 20px 44px rgba(99, 102, 241, 0.16), 0 8px 24px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 20px 44px rgba(99, 92, 246, 0.16), var(--shadow-md);
 }
 
 .master-subject-card__glow {
@@ -4666,7 +4602,7 @@ select option {
   border-radius: 10px;
   border: 1px solid rgba(244, 63, 94, 0.3);
   background: rgba(244, 63, 94, 0.1);
-  color: #f43f5e;
+  color: var(--danger);
   cursor: pointer;
   transition: all 0.2s ease;
   flex-shrink: 0;
@@ -4689,7 +4625,7 @@ select option {
   margin: 0;
   font-size: 1.15rem;
   font-weight: 800;
-  color: #f8fafc;
+  color: var(--text-primary);
   letter-spacing: -0.01em;
   line-height: 1.3;
 }
@@ -4698,7 +4634,7 @@ select option {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #a5b4fc;
+  color: var(--text-brand);
   letter-spacing: 0.02em;
 }
 
@@ -4709,18 +4645,18 @@ select option {
   flex-wrap: wrap;
   gap: 0.5rem;
   padding-top: 0.85rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 1px solid var(--border);
 }
 
 .master-subject-card__credits {
   font-size: 0.8rem;
   font-weight: 700;
-  color: #fbbf24;
+  color: var(--warning);
 }
 
 .master-subject-card__ctx {
   font-size: 0.78rem;
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-weight: 600;
 }
 
@@ -4728,9 +4664,9 @@ select option {
   padding: 2.5rem 1rem;
   text-align: center;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.038);
+  background: var(--bg-subtle);
   border: 1px dashed rgba(148, 163, 184, 0.25);
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 0.95rem;
   font-weight: 600;
   line-height: 1.6;

@@ -75,11 +75,11 @@ function HODRankSheet() {
     appearance: 'none',
     WebkitAppearance: 'none',
     MozAppearance: 'none',
-    background: 'rgba(15, 23, 42, 0.6)',
-    border: '1px solid rgba(255, 255, 255, 0.12)',
+    background: 'var(--bg-card)',
+    border: '1px solid var(--border)',
     borderRadius: '10px',
     padding: '0.6rem 2.2rem 0.6rem 0.9rem',
-    color: '#e2e8f0',
+    color: 'var(--text-primary)',
     fontSize: '0.85rem',
     outline: 'none',
     minWidth: '200px',
@@ -92,7 +92,7 @@ function HODRankSheet() {
     top: '50%',
     transform: 'translateY(-50%)',
     pointerEvents: 'none',
-    color: '#94a3b8',
+    color: 'var(--text-muted)',
     fontSize: '0.7rem',
   };
 
@@ -633,7 +633,7 @@ function HODRankSheet() {
           <select
             value={selectedSection}
             onChange={(e) => setSelectedSection(e.target.value)}
-            style={{ padding: '12px 16px', backgroundColor: '#1e293b', color: '#f8fafc', border: '1px solid #475569', borderRadius: '12px', outline: 'none', fontWeight: '600', cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+            style={{ padding: '12px 16px', backgroundColor: 'var(--brand)', color: '#fff', border: '1px solid var(--border-brand)', borderRadius: '12px', outline: 'none', fontWeight: '600', cursor: 'pointer', boxShadow: 'var(--shadow-sm)' }}
           >
             {availableSections.map(sec => (
               <option key={sec} value={sec}>{sec}</option>
@@ -665,25 +665,25 @@ function HODRankSheet() {
       </div>
 
       {isLoading && (
-        <div className="hod-card" style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
+        <div className="hod-card" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
           Generating rank sheet...
         </div>
       )}
 
       {!isLoading && rankData.length > 0 && (
-        <div style={{ width: '100%', overflowX: 'auto', borderRadius: '16px', backgroundColor: '#0f172a', border: '1px solid #1e293b', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', whiteSpace: 'nowrap', fontSize: '14px', color: '#cbd5e1' }}>
+        <div style={{ width: '100%', overflowX: 'auto', borderRadius: '16px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-md)' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', whiteSpace: 'nowrap', fontSize: '14px', color: 'var(--text-primary)' }}>
             <thead>
-              <tr style={{ backgroundColor: '#1e293b', borderBottom: '1px solid #334155', color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase' }}>
+              <tr style={{ backgroundColor: 'var(--bg-subtle)', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)', fontSize: '12px', textTransform: 'uppercase' }}>
                 <th style={{ padding: '20px 24px', fontWeight: '600', letterSpacing: '0.05em' }}>S.No</th>
                 <th style={{ padding: '20px 24px', fontWeight: '600', letterSpacing: '0.05em' }}>Roll No</th>
                 <th style={{ padding: '20px 24px', fontWeight: '600', letterSpacing: '0.05em', textAlign: 'left' }}>Student Name</th>
                 {subjects.map(sub => (
-                  <th key={sub.id} style={{ padding: '16px 24px', fontWeight: '700', color: '#f1f5f9' }}>
+                  <th key={sub.id} style={{ padding: '16px 24px', fontWeight: '700', color: 'var(--text-primary)' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                       <span style={{ fontSize: '13px', letterSpacing: '0.1em', fontWeight: 'bold' }}>{getSubjectShortName(sub.code, sub.name)}</span>
-                      <span style={{ fontSize: '10px', color: '#94a3b8', fontFamily: 'monospace' }}>{sub.code}</span>
-                      <span style={{ fontSize: '11px', color: '#34d399', fontWeight: '600', marginTop: '2px', backgroundColor: 'rgba(52, 211, 153, 0.1)', padding: '1px 6px', borderRadius: '4px' }}>
+                      <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{sub.code}</span>
+                      <span style={{ fontSize: '11px', color: 'var(--success-text)', fontWeight: '600', marginTop: '2px', backgroundColor: 'var(--success-subtle)', padding: '1px 6px', borderRadius: '4px' }}>
                         Max: {maxMarksPerSubject}
                       </span>
                     </div>
@@ -699,32 +699,32 @@ function HODRankSheet() {
                 </th>
                 <th style={{ padding: '20px 24px', fontWeight: '600', letterSpacing: '0.05em' }}>%</th>
                 <th style={{ padding: '20px 24px', fontWeight: '600', letterSpacing: '0.05em' }}>Pass/Fail</th>
-                <th style={{ padding: '20px 24px', fontWeight: '700', letterSpacing: '0.05em', color: '#f59e0b' }}>Rank</th>
+                <th style={{ padding: '20px 24px', fontWeight: '700', letterSpacing: '0.05em', color: 'var(--text-brand)' }}>Rank</th>
               </tr>
             </thead>
             <tbody>
               {rankData.map((student, idx) => (
-                <tr key={student.id} style={{ borderBottom: '1px solid rgba(30, 41, 59, 0.6)', transition: 'background-color 0.2s' }}>
-                  <td style={{ padding: '16px 24px', color: '#94a3b8' }}>{idx + 1}</td>
-                  <td style={{ padding: '16px 24px', fontFamily: 'monospace', color: '#cbd5e1' }}>{student.roll_number}</td>
-                  <td style={{ padding: '16px 24px', textAlign: 'left', fontWeight: '500', color: '#f1f5f9', minWidth: '180px' }}>
+                <tr key={student.id} style={{ borderBottom: '1px solid var(--border-subtle)', transition: 'background-color 0.2s' }}>
+                  <td style={{ padding: '16px 24px', color: 'var(--text-muted)' }}>{idx + 1}</td>
+                  <td style={{ padding: '16px 24px', fontFamily: 'monospace', color: 'var(--text-secondary)' }}>{student.roll_number}</td>
+                  <td style={{ padding: '16px 24px', textAlign: 'left', fontWeight: '500', color: 'var(--text-primary)', minWidth: '180px' }}>
                     {student.full_name || student.name || student.student_name || 'UNKNOWN'}
                   </td>
                   {subjects.map(sub => {
                     const marks = student.studentMarks[sub.id];
                     const displayMarks = marks === 'A' ? 'A' : marks;
                     return (
-                      <td key={`mark-${student.id}-${sub.id}`} style={{ padding: '16px 24px', fontWeight: '500', color: displayMarks === 'A' ? '#f87171' : '#cbd5e1' }}>
+                      <td key={`mark-${student.id}-${sub.id}`} style={{ padding: '16px 24px', fontWeight: '500', color: displayMarks === 'A' ? 'var(--danger-text)' : 'var(--text-secondary)' }}>
                         {displayMarks}
                       </td>
                     );
                   })}
-                  <td style={{ padding: '16px 24px', fontWeight: '700', color: '#f59e0b' }}>{student.total}</td>
-                  <td style={{ padding: '16px 24px', color: '#cbd5e1' }}>{student.percentage}%</td>
-                  <td style={{ padding: '16px 24px', fontWeight: '700', color: student.passFail === 'PASS' ? '#10b981' : '#ef4444' }}>
+                  <td style={{ padding: '16px 24px', fontWeight: '700', color: 'var(--warning-text)' }}>{student.total}</td>
+                  <td style={{ padding: '16px 24px', color: 'var(--text-secondary)' }}>{student.percentage}%</td>
+                  <td style={{ padding: '16px 24px', fontWeight: '700', color: student.passFail === 'PASS' ? 'var(--success-text)' : 'var(--danger-text)' }}>
                     {student.passFail}
                   </td>
-                  <td style={{ padding: '16px 24px', fontWeight: '900', color: '#ffffff', fontSize: '16px' }}>{student.rank}</td>
+                  <td style={{ padding: '16px 24px', fontWeight: '900', color: 'var(--text-primary)', fontSize: '16px' }}>{student.rank}</td>
                 </tr>
               ))}
             </tbody>
@@ -739,7 +739,7 @@ function HODRankSheet() {
             marginBottom: '1.25rem',
             padding: '2rem',
             textAlign: 'center',
-            color: '#94a3b8',
+            color: 'var(--text-muted)',
             borderStyle: 'dashed',
           }}
         >
@@ -749,21 +749,21 @@ function HODRankSheet() {
 
       {/* --- EXPORT MODAL --- */}
       {isExportModalOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999 }}>
-          <div style={{ backgroundColor: '#1e1e2d', border: '1px solid #334155', borderRadius: '16px', padding: '32px', width: '90%', maxWidth: '400px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'var(--bg-overlay)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999999 }}>
+          <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '16px', padding: '32px', width: '90%', maxWidth: '400px', boxShadow: 'var(--shadow-xl)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
             <div style={{ textAlign: 'center', marginBottom: '4px' }}>
-              <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#ffffff', margin: '0 0 6px 0' }}>Generate Rank Sheet</h2>
-              <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>Confirm details for the PDF header</p>
+              <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: 'var(--text-primary)', margin: '0 0 6px 0' }}>Generate Rank Sheet</h2>
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>Confirm details for the PDF header</p>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '12px', fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Academic Session</label>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Academic Session</label>
               <input
                 type="text"
                 value={academicSession}
                 onChange={(e) => setAcademicSession(e.target.value)}
-                style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #334155', color: '#ffffff', borderRadius: '8px', padding: '12px 16px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+                style={{ width: '100%', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: '8px', padding: '12px 16px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
                 placeholder="e.g. Jan-June 2026"
               />
             </div>
@@ -771,7 +771,7 @@ function HODRankSheet() {
             <div style={{ display: 'flex', gap: '16px', marginTop: '12px' }}>
               <button
                 onClick={() => setIsExportModalOpen(false)}
-                style={{ flex: 1, padding: '12px', backgroundColor: '#334155', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}
+                style={{ flex: 1, padding: '12px', backgroundColor: 'var(--bg-muted)', color: 'var(--text-primary)', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}
               >
                 Cancel
               </button>

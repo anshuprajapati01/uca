@@ -1,0 +1,350 @@
+/* Upload Materials - SaaS Polish */
+
+/* Force all selects/inputs in this module to light mode */
+.upload-materials select,
+.upload-materials input,
+.upload-materials .broadcast-input {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-strong) !important;
+  outline: none !important;
+}
+
+.upload-materials select:focus,
+.upload-materials input:focus,
+.upload-materials .broadcast-input:focus {
+  border-color: var(--brand) !important;
+  box-shadow: 0 0 0 2px var(--brand-subtle) !important;
+}
+
+/* Headings */
+.upload-materials h2,
+.upload-materials h3 {
+  color: var(--text-primary) !important;
+  font-weight: 700 !important;
+  font-size: 1.25rem !important;
+}
+
+.upload-section-title {
+  font-size: 1.35rem !important;
+  font-weight: 700 !important;
+  color: var(--text-primary) !important;
+  margin-bottom: 24px !important;
+  padding-bottom: 12px !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.text-brand {
+  color: var(--brand) !important;
+}
+
+/* Category dropdown light mode */
+.upload-materials .category-dropdown-trigger {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 8px 12px !important;
+  min-height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  box-shadow: none !important;
+}
+
+.upload-materials .category-dropdown-menu {
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-md) !important;
+  background: var(--bg-card) !important;
+  overflow: hidden !important;
+  margin-top: 4px !important;
+  z-index: 50 !important;
+}
+
+.upload-materials .category-dropdown-menu input[type="text"] {
+  border-bottom: 1px solid var(--border-subtle) !important;
+  background: var(--bg-subtle) !important;
+}
+
+.upload-materials .category-dropdown-menu li,
+.upload-materials .category-option {
+  padding: 8px 12px !important;
+  color: var(--text-primary) !important;
+  font-size: 0.9rem !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  border: none !important;
+}
+
+.category-dropdown-option {
+  width: 100% !important;
+  padding: 10px 16px !important;
+  border: none !important;
+  text-align: left !important;
+  cursor: pointer !important;
+  font-size: 0.875rem !important;
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  transition: background 0.15s ease !important;
+  display: block !important;
+}
+
+.upload-materials .category-dropdown-menu button.category-dropdown-option:hover {
+  background: var(--bg-hover) !important;
+  color: var(--brand) !important;
+  border: none !important;
+}
+
+.upload-materials .category-dropdown-menu li:hover,
+.upload-materials .category-option:hover {
+  background: var(--bg-hover) !important;
+  color: var(--text-primary) !important;
+  border: none !important;
+}
+
+.upload-materials .category-dropdown-menu button {
+  color: var(--text-primary) !important;
+  background: transparent !important;
+}
+
+.upload-materials .category-dropdown-menu button:hover {
+  background: var(--brand) !important;
+  color: var(--brand-on) !important;
+}
+
+/* Form actions */
+.form-actions {
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 12px !important;
+  margin-top: 16px !important;
+  width: 100% !important;
+}
+
+.btn-clear {
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  border: 1px solid var(--border-strong) !important;
+  width: auto !important;
+  padding: 8px 16px !important;
+  border-radius: var(--radius-sm) !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-clear:hover {
+  background: var(--bg-muted) !important;
+  color: var(--text-primary) !important;
+}
+
+.btn-upload {
+  background: var(--brand) !important;
+  color: var(--brand-on) !important;
+  width: auto !important;
+  padding: 8px 16px !important;
+  border-radius: var(--radius-sm) !important;
+  border: none !important;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-upload:hover {
+  background: var(--brand-hover) !important;
+}
+
+/* Manage Uploaded Materials heading */
+.upload-materials-manage-heading {
+  display: block !important;
+  text-align: center !important;
+  margin-top: 12px !important;
+  margin-bottom: 20px !important;
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  color: var(--text-primary) !important;
+  width: 100% !important;
+}
+
+/* Filter pills - Mega Library parity */
+.filters-container {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+}
+
+.filters-container::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-pill {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+  padding: 6px 16px !important;
+  border-radius: 99px !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-pill.active {
+  background: var(--brand) !important;
+  color: var(--brand-on) !important;
+  border-color: var(--brand) !important;
+}
+
+.filter-pill:hover:not(.active) {
+  background: var(--bg-hover) !important;
+}
+
+/* Material cards - SaaS layout */
+.material-card {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 16px 20px !important;
+  box-shadow: var(--shadow-xs) !important;
+  margin-bottom: 12px !important;
+  transition: all 0.2s ease !important;
+}
+
+.material-card:hover {
+  box-shadow: var(--shadow-sm) !important;
+  border-color: var(--border-strong) !important;
+}
+
+.material-card .content-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 4px;
+  min-width: 0;
+}
+
+.material-card .actions-right {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* Action buttons */
+.action-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 6px 12px !important;
+  border-radius: var(--radius-sm) !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.view-btn {
+  background: var(--info-subtle) !important;
+  color: var(--info-text) !important;
+  border: 1px solid transparent !important;
+}
+
+.delete-btn {
+  background: transparent !important;
+  color: var(--danger) !important;
+  border: 1px solid var(--danger-border) !important;
+}
+
+.delete-btn:hover {
+  background: var(--danger-subtle) !important;
+}
+
+/* Uploaded by text - professional muted */
+.material-card .uploaded-by,
+.uploaded-by-text {
+  color: var(--text-tertiary) !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+}
+
+/* Catch-all dark buttons in this module */
+.upload-materials button:not(.btn-clear):not(.btn-upload):not(.broadcast-send-btn):not(.filter-pill):not(.director-branch-subtab):not(.category-dropdown-option) {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border) !important;
+}
+
+.upload-materials .dept-card__delete-btn,
+.upload-materials .delete-btn {
+  background: transparent !important;
+  color: var(--danger) !important;
+  border: 1px solid transparent !important;
+  padding: 6px !important;
+  border-radius: var(--radius-md) !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.upload-materials .dept-card__delete-btn:hover,
+.upload-materials .delete-btn:hover {
+  background: var(--danger-subtle) !important;
+  border-color: var(--danger-border) !important;
+}
+
+/* Empty state */
+.upload-materials .empty-state {
+  color: var(--text-secondary) !important;
+  background: var(--bg-subtle) !important;
+  border: 1px dashed var(--border-strong) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 2rem !important;
+  text-align: center !important;
+}
+
+/* File info chip */
+.file-info-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 10px 16px;
+  background: var(--bg-muted) !important;
+  border-radius: var(--radius-md) !important;
+  border: 1px solid var(--border) !important;
+}
+
+.file-info-chip span {
+  color: var(--text-primary) !important;
+  font-size: 0.875rem !important;
+  white-space: nowrap;
+  overflow: hidden;
+  textOverflow: ellipsis;
+}
+
+.file-info-chip button {
+  background: transparent !important;
+  color: var(--danger) !important;
+  border: 1px solid transparent !important;
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: var(--radius-md) !important;
+  cursor: pointer;
+  display: grid !important;
+  place-items: center;
+  transition: all 0.2s ease;
+}
+
+.file-info-chip button:hover {
+  background: var(--danger-subtle) !important;
+  border-color: var(--danger-border) !important;
+}

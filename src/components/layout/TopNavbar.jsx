@@ -220,20 +220,19 @@ export default function TopNavbar({ title, onMenuClick }) {
     }
   };
 
-  return (
-    <>
-      <header className="dashboard-topbar">
-      <div className="dashboard-topbar__left">
-        <button
-          type="button"
-          className="dashboard-topbar__menu-btn"
-          aria-label="Open navigation menu"
-          onClick={onMenuClick}
-        >
-          <Menu size={20} aria-hidden="true" />
-        </button>
-        <h1 className="dashboard-topbar__title">{title}</h1>
-      </div>
+    return (
+      <>
+       <header className="dashboard-topbar">
+          <div className="dashboard-topbar__left">
+            <div className="dashboard-header-titles" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', marginLeft: '24px' }}>
+              <span style={{ fontSize: '0.875rem', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '0.025em', textAlign: 'center' }}>
+                {location.pathname.includes('hod-dashboard') ? 'HOD Dashboard' : location.pathname.includes('director') ? 'Director Portal' : location.pathname.includes('faculty') ? 'Faculty Dashboard' : 'Student Dashboard'}
+              </span>
+              <h1 style={{ color: '#0f172a', fontSize: '1.25rem', fontWeight: '700', margin: 0, letterSpacing: '-0.025em' }}>
+                Welcome back, {fullName || 'User'}
+              </h1>
+            </div>
+          </div>
 
       <div className="dashboard-topbar__right">
         {showRoleSwitcher && switcherLabel ? (

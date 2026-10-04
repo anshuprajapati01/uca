@@ -79,12 +79,22 @@ export default function AuthProvider({ children }) {
           setProfileError(null);
         }
       } catch (error) {
-        console.error('Auth initialization failed:', error);
-        if (mounted) {
-          localStorage.clear();
-          sessionStorage.clear();
-          if (window.location.pathname !== '/') {
-            window.location.href = '/';
+        if (error.name === 'AuthSessionMissingError' || error.message?.includes('Auth session missing')) {
+          if (mounted) {
+            setUser(null);
+            setSession(null);
+            setProfile(null);
+            setRole(null);
+            setProfileError(null);
+          }
+        } else {
+          console.error('Auth initialization failed:', error);
+          if (mounted) {
+            localStorage.clear();
+            sessionStorage.clear();
+            if (window.location.pathname !== '/') {
+              window.location.href = '/';
+            }
           }
         }
       } finally {

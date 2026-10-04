@@ -6,12 +6,12 @@
   margin: 0 0 0.5rem;
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--text-h, #0f172a);
+  color: var(--text-primary);
 }
 
 .faculty-overview__welcome p {
   margin: 0;
-  color: #6b7280;
+  color: var(--text-secondary);
   font-size: 0.9375rem;
 }
 
@@ -28,8 +28,8 @@
   padding: 1.25rem;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: var(--bg, #ffffff);
-  color: var(--text, #111827);
+  background: var(--bg-card);
+  color: var(--text-primary);
 }
 
 .stat-card__icon {
@@ -39,8 +39,8 @@
   width: 48px;
   height: 48px;
   border-radius: 10px;
-  background: var(--accent-bg, rgba(170, 59, 255, 0.1));
-  color: var(--accent, #aa3bff);
+  background: var(--brand-subtle);
+  color: var(--brand);
 }
 
 .stat-card__content {
@@ -53,19 +53,19 @@
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .stat-card__value {
   margin: 0;
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--text-h, #0f172a);
+  color: var(--text-primary);
 }
 
 .stat-card__value--loading {
   font-size: 1rem;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 /* --- My Schedule Today (reuses Student Dashboard .st-* styles) --- */
@@ -82,8 +82,8 @@
 }
 
 .faculty-take-attendance-btn {
-  background: #fbbf24;
-  color: #1a1d2d;
+  background: var(--warning);
+  color: var(--text-primary);
   border: none;
   border-radius: 8px;
   padding: 8px 14px;
@@ -95,7 +95,7 @@
 }
 
 .faculty-take-attendance-btn:hover {
-  background: #f59e0b;
+  background: var(--warning-hover);
   transform: translateY(-1px);
 }
 
@@ -106,19 +106,19 @@
   margin-bottom: 20px;
 }
 .st-day-btn {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #94a3b8;
+  background: var(--bg-muted);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
   padding: 8px 16px;
   border-radius: 8px;
   cursor: pointer;
   transition: 0.3s;
 }
 .st-day-btn.active {
-  background: #4f46e5;
+  background: var(--brand);
   color: white;
-  border-color: #6366f1;
-  box-shadow: 0 0 10px rgba(79, 70, 229, 0.3);
+  border-color: var(--brand-hover);
+  box-shadow: var(--shadow-focus);
 }
 
 /* Dynamic branch filter pills */
@@ -130,9 +130,9 @@
 }
 
 .faculty-filter-pill {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #94a3b8;
+  background: var(--bg-muted);
+  border: 1px solid var(--border-brand);
+  color: var(--text-secondary);
   padding: 6px 16px;
   border-radius: 9999px;
   font-size: 0.8rem;
@@ -143,15 +143,15 @@
 }
 
 .faculty-filter-pill:hover {
-  border-color: rgba(99, 102, 241, 0.55);
-  color: #c7d2fe;
+  border-color: var(--border-brand);
+  color: var(--text-brand);
 }
 
 .faculty-filter-pill.active {
-  background: #4f46e5;
+  background: var(--brand);
   color: #fff;
-  border-color: #6366f1;
-  box-shadow: 0 0 10px rgba(79, 70, 229, 0.3);
+  border-color: var(--brand-hover);
+  box-shadow: var(--shadow-focus);
 }
 
 /* Rich metadata row inside schedule cards */
@@ -161,7 +161,7 @@
   align-items: center;
   gap: 6px;
   margin-top: 6px;
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 0.8rem;
   font-weight: 500;
 }

@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { supabase, createTempClient } from '../../lib/supabase.js';
 import { ROUTES, AGGREGATE_DEPARTMENTS } from '../../config/constants.js';
-import { Shield, Users, BarChart3, Layers, BookOpen, Target, Award, ArrowLeft, UploadCloud, Send, FileText, Archive, ScrollText, PenTool, Phone, Mail, X, Trash2, GraduationCap, Eye } from 'lucide-react';
+import { Shield, Users, BarChart3, Layers, BookOpen, Target, Award, ArrowLeft, UploadCloud, Send, FileText, Archive, ScrollText, PenTool, Phone, Mail, X, Trash2, GraduationCap, Eye, LayoutDashboard, BarChart2, Building2, Briefcase, Contact, BookMarked, Megaphone } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout.jsx';
 import './DirectorDashboard-v2.css';
 import HodManagement from './HodManagement.jsx';
@@ -11,15 +11,15 @@ import DirectorStudentDirectory from './DirectorStudentDirectory.jsx';
 import DirectorAttendance from './DirectorAttendance.jsx';
 
 const DIRECTOR_NAV = [
-  { id: 'overview', label: '🏠 Overview', path: ROUTES.DIRECTOR_DASHBOARD },
-  { id: 'academic', label: '🎓 Academic Hub', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=academic` },
-  { id: 'attendance', label: '📊 Attendance Analytics', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=attendance` },
-  { id: 'faculty', label: '👥 Manage Faculty', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=faculty` },
-  { id: 'departments', label: '🏢 Manage Departments', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=departments` },
-  { id: 'hod-management', label: '👨‍🏫 HOD Management', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=hod-management` },
-  { id: 'student-directory', label: '📖 Student Directory', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=student-directory` },
-  { id: 'master-syllabus', label: '📚 Master Syllabus', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=master-syllabus` },
-  { id: 'announcements', label: '📢 Announcements', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=announcements` },
+  { id: 'overview', label: 'Overview', path: ROUTES.DIRECTOR_DASHBOARD, icon: LayoutDashboard },
+  { id: 'academic', label: 'Academic Hub', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=academic`, icon: GraduationCap },
+  { id: 'attendance', label: 'Attendance Analytics', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=attendance`, icon: BarChart2 },
+  { id: 'faculty', label: 'Manage Faculty', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=faculty`, icon: Users },
+  { id: 'departments', label: 'Manage Departments', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=departments`, icon: Building2 },
+  { id: 'hod-management', label: 'HOD Management', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=hod-management`, icon: Briefcase },
+  { id: 'student-directory', label: 'Student Directory', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=student-directory`, icon: Contact },
+  { id: 'master-syllabus', label: 'Master Syllabus', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=master-syllabus`, icon: BookMarked },
+  { id: 'announcements', label: 'Announcements', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=announcements`, icon: Megaphone },
 ];
 
 const MASTER_YEARS = [1, 2, 3, 4];
@@ -163,7 +163,7 @@ const DepartmentCard = ({ department, onBranchClick }) => {
                     key={idx} 
                     className="director-dept-card__tag director-dept-card__tag--clickable"
                     onClick={() => onBranchClick(branchName, department)}
-                    style={{ cursor: 'pointer' }}
+                    style={{ backgroundColor: '#eef2ff', color: '#4f46e5', border: '1px solid #c7d2fe', padding: '4px 12px', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: '600', cursor: 'pointer' }}
                 >
                     {branchName}
                 </span>
@@ -605,28 +605,29 @@ useEffect(() => {
       <article
         key={announcement.id}
         style={{
-          backgroundColor: 'rgba(31, 41, 55, 0.4)',
-          border: '1px solid rgba(55, 65, 81, 0.5)',
+          backgroundColor: '#ffffff',
+          border: '1px solid #e2e8f0',
           borderRadius: '12px',
           padding: '24px',
           marginBottom: '16px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-          <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#ffffff', margin: 0, textAlign: 'left' }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#0f172a', margin: 0, textAlign: 'left' }}>
             {announcement.title}
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-            <span style={{ padding: '4px 12px', backgroundColor: 'rgba(55, 65, 81, 0.5)', color: '#60a5fa', fontSize: '0.75rem', fontWeight: '600', borderRadius: '9999px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <span style={{ padding: '4px 12px', backgroundColor: '#eef2ff', color: '#4f46e5', fontSize: '0.75rem', fontWeight: '600', borderRadius: '9999px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               {announcement.priority || announcement.type || 'General'}
             </span>
-            <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
+            <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
               {announcement.created_at ? new Date(announcement.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
             </span>
           </div>
         </div>
 
-        <p style={{ color: '#d1d5db', fontSize: '0.875rem', textAlign: 'left', marginBottom: hasLink ? '24px' : 0, whiteSpace: 'pre-wrap', marginTop: 0 }}>
+        <p style={{ color: '#334155', fontSize: '0.875rem', textAlign: 'left', marginBottom: hasLink ? '24px' : 0, whiteSpace: 'pre-wrap', marginTop: 0 }}>
           {announcement.content || announcement.message}
         </p>
 
@@ -637,19 +638,13 @@ useEffect(() => {
                 href={viewHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: 'rgba(30, 58, 138, 0.4)', color: '#bfdbfe', fontSize: '0.875rem', fontWeight: '500', borderRadius: '9999px', textDecoration: 'none' }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: '#eef2ff', color: '#4f46e5', fontSize: '0.875rem', fontWeight: '500', borderRadius: '9999px', textDecoration: 'none' }}
               >
                 <Eye size={16} /> View
               </a>
-              <button
-                onClick={() => setAnnouncementToDelete(announcement.id)}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e', fontSize: '0.875rem', fontWeight: '500', borderRadius: '9999px', border: '1px solid rgba(244, 63, 94, 0.4)', cursor: 'pointer' }}
-              >
-                <Trash2 size={16} /> Delete
-              </button>
             </div>
           )}
-          <div style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: '14px' }}>
+          <div style={{ color: '#64748b', fontWeight: '600', fontSize: '0.875rem' }}>
             Sent by: {announcement.sender?.full_name || 'Admin'} ({announcement.sender?.role || 'Admin'})
           </div>
         </div>
@@ -1292,11 +1287,11 @@ const handleAddFaculty = async (e) => {
         {activeTab === 'overview' && (
           <>
             <header className="director-header">
-              <div className="director-header__content">
-                <h1 className="director-header__title">
-                  Welcome back, <span className="director-header__highlight">{directorName}</span>
+              <div className="director-header__content" style={{ marginLeft: '24px' }}>
+                <h1 style={{ color: '#0f172a', fontSize: '2rem', fontWeight: '800', textAlign: 'left', letterSpacing: '-0.025em', marginBottom: '6px' }}>
+                  {(() => { const h = new Date().getHours(); const t = h >= 5 && h < 12 ? 'Morning' : h >= 12 && h < 17 ? 'Afternoon' : h >= 17 && h < 21 ? 'Evening' : ''; return t ? `Good ${t}, ${directorName}` : `Welcome back, ${directorName}`; })()}
                 </h1>
-                <p className="director-header__subtitle">Director at Buddha Institute of Technology</p>
+                <p style={{ color: '#64748b', fontSize: '0.95rem', textAlign: 'left', marginBottom: '32px', fontWeight: '500' }}>Director at Buddha Institute of Technology</p>
               </div>
             </header>
 
@@ -1342,10 +1337,25 @@ const handleAddFaculty = async (e) => {
             {/* STATE 2: SHOW DEPARTMENTS FOR SELECTED YEAR */}
             {selectedAcademicYear && !selectedBranch && (
               <div className="director-department-view-wrapper">
-                <div className="director-section__header" style={{ alignItems: 'center', marginBottom: '2rem' }}>
-                    <button className="director-back-btn" onClick={() => setSelectedAcademicYear(null)}>
-                    <ArrowLeft size={18} /> Back to Years
-                  </button>
+                 <div className="director-section__header" style={{ display: 'flex', alignItems: 'center', width: '100%', marginBottom: '2rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-start', width: '100%', marginBottom: '20px', paddingLeft: '0px' }}>
+                        <button
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: '#ffffff', color: '#475569', border: '1px solid #cbd5e1', padding: '8px 16px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                          onClick={() => setSelectedAcademicYear(null)}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#eef2ff';
+                            e.currentTarget.style.color = '#4f46e5';
+                            e.currentTarget.style.borderColor = '#4f46e5';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = '#ffffff';
+                            e.currentTarget.style.color = '#475569';
+                            e.currentTarget.style.borderColor = '#cbd5e1';
+                          }}
+                        >
+                        <ArrowLeft size={18} /> Back to Years
+                      </button>
+                    </div>
                   <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginLeft: '1rem' }}>
                     Departments in {selectedAcademicYear}
                   </h2>
@@ -1363,19 +1373,32 @@ const handleAddFaculty = async (e) => {
             )}
 
            {/* STATE 3: EXACT DESIGN COPY WITH NO SUBJECT LIST */}
-{selectedBranch && !selectedSemester && (
-               <div className="director-branch-view-wrapper">
-                 <button
-                   className="director-back-btn director-back-btn--premium"
-                   onClick={() => {
-                     if (isAggregateDepartment(selectedBranch.name)) {
-                       setSelectedSubBranch(null);
-                     }
-                     setSelectedBranch(null);
-                   }}
-                 >
-                   <ArrowLeft size={18} /> Back to Departments
-                 </button>
+  {selectedBranch && !selectedSemester && (
+                <div className="director-branch-view-wrapper">
+                   <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-start', width: '100%', marginBottom: '20px', paddingLeft: '0px' }}>
+                      <button
+                        type="button"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: '#ffffff', color: '#475569', border: '1px solid #cbd5e1', padding: '8px 16px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                        onClick={() => {
+                          if (isAggregateDepartment(selectedBranch.name)) {
+                            setSelectedSubBranch(null);
+                          }
+                          setSelectedBranch(null);
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#eef2ff';
+                          e.currentTarget.style.color = '#4f46e5';
+                          e.currentTarget.style.borderColor = '#4f46e5';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = '#ffffff';
+                          e.currentTarget.style.color = '#475569';
+                          e.currentTarget.style.borderColor = '#cbd5e1';
+                        }}
+                      >
+                        <ArrowLeft size={18} /> Back to Departments
+                      </button>
+                   </div>
 
                  {isAggregateDepartment(selectedBranch.name) && !selectedSubBranch ? (
                    <div className="director-subbranch-view">
@@ -1392,28 +1415,29 @@ const handleAddFaculty = async (e) => {
                        ))}
                      </div>
                    </div>
-                 ) : (
-                   <>
-                     <div className="director-branch-subtabs" role="tablist" aria-label="Branch view">
-<button
-                            type="button"
-                            className={`director-branch-subtab ${branchViewTab === 'academic' ? 'director-branch-subtab--active' : ''}`}
-                            role="tab"
-                            aria-selected={branchViewTab === 'academic'}
-                            onClick={() => setBranchViewTab('academic')}
-                        >
-                            Academic
-                        </button>
-                        {isAggregateDepartment(selectedBranch.name) && (
-                          <button
-                            type="button"
-                            className="director-back-btn--subbranch"
-                            onClick={handleBackToBranches}
-                          >
-                            <ArrowLeft size={16} /> Back to Sub-Branches
-                          </button>
-                        )}
-                      </div>
+                  ) : (
+                     <>
+                       {isAggregateDepartment(selectedBranch.name) && (
+                         <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-start', width: '100%', marginBottom: '20px', paddingLeft: '0px' }}>
+                           <button
+                             type="button"
+                             style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: '#ffffff', color: '#475569', border: '1px solid #cbd5e1', padding: '8px 16px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                             onClick={handleBackToBranches}
+                             onMouseEnter={(e) => {
+                               e.currentTarget.style.backgroundColor = '#eef2ff';
+                               e.currentTarget.style.color = '#4f46e5';
+                               e.currentTarget.style.borderColor = '#4f46e5';
+                             }}
+                             onMouseLeave={(e) => {
+                               e.currentTarget.style.backgroundColor = '#ffffff';
+                               e.currentTarget.style.color = '#475569';
+                               e.currentTarget.style.borderColor = '#cbd5e1';
+                             }}
+                           >
+                             <ArrowLeft size={16} /> Back to Sub-Branches
+                           </button>
+                         </div>
+                       )}
 
                       <div className="sem-grid-container">
                           {getSemestersForYear(selectedAcademicYear, buildLiveSemesterIdsSet(liveDeptRows)).map((sem) => (
@@ -1430,6 +1454,7 @@ const handleAddFaculty = async (e) => {
                                           handleSemesterSelect(sem);
                                       }
                                   }}
+                                  style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', transition: 'all 0.2s ease', cursor: 'pointer' }}
                               >
                                   <h3 className="sem-title">{sem.name}</h3>
                                   {sem.isLive && (
@@ -1443,24 +1468,51 @@ const handleAddFaculty = async (e) => {
                </div>
              )}
 
-            {selectedAcademicYear && selectedBranch && selectedSemester && (
+             {selectedAcademicYear && selectedBranch && selectedSemester && (
                 <div className="director-branch-view-wrapper">
                     {!selectedSubject && (
-                        <button
-                            className="director-back-btn"
-                            onClick={handleBackToSemesters}
-                        >
-                            <ArrowLeft size={18} /> Back to Semesters
-                        </button>
+                        <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-start', width: '100%', marginBottom: '20px', paddingLeft: '0px' }}>
+                            <button
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: '#ffffff', color: '#475569', border: '1px solid #cbd5e1', padding: '8px 16px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                                onClick={handleBackToSemesters}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = '#eef2ff';
+                                  e.currentTarget.style.color = '#4f46e5';
+                                  e.currentTarget.style.borderColor = '#4f46e5';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = '#ffffff';
+                                  e.currentTarget.style.color = '#475569';
+                                  e.currentTarget.style.borderColor = '#cbd5e1';
+                                }}
+                            >
+                                <ArrowLeft size={18} /> Back to Semesters
+                            </button>
+                        </div>
                     )}
 
                     {selectedSubject ? (
                         <div className="subject-detail-materials-full">
-                            <button className="premium-back-btn" onClick={() => setSelectedSubject(null)}>
-                                <ArrowLeft size={18} /> Back to Subjects
-                            </button>
+                            <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-start', width: '100%', marginBottom: '20px', paddingLeft: '0px' }}>
+                                <button
+                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: '#ffffff', color: '#475569', border: '1px solid #cbd5e1', padding: '8px 16px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                                  onClick={() => setSelectedSubject(null)}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = '#eef2ff';
+                                    e.currentTarget.style.color = '#4f46e5';
+                                    e.currentTarget.style.borderColor = '#4f46e5';
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = '#ffffff';
+                                    e.currentTarget.style.color = '#475569';
+                                    e.currentTarget.style.borderColor = '#cbd5e1';
+                                  }}
+                                >
+                                    <ArrowLeft size={18} /> Back to Subjects
+                                </button>
+                            </div>
 
-                            <div className="subject-detail-header">
+                            <div className="director-subject-view__header">
                                 <h2 className="subject-detail-name">{selectedSubject.name}</h2>
                                 <span className="subject-detail-code">{selectedSubject.code}</span>
                             </div>
@@ -1573,41 +1625,23 @@ flexShrink: 0,
                                          onMouseLeave={(e) => {
                                            e.currentTarget.style.background = '#3b82f6';
                                          }}
-                                       >
-                                         <svg
-                                           width="14"
-                                           height="14"
-                                           viewBox="0 0 24 24"
-                                           fill="none"
-                                           stroke="currentColor"
-                                           strokeWidth="2.5"
-                                           strokeLinecap="round"
-                                           strokeLinejoin="round"
-                                         >
-                                           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                           <circle cx="12" cy="12" r="3" />
-                                         </svg>
-                                         View
-                                       </button>
-                                       <button
-                                         onClick={() => setMaterialToDeleteId(material.id)}
-                                         style={{
-                                           display: 'inline-flex',
-                                           alignItems: 'center',
-                                           gap: '8px',
-                                           padding: '8px 16px',
-                                           backgroundColor: 'rgba(244, 63, 94, 0.15)',
-                                           color: '#f43f5e',
-                                           fontSize: '0.875rem',
-                                           fontWeight: '500',
-                                           borderRadius: '9999px',
-                                           border: '1px solid rgba(244, 63, 94, 0.4)',
-                                           cursor: 'pointer',
-                                         }}
-                                       >
-                                         <Trash2 size={16} /> Delete
-                                       </button>
-                                     </div>
+                                        >
+                                          <svg
+                                            width="14"
+                                            height="14"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2.5"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                          >
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                            <circle cx="12" cy="12" r="3" />
+                                          </svg>
+                                          View
+                                        </button>
+                                      </div>
                                    </div>
                                  ))
                               ) : (
@@ -1646,16 +1680,17 @@ flexShrink: 0,
                                             Department of {selectedBranch?.dept?.name || selectedBranch?.name} • {selectedAcademicYear}
                                         </p>
                                     </div>
-                                    <span className="director-subject-view__semester">{selectedSemester.name}</span>
+                                     <span className="director-subject-view__semester" style={{ backgroundColor: '#eef2ff', color: '#4f46e5', border: '1px solid #c7d2fe', padding: '6px 16px', borderRadius: '9999px', fontSize: '0.875rem', fontWeight: '700', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>{selectedSemester.name}</span>
                                 </div>
 
-                                <div className="director-subject-view__tabs" role="tablist" aria-label="Subject type">
+                                 <div className="director-subject-view__tabs" role="tablist" aria-label="Subject type" style={{ display: 'flex', justifyContent: 'flex-start', gap: '10px', width: '100%', marginBottom: '1.5rem', padding: '5px', borderRadius: '9999px', background: '#f8fafc', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)' }}>
                                     <button
                                         type="button"
                                         className={`subject-tab-btn ${subjectType === 'theory' ? 'subject-tab-btn--active' : ''}`}
                                         role="tab"
                                         aria-selected={subjectType === 'theory'}
                                         onClick={() => setSubjectType('theory')}
+                                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minHeight: '2.75rem', padding: '0.75rem 1.5rem', border: '1px solid #e2e8f0', borderRadius: '9999px', background: '#ffffff', color: '#0f172a', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease', letterSpacing: '0.01em' }}
                                     >
                                         Theory Subjects
                                     </button>
@@ -1665,37 +1700,41 @@ flexShrink: 0,
                                         role="tab"
                                         aria-selected={subjectType === 'practical'}
                                         onClick={() => setSubjectType('practical')}
-                                     >
-                                         Practical Subjects
-                                     </button>
-                                     <button
-                                         type="button"
-                                         className={`subject-tab-btn ${subjectType === 'skill' ? 'subject-tab-btn--active' : ''}`}
-                                         role="tab"
-                                         aria-selected={subjectType === 'skill'}
-                                         onClick={() => setSubjectType('skill')}
-                                     >
-                                         Skill
-                                     </button>
-                                     <button
-                                         type="button"
-                                         className={`subject-tab-btn ${subjectType === 'non-academic' ? 'subject-tab-btn--active' : ''}`}
-                                         role="tab"
-                                         aria-selected={subjectType === 'non-academic'}
-                                         onClick={() => setSubjectType('non-academic')}
-                                     >
-                                         Non-Academic
-                                     </button>
-                                     <button
-                                        type="button"
-                                        className={`subject-tab-btn ${subjectType === 'announcements' ? 'subject-tab-btn--active' : ''}`}
-                                        role="tab"
-                                        aria-selected={subjectType === 'announcements'}
-                                        onClick={() => setSubjectType('announcements')}
+                                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minHeight: '2.75rem', padding: '0.75rem 1.5rem', border: '1px solid #e2e8f0', borderRadius: '9999px', background: '#ffffff', color: '#0f172a', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease', letterSpacing: '0.01em' }}
                                     >
-                                        Announcements
+                                        Practical Subjects
                                     </button>
-                                </div>
+                                    <button
+                                        type="button"
+                                        className={`subject-tab-btn ${subjectType === 'skill' ? 'subject-tab-btn--active' : ''}`}
+                                        role="tab"
+                                        aria-selected={subjectType === 'skill'}
+                                        onClick={() => setSubjectType('skill')}
+                                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minHeight: '2.75rem', padding: '0.75rem 1.5rem', border: '1px solid #e2e8f0', borderRadius: '9999px', background: '#ffffff', color: '#0f172a', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease', letterSpacing: '0.01em' }}
+                                    >
+                                        Skill
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`subject-tab-btn ${subjectType === 'non-academic' ? 'subject-tab-btn--active' : ''}`}
+                                        role="tab"
+                                        aria-selected={subjectType === 'non-academic'}
+                                        onClick={() => setSubjectType('non-academic')}
+                                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minHeight: '2.75rem', padding: '0.75rem 1.5rem', border: '1px solid #e2e8f0', borderRadius: '9999px', background: '#ffffff', color: '#0f172a', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease', letterSpacing: '0.01em' }}
+                                    >
+                                        Non-Academic
+                                    </button>
+                                    <button
+                                       type="button"
+                                       className={`subject-tab-btn ${subjectType === 'announcements' ? 'subject-tab-btn--active' : ''}`}
+                                       role="tab"
+                                       aria-selected={subjectType === 'announcements'}
+                                       onClick={() => setSubjectType('announcements')}
+                                       style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minHeight: '2.75rem', padding: '0.75rem 1.5rem', border: '1px solid #e2e8f0', borderRadius: '9999px', background: '#ffffff', color: '#0f172a', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease', letterSpacing: '0.01em' }}
+                                   >
+                                       Announcements
+                                   </button>
+                                 </div>
 
                                 {subjectType === 'announcements' ? (
                                     <div className="pw-announcements-section">
@@ -1723,7 +1762,7 @@ flexShrink: 0,
                                         )}
                                     </div>
 ) : (
-                                    <div className="pw-subject-grid">
+                                    <div className="pw-subject-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '24px', width: '100%' }}>
                                       {subjectsLoading ? (
                                         <div className="pw-loading-subjects">Loading subjects...</div>
                                       ) : subjectsError ? (
@@ -1731,44 +1770,30 @@ flexShrink: 0,
                                       ) : currentSubjects[subjectType].length > 0 ? currentSubjects[subjectType].map((subject) => {
                                         const facultyInfo = getDirectorSubjectFaculty(subject);
                                         return (
-                                        <article
+                                        <div
                                             key={subject.id}
                                             className="pw-subject-card"
-                                            role="button"
-                                            tabIndex={0}
-                                            aria-label={`Open ${subject.name} details`}
-                                            onClick={() => setSelectedSubject({
-                                              id: subject.id,
-                                              name: subject.name,
-                                              code: subject.code,
-                                              faculty: facultyInfo,
-                                            })}
-                                            onKeyDown={(event) => {
-                                                if (event.key === 'Enter' || event.key === ' ') {
-                                                    event.preventDefault();
-                                                    setSelectedSubject({
-                                                      id: subject.id,
-                                                      name: subject.name,
-                                                      code: subject.code,
-                                                      faculty: facultyInfo,
-                                                    });
-                                                }
-                                            }}
+                                            style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', transition: 'all 0.2s ease', position: 'relative' }}
                                         >
-                                            <div className="pw-subject-card__content">
-                                                <h4 className="pw-subject-card__name">{subject.name}</h4>
-                                                <span className="pw-subject-card__code">{subject.code}</span>
-                                            </div>
-                                            <div className="pw-subject-card__faculty">
+                                         <div className="pw-subject-card__content" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', width: '100%', marginBottom: '12px' }}>
+                                           <div className="pw-subject-card__title-area" style={{ flex: 1, minWidth: 0 }}>
+                                               <h4 className="pw-subject-card__name" style={{ margin: 0, color: '#0f172a', fontSize: '1.15rem', fontWeight: '700', letterSpacing: '-0.01em', paddingRight: '0', lineHeight: 1.3 }}>{subject.name}</h4>
+                                           </div>
+                                           <div className="pw-subject-card__actions" style={{ display: 'none' }}>
+                                           </div>
+                                         </div>
+                                            <p className="pw-subject-card__code" style={{ fontSize: '0.88rem', color: '#475569', margin: 0, fontWeight: '600', letterSpacing: '0.02em' }}>{subject.code}</p>
+                                            <div className="pw-subject-card__faculty" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #e2e8f0', color: '#475569' }}>
                                                 <img
                                                     className="pw-subject-card__avatar"
                                                     src={facultyInfo.avatarUrl}
                                                     alt={`${facultyInfo.name} avatar`}
                                                     loading="lazy"
+                                                    style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #cbd5e1', background: '#f8fafc', flexShrink: 0, boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)' }}
                                                 />
-                                                <span>{facultyInfo.name}</span>
+                                                <span style={{ fontSize: '0.9rem', fontWeight: '600', letterSpacing: '-0.01em' }}>{facultyInfo.name}</span>
                                             </div>
-                                        </article>
+                                        </div>
                                         );
                                     }) : (
                                         <div className="pw-empty-subjects">No subjects available for this semester.</div>
@@ -2093,26 +2118,26 @@ flexShrink: 0,
             <div style={{ marginBottom: '24px', position: 'relative' }}>
               <input
                 type="text"
-                placeholder="🔍 Search faculty by name, email, or phone..."
+                placeholder="Search faculty by name, email, or phone..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
                   width: '100%',
-                  padding: '14px 20px',
-                  borderRadius: '12px',
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: 'white',
-                  fontSize: '15px',
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #cbd5e1',
+                  color: '#0f172a',
+                  padding: '12px 16px 12px 40px',
+                  borderRadius: '8px',
                   outline: 'none',
-                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                  transition: 'all 0.3s ease'
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
                 }}
-                onFocus={(e) => e.target.style.borderColor = '#4f46e5'}
-                onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
+                onFocus={(e) => { e.target.style.borderColor = '#4f46e5'; }}
+                onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; }}
               />
             </div>
-            <div style={{ overflowY: 'auto', flexGrow: 1, paddingBottom: '40px', paddingRight: '10px' }}>
+            <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', transition: 'all 0.2s ease', overflowY: 'auto', flexGrow: 1, paddingBottom: '40px', paddingRight: '10px' }}>
               <div className="premium-faculty-grid">
                 {(() => {
                   const filteredFaculties = dbFaculty.filter((faculty) => {
@@ -2131,8 +2156,8 @@ flexShrink: 0,
                   const avatarUrl = faculty.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=8b5cf6&color=fff`;
                   const facultyTags = Array.isArray(faculty.expertise_tags) ? faculty.expertise_tags : [];
 
-                   return (
-                     <div key={faculty.id} className="premium-faculty-card" style={{ cursor: 'pointer' }} onClick={() => openActionModal(faculty)}>
+                    return (
+                      <div key={faculty.id} className="premium-faculty-card" style={{ cursor: 'pointer' }} onClick={() => { if (!window.getSelection().toString().trim()) openActionModal(faculty); }}>
                        <div className="premium-faculty-card__glow" />
                        <button
                          className="premium-faculty-card__delete-btn"
@@ -2186,8 +2211,8 @@ flexShrink: 0,
             style={{
               position: 'fixed',
               inset: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.75)',
-              backdropFilter: 'blur(8px)',
+              backgroundColor: 'rgba(15, 23, 42, 0.5)',
+              backdropFilter: 'blur(4px)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -2197,13 +2222,12 @@ flexShrink: 0,
           >
             <div
               style={{
-                backgroundColor: '#1c1d2e',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                backgroundColor: '#ffffff',
                 borderRadius: '16px',
-                padding: '28px',
+                padding: '32px',
                 width: '100%',
                 maxWidth: '480px',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
               }}
               onClick={(e) => e.stopPropagation()}
             >
@@ -2218,9 +2242,9 @@ flexShrink: 0,
                 <h3
                   style={{
                     margin: 0,
-                    fontSize: '1.15rem',
+                    fontSize: '1.25rem',
                     fontWeight: '700',
-                    color: '#f1f5f9',
+                    color: '#0f172a',
                   }}
                 >
                   Faculty Actions
@@ -2228,10 +2252,10 @@ flexShrink: 0,
                 <button
                   onClick={closeActionModal}
                   style={{
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.1)',
+                    background: '#f1f5f9',
+                    border: '1px solid #e2e8f0',
                     borderRadius: '8px',
-                    color: '#cbd5e1',
+                    color: '#475569',
                     cursor: 'pointer',
                     padding: '0.35rem 0.6rem',
                     fontSize: '0.8rem',
@@ -2258,7 +2282,7 @@ flexShrink: 0,
                     height: '80px',
                     borderRadius: '50%',
                     objectFit: 'cover',
-                    border: '2px solid rgba(99,102,241,0.3)',
+                    border: '2px solid #cbd5e1',
                   }}
                 />
                 <div style={{ textAlign: 'center' }}>
@@ -2266,7 +2290,7 @@ flexShrink: 0,
                     style={{
                       fontSize: '1.1rem',
                       fontWeight: '700',
-                      color: '#f1f5f9',
+                      color: '#0f172a',
                     }}
                   >
                     {selectedActionFaculty.full_name || '—'}
@@ -2274,7 +2298,7 @@ flexShrink: 0,
                   <div
                     style={{
                       fontSize: '0.85rem',
-                      color: '#94a3b8',
+                      color: '#64748b',
                       marginTop: '0.25rem',
                     }}
                   >
@@ -2293,11 +2317,13 @@ flexShrink: 0,
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                   <label
                     style={{
-                      fontSize: '0.72rem',
-                      fontWeight: '600',
-                      color: '#6366f1',
+                      color: '#475569',
+                      fontSize: '0.75rem',
+                      fontWeight: '700',
                       textTransform: 'uppercase',
                       letterSpacing: '0.05em',
+                      marginBottom: '8px',
+                      display: 'block',
                     }}
                   >
                     Phone Number
@@ -2309,13 +2335,14 @@ flexShrink: 0,
                     placeholder="Enter phone number"
                     style={{
                       width: '100%',
-                      padding: '0.65rem 0.85rem',
-                      borderRadius: '10px',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      background: 'rgba(20,20,40,0.5)',
-                      color: '#f1f5f9',
-                      fontSize: '0.9rem',
+                      backgroundColor: '#f8fafc',
+                      border: '1px solid #cbd5e1',
+                      color: '#0f172a',
+                      padding: '12px 16px',
+                      borderRadius: '8px',
                       outline: 'none',
+                      marginBottom: '20px',
+                      fontWeight: '600',
                     }}
                   />
                 </div>
@@ -2324,16 +2351,14 @@ flexShrink: 0,
                   disabled={isUpdatingPhone}
                   style={{
                     width: '100%',
-                    padding: '0.7rem',
-                    borderRadius: '12px',
+                    padding: '12px',
+                    borderRadius: '8px',
                     border: 'none',
-                    fontSize: '0.9rem',
+                    fontSize: '0.875rem',
                     fontWeight: '600',
                     cursor: isUpdatingPhone ? 'not-allowed' : 'pointer',
-                    background: isUpdatingPhone
-                      ? 'rgba(99,102,241,0.4)'
-                      : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                    color: '#fff',
+                    background: isUpdatingPhone ? '#a5b4fc' : '#4f46e5',
+                    color: '#ffffff',
                     opacity: isUpdatingPhone ? 0.7 : 1,
                     transition: 'all 0.2s ease',
                   }}
@@ -2345,16 +2370,14 @@ flexShrink: 0,
                   disabled={isSendingReset}
                   style={{
                     width: '100%',
-                    padding: '0.7rem',
-                    borderRadius: '12px',
+                    padding: '12px',
+                    borderRadius: '8px',
                     border: 'none',
-                    fontSize: '0.9rem',
+                    fontSize: '0.875rem',
                     fontWeight: '600',
                     cursor: isSendingReset ? 'not-allowed' : 'pointer',
-                    background: isSendingReset
-                      ? 'rgba(16, 185, 129, 0.4)'
-                      : 'linear-gradient(135deg, #10b981, #059669)',
-                    color: '#fff',
+                    background: isSendingReset ? '#6ee7b7' : '#10b981',
+                    color: '#ffffff',
                     opacity: isSendingReset ? 0.7 : 1,
                     transition: 'all 0.2s ease',
                   }}
@@ -2421,6 +2444,7 @@ flexShrink: 0,
                     value={newDeptName}
                     onChange={(e) => setNewDeptName(e.target.value)}
                     required
+                    style={{ width: '100%', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', color: '#0f172a', padding: '12px 16px', borderRadius: '8px', outline: 'none', fontSize: '0.875rem', fontWeight: '500', marginBottom: '20px' }}
                   />
                 </div>
                 <div className="dept-form__row">
@@ -2431,6 +2455,7 @@ flexShrink: 0,
                     value={selectedYear}
                     onChange={(e) => setSelectedYear(e.target.value)}
                     required
+                    style={{ width: '100%', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', color: '#0f172a', padding: '12px 16px', borderRadius: '8px', outline: 'none', fontSize: '0.875rem', fontWeight: '500', marginBottom: '20px' }}
                   >
                     {YEARS.map((year) => (
                       <option key={year.id} value={year.id}>{year.title}</option>
@@ -2507,12 +2532,13 @@ flexShrink: 0,
 
             <div className="master-syllabus-filter-bar">
               <div className="master-syllabus-filter-group">
-                <label className="master-syllabus-filter-label" htmlFor="master-year">Year</label>
+                <label className="master-syllabus-filter-label" htmlFor="master-year" style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Year</label>
                 <select
                   id="master-year"
                   className="dept-input master-syllabus-select"
                   value={masterYear}
                   onChange={(e) => setMasterYear(Number(e.target.value))}
+                  style={{ backgroundColor: '#ffffff', border: '1px solid #cbd5e1', color: '#0f172a', padding: '10px 16px', borderRadius: '8px', outline: 'none', fontSize: '0.875rem', fontWeight: '500', minWidth: '160px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
                 >
                   {MASTER_YEARS.map((y) => (
                     <option key={y} value={y}>{`Year ${y}`}</option>
@@ -2520,12 +2546,13 @@ flexShrink: 0,
                 </select>
               </div>
               <div className="master-syllabus-filter-group">
-                <label className="master-syllabus-filter-label" htmlFor="master-branch">Branch</label>
+                <label className="master-syllabus-filter-label" htmlFor="master-branch" style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Branch</label>
                 <select
                   id="master-branch"
                   className="dept-input master-syllabus-select"
                   value={masterBranch}
                   onChange={(e) => setMasterBranch(e.target.value)}
+                  style={{ backgroundColor: '#ffffff', border: '1px solid #cbd5e1', color: '#0f172a', padding: '10px 16px', borderRadius: '8px', outline: 'none', fontSize: '0.875rem', fontWeight: '500', minWidth: '160px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
                 >
                   {MASTER_BRANCHES.map((b) => (
                     <option key={b} value={b}>{b}</option>
@@ -2551,12 +2578,21 @@ flexShrink: 0,
             {masterSubjectsLoading ? (
               <div className="master-syllabus-loading">Loading master subjects...</div>
             ) : masterSubjectsList.length > 0 ? (
-              <div className="master-syllabus-grid">
+              <div className="master-syllabus-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px', width: '100%' }}>
                 {masterSubjectsList.map((subject) => (
-                  <div key={subject.id} className="master-subject-card">
-                    <div className="master-subject-card__glow" />
+                  <div key={subject.id} className="master-subject-card" style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', position: 'relative', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'all 0.2s ease' }}>
+                    <div className="master-subject-card__glow" style={{ display: 'none' }} />
                     <div className="master-subject-card__top">
-                      <span className={`master-subject-card__type master-subject-card__type--${(subject.type || 'Theory').toLowerCase()}`}>
+                      <span className="master-subject-card__type" style={(() => {
+                        const t = (subject.type || 'Theory').toLowerCase();
+                        const map = {
+                          theory: { backgroundColor: '#eef2ff', color: '#4f46e5', border: '1px solid #c7d2fe' },
+                          practical: { backgroundColor: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0' },
+                          skill: { backgroundColor: '#fffbeb', color: '#d97706', border: '1px solid #fde68a' },
+                        };
+                        const s = map[t] || { backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' };
+                        return { padding: '4px 12px', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: '700', display: 'inline-block', textTransform: 'uppercase', ...s };
+                      })()}>
                         {subject.type || 'Theory'}
                       </span>
                       <button
@@ -2564,16 +2600,19 @@ flexShrink: 0,
                         onClick={() => setMasterSubjectToDelete(subject.id)}
                         aria-label="Delete subject"
                         type="button"
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#fee2e2'; e.currentTarget.style.borderColor = '#f87171'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#fef2f2'; e.currentTarget.style.borderColor = '#fecaca'; }}
                       >
                         <Trash2 size={16} />
                       </button>
                     </div>
                     <div className="master-subject-card__body">
-                      <h4 className="master-subject-card__name">{subject.name}</h4>
+                      <h4 className="master-subject-card__name" style={{ color: '#0f172a', fontSize: '1.125rem', fontWeight: '700', lineHeight: '1.4', marginBottom: '4px' }}>{subject.name}</h4>
                       <span className="master-subject-card__code">{subject.code}</span>
                     </div>
                     <div className="master-subject-card__meta">
-                      <span className="master-subject-card__credits">{subject.credits} Credits</span>
+                      <span className="master-subject-card__credits" style={{ color: '#4f46e5', fontSize: '0.875rem', fontWeight: '700' }}>{subject.credits} Credits</span>
                       <span className="master-subject-card__ctx">Year {subject.year} · {subject.branch}</span>
                     </div>
                   </div>

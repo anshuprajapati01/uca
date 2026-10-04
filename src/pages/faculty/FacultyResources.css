@@ -9,7 +9,7 @@
   margin: 0;
   font-size: 1.5rem;
   font-weight: 600;
-  color: #f3f4f6;
+  color: var(--text-primary);
 }
 
 .faculty-resources__add-btn {
@@ -20,8 +20,8 @@
   font-size: 0.875rem;
   font-weight: 500;
   border-radius: 8px;
-  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
-  color: #fff;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-hover) 100%);
+  color: var(--brand-on);
   border: none;
   cursor: pointer;
   transition: opacity 0.15s, transform 0.15s;
@@ -35,27 +35,27 @@
 .faculty-resources__table {
   width: 100%;
   border-collapse: collapse;
-  background: #1e1e2f;
+  background: var(--bg-card);
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid #2e303a;
+  border: 1px solid var(--border);
 }
 
 .faculty-resources__table th,
 .faculty-resources__table td {
   padding: 1rem;
   text-align: left;
-  border-bottom: 1px solid #2e303a;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .faculty-resources__table th {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-muted);
   font-weight: 600;
-  color: #e5e7eb;
+  color: var(--text-secondary);
 }
 
 .faculty-resources__table td {
-  color: #d1d5e0;
+  color: var(--text-primary);
 }
 
 .faculty-resources__table tr:last-child td {
@@ -69,16 +69,16 @@
   padding: 0.4rem;
   border-radius: 6px;
   background: transparent;
-  color: #9ca3af;
+  color: var(--text-secondary);
   border: 1px solid transparent;
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
 .faculty-resources__delete-btn:hover {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-  border-color: rgba(239, 68, 68, 0.3);
+  background: var(--danger-subtle);
+  color: var(--danger);
+  border-color: var(--danger-border);
 }
 
 .faculty-resources__tabs {

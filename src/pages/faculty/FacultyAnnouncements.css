@@ -9,7 +9,7 @@
   margin: 0;
   font-size: 1.5rem;
   font-weight: 600;
-  color: #f3f4f6;
+  color: #0f172a;
 }
 
 .faculty-announcements__grid {
@@ -19,8 +19,8 @@
 }
 
 .announcement-card {
-  background: #1e1e2f;
-  border: 1px solid #2e303a;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
   padding: 1rem;
   display: flex;
@@ -51,14 +51,14 @@
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
-  color: #f3f4f6;
+  color: #0f172a;
   line-height: 1.3;
 }
 
 .announcement-card__content {
   margin: 0;
   font-size: 0.875rem;
-  color: #9ca3af;
+  color: #334155;
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -89,7 +89,7 @@
 
 .announcement-badge--exam {
   background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
+  color: var(--warning);
 }
 
 .announcement-badge--holiday {
@@ -104,5 +104,5 @@
 
 .announcement-card__date {
   font-size: 0.8rem;
-  color: #6b7280;
+  color: #64748b;
 }

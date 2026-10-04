@@ -583,7 +583,7 @@ const fetchSubjects = useCallback(async () => {
   return (
     <div className="curriculum-manager">
       <div className="curriculum-manager__header">
-        <div>
+        <div className="curriculum-banner">
           <p className="curriculum-manager__eyebrow">HOD Curriculum Access</p>
           <h3 className="section-title">Curriculum Manager</h3>
           <p className="curriculum-manager__subtitle">
@@ -656,9 +656,11 @@ const fetchSubjects = useCallback(async () => {
       ) : !selectedBranch ? (
         <>
           {/* State 2: Branch Cards (for multi-branch HODs and aggregate HODs) */}
-          <button className="curriculum-manager__back" onClick={() => setSelectedSemester(null)}>
-            &larr; Back to Semesters
-          </button>
+          <div className="curriculum-back-wrapper">
+            <button className="curriculum-manager__back" onClick={() => setSelectedSemester(null)}>
+              &larr; Back to Semesters
+            </button>
+          </div>
 
           <div className="semester-detail-card">
             <div className="semester-detail-card__top">
@@ -695,9 +697,11 @@ const fetchSubjects = useCallback(async () => {
       ) : isAggregateHod && !selectedSubBranch ? (
         <>
           {/* State 2b: Sub-Branch Cards (only for aggregate HODs) */}
-          <button className="curriculum-manager__back" onClick={() => setSelectedBranch(null)}>
-            &larr; Back to Branches
-          </button>
+          <div className="curriculum-back-wrapper">
+            <button className="curriculum-manager__back" onClick={() => setSelectedBranch(null)}>
+              &larr; Back to Branches
+            </button>
+          </div>
 
           <div className="semester-detail-card">
             <div className="semester-detail-card__top">
@@ -730,15 +734,17 @@ const fetchSubjects = useCallback(async () => {
       ) : (
         <>
           {/* State 3: Subject Management */}
-          <button className="curriculum-manager__back" onClick={() => {
-            if (isAggregateHod) {
-              setSelectedSubBranch(null);
-            } else {
-              setSelectedBranch(null);
-            }
-          }}>
-            &larr; Back to {isAggregateHod ? 'Sub-Branches' : 'Branches'}
-          </button>
+          <div className="curriculum-back-row">
+            <button className="curriculum-manager__back" onClick={() => {
+              if (isAggregateHod) {
+                setSelectedSubBranch(null);
+              } else {
+                setSelectedBranch(null);
+              }
+            }}>
+              &larr; Back to {isAggregateHod ? 'Sub-Branches' : 'Branches'}
+            </button>
+          </div>
           {toastMsg && (
             <div className="cm-toast">
               <span className="cm-toast__message">{toastMsg}</span>
@@ -765,7 +771,7 @@ const fetchSubjects = useCallback(async () => {
 
             <button
               type="button"
-              className="curriculum-manager__add-button"
+              className="add-new-subject-btn"
               onClick={() => setShowAddModal(true)}
             >
               + Add New Subject
@@ -796,84 +802,37 @@ const fetchSubjects = useCallback(async () => {
                   key={subject.id}
                   className="subject-card"
                 >
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'flex-end',
-                      gap: '10px',
-                      background: 'transparent',
-                      padding: '0',
-                      position: 'absolute',
-                      top: '10px',
-                      right: '10px',
-                    }}
-                  >
-                    <button
-                      type="button"
-                      className="subject-card__assign-button"
-                      aria-label={`Assign faculty to ${subject.name}`}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setReassignModal({ isOpen: true, subject, newFacultyId: '' });
-                      }}
-                      title="Assign faculty"
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        cursor: 'pointer',
-                        padding: '5px',
-                        color: '#94a3b8',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '999px',
-                        transition: 'all 0.2s ease',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.color = '#e2e8f0';
-                        e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.color = '#94a3b8';
-                        e.currentTarget.style.background = 'transparent';
-                      }}
-                    >
-                      <PenTool size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      className="subject-card__delete-button"
-                      aria-label={`Delete ${subject.name}`}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setDeleteSubjectId(subject.id);
-                      }}
-                      title="Delete subject"
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        cursor: 'pointer',
-                        padding: '5px',
-                        color: '#fca5a5',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '999px',
-                        transition: 'all 0.2s ease',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.color = '#fff';
-                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.color = '#fca5a5';
-                        e.currentTarget.style.background = 'transparent';
-                      }}
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                  <h3 className="subject-card__title">{subject.name}</h3>
+                 <div className="subject-card-header">
+                   <div className="subject-card-title-area">
+                     <h3 className="subject-card__title">{subject.name}</h3>
+                   </div>
+                   <div className="subject-card-actions">
+                     <button
+                       type="button"
+                       className="subject-card__assign-button subject-edit-btn"
+                       aria-label={`Assign faculty to ${subject.name}`}
+                       onClick={(event) => {
+                         event.stopPropagation();
+                         setReassignModal({ isOpen: true, subject, newFacultyId: '' });
+                       }}
+                       title="Assign faculty"
+                     >
+                       <PenTool size={16} />
+                     </button>
+                     <button
+                       type="button"
+                       className="subject-card__delete-button subject-delete-btn"
+                       aria-label={`Delete ${subject.name}`}
+                       onClick={(event) => {
+                         event.stopPropagation();
+                         setDeleteSubjectId(subject.id);
+                       }}
+                       title="Delete subject"
+                     >
+                       <Trash2 size={16} />
+                     </button>
+                   </div>
+                 </div>
                   <p className="subject-card__code">{subject.code}</p>
                   <div className="subject-card__faculty-section">
                     <img
@@ -899,7 +858,8 @@ const fetchSubjects = useCallback(async () => {
         <div className="cm-modal-backdrop" onClick={() => setShowAddModal(false)}>
           <div className="cm-modal" onClick={(e) => e.stopPropagation()}>
             <h3 className="cm-modal__title">Add New Subject</h3>
-            <form className="cm-form" onSubmit={handleSubmitSubject}>
+            <div className="modal-body form-scrollable-content">
+              <form className="cm-form" onSubmit={handleSubmitSubject}>
               <div className="cm-form__row">
                 <label className="cm-label">Subject Name</label>
                 <div className="cm-subject-combobox" ref={subjectDropdownRef}>
@@ -1063,213 +1023,108 @@ const fetchSubjects = useCallback(async () => {
                 </div>
               )}
 
-              <div className="cm-form__actions">
-                <button type="button" className="cm-cancel-btn" onClick={() => setShowAddModal(false)}>
-                  Cancel
-                </button>
-                <button type="submit" className="cm-submit-btn" disabled={isSubmitting}>
-                  {isSubmitting ? 'Adding...' : 'Add Subject'}
-                </button>
-              </div>
             </form>
           </div>
+          <div className="modal-footer modal-actions">
+            <div className="cm-form__actions">
+              <button type="button" className="cm-cancel-btn" onClick={() => setShowAddModal(false)}>
+                Cancel
+              </button>
+              <button type="submit" className="cm-submit-btn" disabled={isSubmitting}>
+                {isSubmitting ? 'Adding...' : 'Add Subject'}
+              </button>
+            </div>
+          </div>
+        </div>
         </div>
       )}
 
       {reassignModal.isOpen && (
         <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 9999,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: 'rgba(0,0,0,0.7)',
-            backdropFilter: 'blur(5px)',
-          }}
+          className="reassign-modal-backdrop"
           onClick={() => {
             setReassignModal({ isOpen: false, subject: null, newFacultyId: '' });
             setReassignSearchTerm('');
           }}
         >
           <div
-            style={{
-              background: '#1a1c2e',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '16px',
-              padding: '28px',
-              width: '100%',
-              maxWidth: '480px',
-              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
-            }}
+            className="reassign-modal"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 style={{ color: 'white', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>
-              Reassign Faculty
-            </h3>
-            <p style={{ color: '#9ca3af', fontSize: '0.875rem', margin: '0 0 20px 0' }}>
-              Subject: <strong style={{ color: '#fbbf24' }}>{reassignModal.subject?.name}</strong>
+            <h3 className="reassign-modal__title">Reassign Faculty</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', margin: '0 0 20px 0' }}>
+              Subject: <strong className="reassign-modal__subject-name">{reassignModal.subject?.name}</strong>
             </p>
 
-            <div style={{ marginBottom: '20px' }}>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '0.75rem',
-                  fontWeight: '600',
-                  color: '#9ca3af',
-                  marginBottom: '8px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
+            <div style={{ marginBottom: '20px', position: 'relative' }} ref={reassignDropdownRef}>
+              <label className="reassign-modal__label">New Faculty</label>
+              <input
+                type="text"
+                placeholder="Search faculty by name..."
+                value={
+                  reassignModal.newFacultyId
+                    ? selectedReassignFaculty?.full_name || ''
+                    : reassignSearchTerm
+                }
+                onChange={(e) => {
+                  setReassignSearchTerm(e.target.value);
+                  setReassignModal((prev) => ({ ...prev, newFacultyId: '' }));
+                  setIsReassignDropdownOpen(true);
                 }}
-              >
-                New Faculty
-              </label>
-              <div
-                style={{
-                  position: 'relative',
+                onFocus={() => {
+                  setIsReassignDropdownOpen(true);
                 }}
-                ref={reassignDropdownRef}
-              >
-                <input
-                  type="text"
-                  placeholder="Search faculty by name..."
-                  value={
-                    reassignModal.newFacultyId
-                      ? selectedReassignFaculty?.full_name || ''
-                      : reassignSearchTerm
-                  }
-                  onChange={(e) => {
-                    setReassignSearchTerm(e.target.value);
-                    setReassignModal((prev) => ({ ...prev, newFacultyId: '' }));
-                    setIsReassignDropdownOpen(true);
-                  }}
-                  onFocus={() => {
-                    setIsReassignDropdownOpen(true);
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '10px',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    background: 'rgba(45,45,61,0.5)',
-                    color: '#fff',
-                    fontSize: '0.95rem',
-                    outline: 'none',
-                    cursor: 'text',
-                    boxSizing: 'border-box',
-                  }}
-                />
-                {isReassignDropdownOpen && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: '100%',
-                      left: 0,
-                      right: 0,
-                      marginTop: '6px',
-                      maxHeight: '220px',
-                      overflowY: 'auto',
-                      background: '#1e1e2d',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '10px',
-                      zIndex: 10000,
-                      boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
-                    }}
-                  >
-                    {dbFacultyList
-                      .filter((f) =>
-                        f.full_name.toLowerCase().includes(reassignSearchTerm.toLowerCase())
-                      )
-                      .map((fac) => (
-                        <div
-                          key={fac.id}
-                          onClick={() => {
-                            setReassignModal((prev) => ({ ...prev, newFacultyId: fac.id }));
-                            setReassignSearchTerm('');
-                            setIsReassignDropdownOpen(false);
-                          }}
-                          style={{
-                            padding: '10px 16px',
-                            cursor: 'pointer',
-                            color: '#e2e8f0',
-                            fontSize: '0.9rem',
-                            transition: 'background 0.15s',
-                            borderBottom: '1px solid rgba(255,255,255,0.04)',
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'rgba(139, 92, 246, 0.15)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'transparent';
-                          }}
-                        >
-                          {fac.full_name}
-                          {fac.email ? (
-                            <span style={{ color: '#9ca3af', fontSize: '0.8rem', marginLeft: '8px' }}>
-                              ({fac.email})
-                            </span>
-                          ) : null}
-                        </div>
-                      ))}
-                    {dbFacultyList.filter((f) =>
+                className="reassign-modal__input"
+              />
+              {isReassignDropdownOpen && (
+                <div className="reassign-modal__dropdown">
+                  {dbFacultyList
+                    .filter((f) =>
                       f.full_name.toLowerCase().includes(reassignSearchTerm.toLowerCase())
-                    ).length === 0 && (
+                    )
+                    .map((fac) => (
                       <div
-                        style={{
-                          padding: '12px 16px',
-                          color: '#6b7280',
-                          fontSize: '0.85rem',
-                          fontStyle: 'italic',
+                        key={fac.id}
+                        className="reassign-modal__option"
+                        onClick={() => {
+                          setReassignModal((prev) => ({ ...prev, newFacultyId: fac.id }));
+                          setReassignSearchTerm('');
+                          setIsReassignDropdownOpen(false);
                         }}
                       >
-                        No faculty found
+                        {fac.full_name}
+                        {fac.email ? (
+                          <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginLeft: '8px' }}>
+                            ({fac.email})
+                          </span>
+                        ) : null}
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
+                    ))}
+                  {dbFacultyList.filter((f) =>
+                    f.full_name.toLowerCase().includes(reassignSearchTerm.toLowerCase())
+                  ).length === 0 && (
+                     <div className="reassign-modal__option--empty">
+                       No faculty found
+                     </div>
+                   )}
+                 </div>
+               )}
+             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+            <div className="reassign-modal__actions">
               <button
+                className="reassign-modal__btn reassign-modal__btn--cancel"
                 onClick={() => {
                   setReassignModal({ isOpen: false, subject: null, newFacultyId: '' });
                   setReassignSearchTerm('');
                 }}
-                style={{
-                  padding: '10px 20px',
-                  borderRadius: '8px',
-                  fontWeight: '600',
-                  color: '#d1d5db',
-                  backgroundColor: '#2d314d',
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s',
-                }}
-                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#3b4063')}
-                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#2d314d')}
               >
                 Cancel
               </button>
               <button
+                className="reassign-modal__btn reassign-modal__btn--confirm"
                 onClick={handleReassignFaculty}
                 disabled={!reassignModal.newFacultyId}
-                style={{
-                  padding: '10px 20px',
-                  borderRadius: '8px',
-                  fontWeight: '600',
-                  color: 'white',
-                  backgroundColor: reassignModal.newFacultyId ? '#8b5cf6' : '#4b5563',
-                  border: 'none',
-                  cursor: reassignModal.newFacultyId ? 'pointer' : 'not-allowed',
-                  boxShadow: reassignModal.newFacultyId ? '0 10px 15px -3px rgba(139,92,246,0.3)' : 'none',
-                  transition: 'background-color 0.2s',
-                  opacity: reassignModal.newFacultyId ? 1 : 0.7,
-                }}
-                onMouseOver={(e) => reassignModal.newFacultyId && (e.currentTarget.style.backgroundColor = '#7c3aed')}
-                onMouseOut={(e) => reassignModal.newFacultyId && (e.currentTarget.style.backgroundColor = '#8b5cf6')}
               >
                 Assign Faculty
               </button>
@@ -1281,23 +1136,23 @@ const fetchSubjects = useCallback(async () => {
         const deletingSubject = dbSubjectsList.find((s) => s.id === deleteSubjectId);
         const hasAssignedFaculty = !!deletingSubject?.faculty_id;
         return (
-         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(5px)' }}>
-            <div style={{ background: '#1a1c2e', padding: '24px', borderRadius: '16px', border: '1px solid #ef4444', maxWidth: '440px', width: '90%' }}>
-               <h3 style={{ color: 'white', fontSize: '18px', fontWeight: 'bold' }}>Delete Subject?</h3>
-               <p style={{ color: '#ccc', margin: '10px 0' }}>
+         <div className="delete-modal-overlay">
+            <div className="delete-modal">
+               <h3 style={{ color: 'var(--text-primary)', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Delete Subject?</h3>
+               <p style={{ color: 'var(--text-secondary)', margin: '10px 0' }}>
                  Are you sure you want to delete this subject? This action cannot be undone.
                  {hasAssignedFaculty && (
-                   <span style={{ display: 'block', marginTop: '8px', color: '#9ca3af', fontSize: '0.85rem' }}>
+                   <span style={{ display: 'block', marginTop: '8px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
                      This subject has a faculty assigned. If the delete is blocked, use "Unassign Faculty" to relieve their workload instead.
                    </span>
                  )}
                </p>
                <div style={{ display: 'flex', gap: '10px', marginTop: '20px', flexWrap: 'wrap' }}>
-                  <button onClick={() => setDeleteSubjectId(null)} style={{ flex: 1, minWidth: '110px', padding: '10px', borderRadius: '8px', background: '#374151', color: 'white', fontWeight: '500', transition: '0.2s', cursor: 'pointer' }} onMouseOver={(e) => e.target.style.background = '#4b5563'} onMouseOut={(e) => e.target.style.background = '#374151'}>Cancel</button>
+                  <button className="delete-modal__cancel" onClick={() => setDeleteSubjectId(null)}>Cancel</button>
                   {hasAssignedFaculty && (
-                    <button onClick={() => handleUnassignFaculty(deleteSubjectId)} style={{ flex: 1, minWidth: '140px', padding: '10px', borderRadius: '8px', background: '#7c3aed', color: 'white', fontWeight: '600', transition: '0.2s', cursor: 'pointer' }} onMouseOver={(e) => e.target.style.background = '#6d28d9'} onMouseOut={(e) => e.target.style.background = '#7c3aed'}>Unassign Faculty</button>
+                    <button className="reassign-modal__btn reassign-modal__btn--confirm" onClick={() => handleUnassignFaculty(deleteSubjectId)}>Unassign Faculty</button>
                   )}
-                  <button onClick={() => confirmDeleteSubject(deleteSubjectId)} style={{ flex: 1, minWidth: '110px', padding: '10px', borderRadius: '8px', background: '#dc2626', color: 'white', fontWeight: 'bold', transition: '0.2s', cursor: 'pointer' }} onMouseOver={(e) => e.target.style.background = '#b91c1c'} onMouseOut={(e) => e.target.style.background = '#dc2626'}>Delete</button>
+                  <button className="delete-modal__confirm" onClick={() => confirmDeleteSubject(deleteSubjectId)}>Delete</button>
                </div>
             </div>
          </div>

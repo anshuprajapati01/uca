@@ -969,15 +969,13 @@ export default function HODManageTimetable() {
             type="date"
             value={semesterStartDate || ''}
             onChange={(e) => setSemesterStartDate(e.target.value)}
-            style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid #3f3f46', backgroundColor: '#18181b', color: '#fff', outline: 'none', colorScheme: 'dark', fontFamily: 'inherit' }}
+            style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border)', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', outline: 'none', colorScheme: 'light', fontFamily: 'inherit' }}
             disabled={isSemesterSettingsLoading}
           />
         </div>
         <button
+          style={{ backgroundColor: '#4f46e5', color: '#ffffff', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: '500', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)', cursor: 'pointer' }}
           onClick={handleApplyClick}
-          style={{ marginTop: '24px', padding: '10px 20px', backgroundColor: '#6366f1', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', transition: 'all 0.2s' }}
-          onMouseOver={(e) => e.target.style.backgroundColor = '#4f46e5'}
-          onMouseOut={(e) => e.target.style.backgroundColor = '#6366f1'}
         >
           Apply Config to All Portals
         </button>
@@ -1038,16 +1036,16 @@ export default function HODManageTimetable() {
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <span className="timetable-draft-badge">Draft Mode</span>
+          <span style={{ backgroundColor: '#fef3c7', color: '#92400e', border: '1px solid #fde68a', padding: '6px 12px', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 'bold', letterSpacing: '0.05em', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)' }}>Draft Mode</span>
           <button
-            className="timetable-sync-btn"
+            style={{ backgroundColor: '#ffffff', border: '1px solid #d1d5db', color: '#374151', padding: '8px 16px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: '600', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)', cursor: 'pointer' }}
             onClick={handleSyncLiveToDraft}
             disabled={!effectiveBranch || !effectiveYear || !selectedSemester}
           >
             Sync Live to Draft
           </button>
           <button
-            className="timetable-publish-btn"
+            style={{ backgroundColor: '#059669', color: '#ffffff', border: 'none', padding: '8px 20px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: '600', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)', cursor: 'pointer' }}
             onClick={handlePublishTimetable}
             disabled={!effectiveBranch || !effectiveYear || !selectedSemester}
           >
@@ -1061,10 +1059,10 @@ export default function HODManageTimetable() {
           <div className="timetable-grid-actions">
             <button
               type="button"
-              className="timetable-download-btn"
+              style={{ backgroundColor: '#4f46e5', color: '#ffffff', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: '600', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
               onClick={handleDownloadPDF}
             >
-              <Download size={18} />
+              <Download size={16} />
               Download PDF
             </button>
           </div>
@@ -1243,34 +1241,37 @@ export default function HODManageTimetable() {
             </div>
 
             <div className="tt-ref-toggle-container" data-html2canvas-ignore="true">
-              <button onClick={() => setShowRefTable(!showRefTable)} className="tt-ref-toggle-btn">
+              <button 
+                onClick={() => setShowRefTable(!showRefTable)} 
+                style={{ backgroundColor: '#f1f5f9', color: '#475569', border: 'none', padding: '8px 16px', borderRadius: '9999px', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', display: 'block', margin: '20px auto 0' }}
+              >
                 {showRefTable ? 'Hide' : 'Show'} Subject &amp; Faculty Reference Key
               </button>
             </div>
 
             {showRefTable && (
-              <div className="tt-reference-section">
-                <h3 className="tt-reference-title">Subject &amp; Faculty Reference Key</h3>
+              <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', overflow: 'hidden', marginTop: '24px' }}>
+                <h3 style={{ color: '#0f172a', fontSize: '1rem', fontWeight: '700', padding: '16px 20px', margin: 0, backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0', letterSpacing: '0.05em' }}>Subject &amp; Faculty Reference Key</h3>
                 <table className="tt-reference-table">
                   <thead>
                     <tr>
-                      <th>Subject Code</th>
-                      <th>Subject Name</th>
-                      <th>Faculty Code</th>
-                      <th>Faculty Full Name</th>
+                      <th style={{ backgroundColor: '#f8fafc', color: '#64748b', fontWeight: '600', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '12px 20px', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>Subject Code</th>
+                      <th style={{ backgroundColor: '#f8fafc', color: '#64748b', fontWeight: '600', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '12px 20px', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>Subject Name</th>
+                      <th style={{ backgroundColor: '#f8fafc', color: '#64748b', fontWeight: '600', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '12px 20px', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>Faculty Code</th>
+                      <th style={{ backgroundColor: '#f8fafc', color: '#64748b', fontWeight: '600', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '12px 20px', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>Faculty Full Name</th>
                     </tr>
                   </thead>
                   <tbody>
                     {referenceIndex.map((item, idx) => (
                       <tr key={idx}>
-                        <td>{item.subjectCode || '—'}</td>
-                        <td>
+                        <td style={{ padding: '14px 20px', color: '#334155', fontSize: '0.875rem', borderBottom: '1px solid #f1f5f9', verticalAlign: 'middle' }}>{item.subjectCode || '—'}</td>
+                        <td style={{ padding: '14px 20px', color: '#334155', fontSize: '0.875rem', borderBottom: '1px solid #f1f5f9', verticalAlign: 'middle' }}>
                           {item.subjectFullName
                             ? `${item.subjectFullName} (${item.subjectShortName})`
                             : item.subjectShortName}
                         </td>
-                        <td>{item.facultyCode || '—'}</td>
-                        <td>{item.facultyName}</td>
+                        <td style={{ padding: '14px 20px', color: '#334155', fontSize: '0.875rem', borderBottom: '1px solid #f1f5f9', verticalAlign: 'middle' }}>{item.facultyCode || '—'}</td>
+                        <td style={{ padding: '14px 20px', color: '#334155', fontSize: '0.875rem', borderBottom: '1px solid #f1f5f9', verticalAlign: 'middle' }}>{item.facultyName}</td>
                       </tr>
                     ))}
                   </tbody>

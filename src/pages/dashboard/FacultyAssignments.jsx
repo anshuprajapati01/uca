@@ -361,7 +361,7 @@ const openBulkGrading = async (assignment) => {
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white', margin: 0 }}>
+        <h2 style={{ color: '#0f172a', fontSize: '1.5rem', fontWeight: '700', marginBottom: '24px', margin: '0 0 24px 0' }}>
           Manage Assignments
         </h2>
         <button
@@ -387,8 +387,8 @@ const openBulkGrading = async (assignment) => {
       </div>
 
       {myAssignments.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '48px', backgroundColor: '#151623', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.1)', color: '#9ca3af' }}>
-          <FileText size={48} strokeWidth={1} style={{ marginBottom: '12px', opacity: 0.5 }} />
+        <div style={{ textAlign: 'center', padding: '64px 24px', backgroundColor: '#ffffff', borderRadius: '12px', border: '1px dashed #cbd5e1', color: '#64748b' }}>
+          <FileText size={48} strokeWidth={1} style={{ marginBottom: '12px', color: '#94a3b8' }} />
           <p style={{ margin: 0 }}>No assignments yet. Create your first one above.</p>
         </div>
       ) : (
@@ -731,8 +731,8 @@ const openBulkGrading = async (assignment) => {
             style={{
               position: 'fixed',
               inset: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.8)',
-              backdropFilter: 'blur(8px)',
+              backgroundColor: 'rgba(15, 23, 42, 0.6)',
+              backdropFilter: 'blur(4px)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -743,25 +743,24 @@ const openBulkGrading = async (assignment) => {
             <div
               onClick={(e) => e.stopPropagation()}
               style={{
-                backgroundColor: '#1c1d2e',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                backgroundColor: '#ffffff',
                 borderRadius: '16px',
-                padding: '24px',
+                padding: '32px',
                 width: '100%',
-                maxWidth: '520px',
+                maxWidth: '600px',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
                 maxHeight: '90vh',
                 overflowY: 'auto',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white', margin: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <h3 style={{ color: '#0f172a', fontSize: '1.25rem', fontWeight: '700', margin: 0 }}>
                   Create Assignment
                 </h3>
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  style={{ background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', display: 'flex' }}
+                  style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex' }}
                 >
                   <X size={20} />
                 </button>
@@ -769,14 +768,14 @@ const openBulkGrading = async (assignment) => {
 
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <label style={{ color: '#475569', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', display: 'block' }}>
                     Subject
                   </label>
                   <select
                     value={subjectId}
                     onChange={(e) => setSubjectId(e.target.value)}
                     required
-                    style={{ width: '100%', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '10px 12px', borderRadius: '8px', fontSize: '0.875rem', outline: 'none', fontFamily: 'inherit' }}
+                    style={{ width: '100%', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', color: '#0f172a', padding: '12px 16px', borderRadius: '8px', outline: 'none', marginBottom: '20px', fontFamily: 'inherit' }}
                   >
                     <option value="">-- Select Subject --</option>
                     {mySubjects.map((subject) => (
@@ -788,14 +787,14 @@ const openBulkGrading = async (assignment) => {
                 </div>
 
                   <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <label style={{ color: '#475569', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', display: 'block' }}>
                     Category
                   </label>
                   <select
                     value={categoryId}
                     onChange={(e) => setCategoryId(e.target.value)}
                     required
-                    style={{ width: '100%', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '10px 12px', borderRadius: '8px', fontSize: '0.875rem', outline: 'none', fontFamily: 'inherit' }}
+                    style={{ width: '100%', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', color: '#0f172a', padding: '12px 16px', borderRadius: '8px', outline: 'none', marginBottom: '20px', fontFamily: 'inherit' }}
                   >
                     <option value="">-- Select Category --</option>
                     {categories
@@ -813,7 +812,7 @@ const openBulkGrading = async (assignment) => {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <label style={{ color: '#475569', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', display: 'block' }}>
                     Title
                   </label>
                   <input
@@ -822,12 +821,12 @@ const openBulkGrading = async (assignment) => {
                     onChange={(e) => setTitle(e.target.value)}
                     required
                     placeholder="Assignment title"
-                    style={{ width: '100%', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '10px 12px', borderRadius: '8px', fontSize: '0.875rem', outline: 'none', fontFamily: 'inherit' }}
+                    style={{ width: '100%', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', color: '#0f172a', padding: '12px 16px', borderRadius: '8px', outline: 'none', marginBottom: '20px', fontFamily: 'inherit' }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <label style={{ color: '#475569', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', display: 'block' }}>
                     Description
                   </label>
                   <textarea
@@ -835,11 +834,11 @@ const openBulkGrading = async (assignment) => {
                     onChange={(e) => setDescription(e.target.value)}
                     rows={3}
                     placeholder="Optional description"
-                    style={{ width: '100%', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '10px 12px', borderRadius: '8px', fontSize: '0.875rem', outline: 'none', fontFamily: 'inherit', resize: 'vertical' }}
+                    style={{ width: '100%', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', color: '#0f172a', padding: '12px 16px', borderRadius: '8px', outline: 'none', marginBottom: '20px', fontFamily: 'inherit', resize: 'vertical' }}
                   />
                 </div>
 
-                <div style={{ backgroundColor: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '10px', padding: '12px 14px' }}>
+                <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
                     <input
                       type="checkbox"
@@ -860,18 +859,18 @@ const openBulkGrading = async (assignment) => {
                       }}
                       style={{ width: '18px', height: '18px', accentColor: '#f59e0b', cursor: 'pointer' }}
                     />
-                    <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#fbbf24' }}>
+                    <span style={{ fontSize: '0.875rem', fontWeight: '700', color: '#b45309', marginBottom: '4px' }}>
                       Include in Official Internal Assessment (TES T/A/Q)
                     </span>
                   </label>
-                  <p style={{ margin: '6px 0 0 28px', fontSize: '0.75rem', color: '#9ca3af' }}>
+                  <p style={{ margin: '4px 0 0 28px', fontSize: '0.875rem', color: '#d97706' }}>
                     If checked, marks will be included in the final official 30-mark internal calculation sheet.
                   </p>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <label style={{ color: '#475569', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', display: 'block' }}>
                       {submissionMode === 'Offline' ? 'Test / Submission Date' : 'Due Date'}
                     </label>
                     <input
@@ -879,12 +878,12 @@ const openBulkGrading = async (assignment) => {
                       value={dueDate}
                       onChange={(e) => setDueDate(e.target.value)}
                       required
-                      style={{ width: '100%', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '10px 12px', borderRadius: '8px', fontSize: '0.875rem', outline: 'none', fontFamily: 'inherit' }}
+                      style={{ width: '100%', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', color: '#0f172a', padding: '12px 16px', borderRadius: '8px', outline: 'none', marginBottom: '20px', fontFamily: 'inherit' }}
                     />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      Max Marks {isTesIncluded && <span style={{ color: '#f59e0b' }}>(TES locked: 10)</span>}
+                    <label style={{ color: '#475569', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', display: 'block' }}>
+                      Max Marks {isTesIncluded && <span style={{ color: '#d97706' }}>(TES locked: 10)</span>}
                     </label>
                     <input
                       type="number"
@@ -893,19 +892,19 @@ const openBulkGrading = async (assignment) => {
                       disabled={isTesIncluded}
                       onChange={(e) => setMaxMarks(e.target.value)}
                       required
-                      style={{ width: '100%', backgroundColor: isTesIncluded ? '#1a1b2a' : '#11131f', border: '1px solid #2d314d', color: isTesIncluded ? '#9ca3af' : 'white', padding: '10px 12px', borderRadius: '8px', fontSize: '0.875rem', outline: 'none', fontFamily: 'inherit', cursor: isTesIncluded ? 'not-allowed' : 'text' }}
+                      style={{ width: '100%', backgroundColor: isTesIncluded ? '#f1f5f9' : '#f8fafc', border: '1px solid #cbd5e1', color: isTesIncluded ? '#94a3b8' : '#0f172a', padding: '12px 16px', borderRadius: '8px', outline: 'none', marginBottom: '20px', fontFamily: 'inherit', cursor: isTesIncluded ? 'not-allowed' : 'text' }}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <label style={{ color: '#475569', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', display: 'block' }}>
                     Submission Mode
                   </label>
                   <select
                     value={submissionMode}
                     onChange={(e) => setSubmissionMode(e.target.value)}
-                    style={{ width: '100%', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '10px 12px', borderRadius: '8px', fontSize: '0.875rem', outline: 'none', fontFamily: 'inherit' }}
+                    style={{ width: '100%', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', color: '#0f172a', padding: '12px 16px', borderRadius: '8px', outline: 'none', marginBottom: '20px', fontFamily: 'inherit' }}
                   >
                     <option value="Online">Online</option>
                     <option value="Offline">Offline</option>
@@ -913,13 +912,13 @@ const openBulkGrading = async (assignment) => {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#d1d5db', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <label style={{ color: '#475569', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', display: 'block' }}>
                     Attachment (optional)
                   </label>
                   <input
                     type="file"
                     onChange={(e) => setAttachment(e.target.files?.[0] || null)}
-                    style={{ width: '100%', backgroundColor: '#11131f', border: '1px solid #2d314d', color: 'white', padding: '10px 12px', borderRadius: '8px', fontSize: '0.875rem', outline: 'none', fontFamily: 'inherit' }}
+                    style={{ width: '100%', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', color: '#0f172a', padding: '12px 16px', borderRadius: '8px', outline: 'none', marginBottom: '20px', fontFamily: 'inherit' }}
                   />
                 </div>
 
@@ -927,7 +926,7 @@ const openBulkGrading = async (assignment) => {
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    style={{ padding: '10px 16px', borderRadius: '8px', fontWeight: '600', color: '#d1d5db', backgroundColor: '#2d314d', border: 'none', cursor: 'pointer', fontSize: '0.875rem' }}
+                    style={{ backgroundColor: '#f1f5f9', color: '#475569', border: 'none', padding: '10px 24px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}
                   >
                     Cancel
                   </button>
@@ -935,15 +934,14 @@ const openBulkGrading = async (assignment) => {
                     type="submit"
                     disabled={isSubmitting}
                     style={{
-                      padding: '10px 20px',
+                      padding: '10px 24px',
                       borderRadius: '8px',
                       fontWeight: '600',
-                      color: 'white',
-                      backgroundColor: isSubmitting ? '#4b5563' : '#6366f1',
+                      color: '#ffffff',
+                      backgroundColor: isSubmitting ? '#4b5563' : '#4f46e5',
                       border: 'none',
                       cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                      fontSize: '0.875rem',
-                      boxShadow: isSubmitting ? 'none' : '0 10px 15px -3px rgba(99, 102, 241, 0.3)',
+                      boxShadow: isSubmitting ? 'none' : '0 2px 4px rgba(79, 70, 229, 0.2)',
                     }}
                   >
                     {isSubmitting ? (isUploading ? 'Uploading…' : 'Creating…') : 'Create Assignment'}

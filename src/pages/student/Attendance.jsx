@@ -206,10 +206,7 @@ export default function Attendance({ subjects, records, loading = false, student
     async function fetchExtraAttendance() {
       const activeRollNumber = studentData?.roll_number || studentData?.roll_no || studentData?.id || studentRoll;
 
-      console.log("USING ROLL NUMBER FOR QUERY:", activeRollNumber);
-
       if (!activeRollNumber) {
-        console.warn("Roll number is undefined. Skipping extra attendance fetch.");
         if (!cancelled) setExtraActivities([]);
         return;
       }
@@ -219,8 +216,6 @@ export default function Attendance({ subjects, records, loading = false, student
           .from('extra_attendance')
           .select('*')
           .eq('student_roll', String(activeRollNumber));
-
-        console.log("EXTRA RAW DB RESPONSE:", data, error);
 
         if (error) throw error;
         if (cancelled) return;
@@ -272,8 +267,6 @@ export default function Attendance({ subjects, records, loading = false, student
           present: sub.attendedClasses,
           percentage: sub.totalClasses > 0 ? Math.round((sub.attendedClasses / sub.totalClasses) * 100) : 0,
         }));
-
-        console.log("FINAL MAPPED EXTRA:", mappedExtra);
 
         if (!cancelled) setExtraActivities(mappedExtra);
       } catch (err) {
@@ -608,7 +601,7 @@ export default function Attendance({ subjects, records, loading = false, student
               const isActive = activeSubject === sub.name;
               return (
                 <button
-                  key={sub.id && sub.id !== 'N/A' ? sub.id : `subject-tab-${index}`}
+                  key={`${sub.code || sub.name}-${index}`}
                   type="button"
                   className={`att-pill ${isActive ? "att-pill--active" : ""} ${high ? "att-pill--safe" : "att-pill--critical"}`}
                   onClick={() => handleSubjectChange(sub)}

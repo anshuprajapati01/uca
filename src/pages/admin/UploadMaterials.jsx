@@ -3,8 +3,9 @@ import { supabase } from '../../lib/supabase';
 import { sanitizeFileName, validateAcademicFile } from '../../services/resourceService.js';
 import { useHodContext } from '../../context/HodContext.jsx';
 import { AGGREGATE_DEPARTMENTS } from '../../config/constants.js';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, UploadCloud, Eye, Trash2 } from 'lucide-react';
 import './DirectorDashboard-v2.css';
+import './UploadMaterials.css';
 
 export default function UploadMaterials() {
   const { hodDepartmentsData } = useHodContext();
@@ -186,7 +187,7 @@ export default function UploadMaterials() {
 
       if (error) throw error;
 
-      setToast({ message: 'Material uploaded successfully! 🎉', type: 'success' });
+      setToast({ message: 'Material uploaded successfully!', type: 'success' });
       setFormData({ title: '', category: '', subject_id: '', file_url: '' });
       setFile(null);
       fetchUploadedMaterials();
@@ -224,8 +225,8 @@ export default function UploadMaterials() {
     setTimeout(() => setToast({ message: '', type: '' }), 3000);
   };
 
-  return (
-    <div className="relative min-h-screen">
+   return (
+     <div className="upload-materials relative min-h-screen">
       <div className="premium-glass-card p-6">
         {toast.message && (
           <div className={`custom-toast ${toast.type}`}>
@@ -233,7 +234,7 @@ export default function UploadMaterials() {
           </div>
         )}
 
-        <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#f8fafc', margin: '0 0 1.5rem 0', letterSpacing: '-0.02em' }}>Upload Study Materials</h2>
+         <h2 className="upload-section-title"><UploadCloud size={24} className="text-brand mr-3 inline-block" style={{ marginRight: '12px' }} /> Upload Study Materials</h2>
 
         <form onSubmit={handleSubmit} className="broadcast-form-container">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '1.2rem' }}>
@@ -253,20 +254,16 @@ export default function UploadMaterials() {
 
             <div className="broadcast-form-row">
               <label htmlFor="category" style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#a1a1aa', marginBottom: '0.375rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Category</label>
-              <div style={{ position: 'relative' }} ref={categoryDropdownRef}>
+               <div style={{ position: 'relative' }} ref={categoryDropdownRef}>
                 <button
                   type="button"
                   onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                  className="category-dropdown-trigger"
                   style={{
                     width: '100%',
                     boxSizing: 'border-box',
                     padding: '0.75rem 1rem',
-                    border: '1px solid rgba(148, 163, 184, 0.18)',
-                    borderRadius: '0.5rem',
-                    background: 'rgba(15, 23, 42, 0.65)',
-                    color: formData.category ? '#f8fafc' : '#64748b',
-                    fontSize: '0.95rem',
-                    fontWeight: '500',
+                    borderRadius: 'var(--radius-sm)',
                     textAlign: 'left',
                     cursor: 'pointer',
                     display: 'flex',
@@ -275,20 +272,17 @@ export default function UploadMaterials() {
                   }}
                 >
                   <span>{formData.category || '-- Select Category --'}</span>
-                  <ChevronDown size={16} style={{ color: '#94a3b8' }} />
+                  <ChevronDown size={16} style={{ color: 'var(--text-secondary)' }} />
                 </button>
                 {isCategoryDropdownOpen && (
-                  <div style={{
+                  <div className="category-dropdown-menu" style={{
                     position: 'absolute',
                     top: '100%',
                     left: 0,
                     right: 0,
                     zIndex: 50,
-                    background: '#1e1e2d',
-                    border: '1px solid #2d2d3f',
-                    borderRadius: '0.5rem',
                     marginTop: '0.25rem',
-                    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)',
+                    boxShadow: 'var(--shadow-md)',
                     maxHeight: '200px',
                     overflow: 'hidden'
                   }}>
@@ -301,44 +295,30 @@ export default function UploadMaterials() {
                         width: '100%',
                         padding: '0.5rem 0.75rem',
                         border: 'none',
-                        borderBottom: '1px solid #2d2d3f',
-                        background: '#13131a',
-                        color: '#fff',
+                        borderBottom: '1px solid var(--border)',
                         fontSize: '0.85rem',
                         outline: 'none'
                       }}
                     />
                     <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
                       {categories.filter(cat => cat.toLowerCase().includes(categorySearchQuery.toLowerCase())).length === 0 ? (
-                        <div style={{ padding: '0.75rem', color: '#cbd5e1', fontSize: '0.85rem', textAlign: 'center' }}>No category found</div>
+                        <div style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.85rem', textAlign: 'center' }}>No category found</div>
                       ) : (
                         categories
                           .filter(cat => cat.toLowerCase().includes(categorySearchQuery.toLowerCase()))
                           .map((cat) => (
-                            <button
-                              key={cat}
-                              type="button"
-                              onClick={() => {
-                                setFormData(prev => ({ ...prev, category: cat }));
-                                setIsCategoryDropdownOpen(false);
-                                setCategorySearchQuery('');
-                              }}
-                              style={{
-                                width: '100%',
-                                padding: '12px 16px',
-                                border: 'none',
-                                background: 'transparent',
-                                color: '#e2e8f0',
-                                textAlign: 'left',
-                                cursor: 'pointer',
-                                fontSize: '0.85rem',
-                                transition: 'all 0.15s ease'
-                              }}
-                              onMouseEnter={(e) => { e.target.style.background = 'rgba(139, 92, 246, 0.15)'; e.target.style.color = '#fff'; }}
-                              onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#e2e8f0'; }}
-                            >
-                              {cat}
-                            </button>
+                             <button
+                               key={cat}
+                               type="button"
+                               className="category-dropdown-option"
+                               onClick={() => {
+                                 setFormData(prev => ({ ...prev, category: cat }));
+                                 setIsCategoryDropdownOpen(false);
+                                 setCategorySearchQuery('');
+                               }}
+                             >
+                               {cat}
+                             </button>
                           ))
                       )}
                     </div>
@@ -435,18 +415,16 @@ export default function UploadMaterials() {
                   onChange={handleFileChange}
                   style={{ display: 'none' }}
                 />
-                <label htmlFor="local-file-upload" style={{ cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}>
-                  📁 Choose File
+                <label htmlFor="local-file-upload" style={{ cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <UploadCloud size={18} className="mr-2 inline" />
+                  Choose File
                 </label>
                 {file && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginTop: '12px', padding: '10px 16px', backgroundColor: 'rgba(31, 41, 55, 0.7)', borderRadius: '8px', border: '1px solid rgba(75, 85, 99, 0.6)' }}>
-                    <span style={{ color: '#d1d5db', fontSize: '0.875rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {file.name}
-                    </span>
-                    <button 
-                      type="button" 
-                      onClick={() => setFile(null)} 
-                      style={{ backgroundColor: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5', border: 'none', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}
+                  <div className="file-info-chip">
+                    <span>{file.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => setFile(null)}
                       title="Clear file"
                     >
                       ✕
@@ -457,84 +435,71 @@ export default function UploadMaterials() {
             </div>
           </div>
 
-          <div className="broadcast-form-actions">
-            <button type="button" className="dept-modal__btn dept-modal__btn--cancel" onClick={handleReset}>
+          <div className="form-actions">
+            <button type="button" className="btn-clear" onClick={handleReset}>
               Clear
             </button>
-            <button type="submit" className="broadcast-send-btn" disabled={isLoading}>
+            <button type="submit" className="btn-upload" disabled={isLoading}>
               {isLoading ? 'Uploading...' : 'Upload Material'}
             </button>
           </div>
         </form>
 
-        <div style={{ marginTop: '40px' }}>
-          <h3 style={{ color: '#f8fafc', fontSize: '1.25rem', fontWeight: '700', marginBottom: '16px', letterSpacing: '-0.01em' }}>Manage Uploaded Materials</h3>
+        <div style={{ marginTop: '40px', display: 'flex', flexDirection: 'column' }}>
+          <h3 className="upload-materials-manage-heading">Manage Uploaded Materials</h3>
 
-          <div className="pill-group" style={{ marginBottom: '20px' }}>
-            {['All', ...categories].map((f) => (
-              <button
-                key={f}
-                className={`pill-btn ${manageFilter === f ? 'pill-btn--active' : ''}`}
-                onClick={() => setManageFilter(f)}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
+           <div className="filters-container">
+             {['All', ...categories].map((f) => (
+               <button
+                 key={f}
+                 className={`filter-pill ${manageFilter === f ? 'active' : ''}`}
+                 onClick={() => setManageFilter(f)}
+               >
+                 {f}
+               </button>
+             ))}
+           </div>
 
           <div className="director-announcements-list">
             {(() => {
               const filtered = uploadedMaterials.filter(item => manageFilter === 'All' || item.type === manageFilter);
               if (filtered.length === 0) {
                 return (
-                  <div style={{ color: '#94a3b8', textAlign: 'center', padding: '2rem', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '14px', border: '1px dashed rgba(148, 163, 184, 0.25)' }}>
+                  <div className="empty-state">
                     No materials found.
                   </div>
                 );
               }
               return filtered.map((item) => (
-                <div key={item.id} className="director-announcement-card">
-                  <div className="director-announcement-card__header">
+                <div key={item.id} className="material-card">
+                  <div className="content-left">
                     <h4>{item.title}</h4>
-                    <div className="director-announcement-card__date">
+                    <div className="uploaded-by-text">
                       Code: {item.subject_code} • {item.type}
                     </div>
+                    <div className="uploaded-by">
+                      Uploaded by: {item.uploader_name} ({item.uploader_role})
+                    </div>
                   </div>
-                  <div style={{ color: '#fbbf24', fontSize: '13px', margin: '6px 0 0 0', fontWeight: 'bold' }}>
-                    Uploaded by: {item.uploader_name} ({item.uploader_role})
-                  </div>
-                  
-                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '12px' }}>
+                  <div className="actions-right">
                     {item.file_url && (
                       <a
                         href={item.file_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        style={{
-                          background: 'rgba(59, 130, 246, 0.15)',
-                          border: '1px solid rgba(59, 130, 246, 0.35)',
-                          color: '#93c5fd',
-                          textDecoration: 'none',
-                          borderRadius: '10px',
-                          padding: '0.5rem 1rem',
-                          fontSize: '0.85rem',
-                          fontWeight: '700',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.35rem',
-                          transition: 'all 0.2s ease'
-                        }}
+                        className="action-btn view-btn"
                       >
-                        👁️ View
+                        <Eye size={16} />
+                        View
                       </a>
                     )}
 
                     <button
                       onClick={() => handleDelete(item.id)}
-                      className="dept-card__delete-btn"
-                      style={{ width: 'auto', height: 'auto', padding: '0.5rem 1rem', gap: '0.35rem', fontSize: '0.85rem', fontWeight: '700' }}
+                      className="action-btn delete-btn"
                     >
-                      🗑️ Delete
+                      <Trash2 size={16} />
+                      Delete
                     </button>
                   </div>
                 </div>

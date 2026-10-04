@@ -216,9 +216,10 @@ export default function DirectorDepartments() {
             )}
 
             {(viewMode === 'detail' || viewMode === 'branchHub' || viewMode === 'subjectMaterial') && (
+              <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-start', width: '100%', marginBottom: '20px', paddingLeft: '0px' }}>
               <button
                 type="button"
-                className="premium-back-btn"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: '#ffffff', color: '#475569', border: '1px solid #cbd5e1', padding: '8px 16px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease' }}
                 onClick={() => {
                   if (viewMode === 'subjectMaterial') {
                     setViewMode('branchHub');
@@ -227,6 +228,16 @@ export default function DirectorDepartments() {
                   } else {
                     handleBackToMaster();
                   }
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#eef2ff';
+                  e.currentTarget.style.color = '#4f46e5';
+                  e.currentTarget.style.borderColor = '#4f46e5';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#ffffff';
+                  e.currentTarget.style.color = '#475569';
+                  e.currentTarget.style.borderColor = '#cbd5e1';
                 }}
               >
                 <ArrowLeft size={18} />
@@ -238,6 +249,7 @@ export default function DirectorDepartments() {
                     : 'Back to Years'}
                 </span>
               </button>
+              </div>
             )}
           </section>
         </div>
@@ -307,14 +319,26 @@ export default function DirectorDepartments() {
                     </div>
                   ) : (
                     <div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-start', width: '100%', marginBottom: '20px', paddingLeft: '0px' }}>
                       <button
                         type="button"
-                        className="premium-back-btn"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: '#ffffff', color: '#475569', border: '1px solid #cbd5e1', padding: '8px 16px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease' }}
                         onClick={() => setSelectedSemester(null)}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#eef2ff';
+                          e.currentTarget.style.color = '#4f46e5';
+                          e.currentTarget.style.borderColor = '#4f46e5';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = '#ffffff';
+                          e.currentTarget.style.color = '#475569';
+                          e.currentTarget.style.borderColor = '#cbd5e1';
+                        }}
                       >
                         <ArrowLeft size={18} />
                         <span>Back to Semesters</span>
                       </button>
+                      </div>
                       <h3 className="director-branch-hub__title" style={{ marginBottom: '1.25rem' }}>
                         {selectedSemester} Subjects
                       </h3>

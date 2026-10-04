@@ -122,8 +122,12 @@ export default function SubjectWorkspace() {
     return (
       <div className="subject-workspace">
         <div className="w-full text-left mb-6">
-          <button type="button" className="subject-workspace__back" onClick={() => navigate('/faculty/subjects')}>
-            <ArrowLeft size={18} /> Back to Subjects
+          <button
+            type="button"
+            onClick={() => navigate('/faculty/subjects')}
+            className="premium-back-btn"
+          >
+            <ArrowLeft size={16} /> Back to Subjects
           </button>
         </div>
         <div className="subject-workspace__error">
@@ -144,17 +148,21 @@ export default function SubjectWorkspace() {
       <div className="subject-workspace text-left flex flex-col items-start w-full">
         
         <div className="subject-workspace__top-bar">
-          <button onClick={() => navigate('/faculty/subjects')} className="subject-workspace__back">
-            <ArrowLeft size={18} /> Back to Subjects
+          <button
+            type="button"
+            onClick={() => navigate('/faculty/subjects')}
+            className="premium-back-btn"
+          >
+            <ArrowLeft size={16} /> Back to Subjects
           </button>
         </div>
 
         <div className="w-full subject-workspace__header">
           <div className="text-left">
-            <h1 className="subject-workspace__title">{headerTitle}</h1>
+            <h1 className="subject-workspace__title" style={{ fontSize: '1.5rem', fontWeight: '700', color: '#0f172a', margin: '0 0 4px 0', letterSpacing: '-0.025em' }}>{headerTitle}</h1>
             <p className="subject-workspace__subtitle">{headerSubtitle}</p>
           </div>
-          <div className="subject-workspace__badge">LIVE</div>
+          <div className="subject-workspace__badge" style={{ backgroundColor: '#d1fae5', color: '#059669', border: '1px solid #a7f3d0', padding: '6px 12px', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: '700', letterSpacing: '0.05em', display: 'inline-flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase' }}>LIVE</div>
         </div>
 
         <div style={{ display: 'flex', gap: '16px', borderBottom: '1px solid rgba(255,255,255,0.1)', marginBottom: '24px', paddingBottom: '16px', marginTop: '24px', width: '100%' }}>
@@ -223,12 +231,16 @@ export default function SubjectWorkspace() {
               </div>
             </div>
 
-            <div className="subject-workspace__tabs-container hide-scrollbar" style={{ overflowX: 'auto', flexWrap: 'nowrap' }}>
+            <div className="subject-workspace__tabs-container hide-scrollbar" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '24px', overflowX: 'auto', flexWrap: 'nowrap' }}>
               {categories.map(filterName => (
                 <button 
-                  key={filterName} onClick={() => setActiveFilter(filterName)}
-                  className={`subject-workspace__tab ${activeFilter === filterName ? 'subject-workspace__tab--active' : ''}`}
-                  style={{ flexShrink: 0 }}
+                  key={filterName}
+                  onClick={() => setActiveFilter(filterName)}
+                  style={
+                    activeFilter === filterName
+                      ? { backgroundColor: '#4f46e5', color: '#ffffff', border: '1px solid #4f46e5', padding: '8px 20px', borderRadius: '9999px', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.2)', transition: 'all 0.2s ease', outline: 'none', whiteSpace: 'nowrap' }
+                      : { backgroundColor: '#ffffff', color: '#475569', border: '1px solid #cbd5e1', padding: '8px 20px', borderRadius: '9999px', fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', transition: 'all 0.2s ease', outline: 'none', whiteSpace: 'nowrap' }
+                  }
                 >
                   {filterName}
                 </button>
@@ -243,34 +255,35 @@ export default function SubjectWorkspace() {
               <div className="subject-workspace__cards w-full mt-4" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {filteredResources.map(resource => (
                   <div key={resource.id} className="subject-resource-card" style={{
-                    background: '#1e1e2d',
-                    border: '1px solid #2d2d3f',
-                    borderRadius: '12px',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
                     padding: '16px',
                     display: 'flex',
+                    justifyContent: 'space-between',
                     alignItems: 'center',
-                    gap: '12px'
+                    marginBottom: '12px'
                   }}>
                     <div style={{
                       width: '40px',
                       height: '40px',
                       borderRadius: '8px',
-                      background: 'rgba(129, 140, 248, 0.15)',
+                      background: '#eef2ff',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       flexShrink: 0
                     }}>
-                      {resource.file_url ? <FileText size={20} color="#818cf8" /> : <LinkIcon size={20} color="#818cf8" />}
+                      {resource.file_url ? <FileText size={20} color="#4f46e5" /> : <LinkIcon size={20} color="#4f46e5" />}
                     </div>
 
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <span style={{ color: '#f8fafc', fontWeight: '600', fontSize: '0.95rem' }}>{resource.title}</span>
+                      <span style={{ color: '#0f172a', fontWeight: '600', fontSize: '0.95rem' }}>{resource.title}</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>{new Date(resource.created_at).toLocaleDateString()}</span>
+                        <span style={{ color: '#64748b', fontSize: '0.8rem' }}>{new Date(resource.created_at).toLocaleDateString()}</span>
                         <span style={{
-                          background: 'rgba(129, 140, 248, 0.15)',
-                          color: '#a5b4fc',
+                          background: '#eef2ff',
+                          color: '#4f46e5',
                           padding: '2px 8px',
                           borderRadius: '9999px',
                           fontSize: '0.7rem',

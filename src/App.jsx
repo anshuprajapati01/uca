@@ -5,7 +5,7 @@ import ErrorBoundary from './components/common/ErrorBoundary.jsx';
 export default function App() {
   return (
     <ErrorBoundary>
-      <div style={{ width: '100vw', minHeight: '100vh', margin: 0, padding: 0, overflowX: 'hidden' }}>
+      <div style={{ width: '100vw', height: '100vh', margin: 0, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <AppRoutes />
         <Toaster 
           position="top-right" 

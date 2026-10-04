@@ -372,7 +372,7 @@ export default function ManageFaculty() {
               <tr
                 key={faculty.id}
                 style={{ ...tableRowStyle, cursor: 'pointer' }}
-                onClick={() => openActionModal(faculty)}
+                onClick={() => { if (!window.getSelection().toString().trim()) openActionModal(faculty); }}
               >
                 <td style={tableCellStyle}>{faculty.full_name}</td>
                 <td style={tableCellStyle}>{faculty.email || 'N/A'}</td>

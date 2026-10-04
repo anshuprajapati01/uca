@@ -139,10 +139,10 @@ export default function UploadResourceModal({ onClose, onSubmit, onSuccess, subj
                   width: '100%',
                   boxSizing: 'border-box',
                   padding: '0.75rem 1rem',
-                  border: '1px solid #2d314d',
+                  border: '1px solid #cbd5e1',
                   borderRadius: '8px',
-                  background: '#11131f',
-                  color: formData.type ? '#f1f5f9' : '#64748b',
+                  background: '#ffffff',
+                  color: formData.type ? '#0f172a' : '#64748b',
                   fontSize: '0.9rem',
                   fontWeight: '500',
                   textAlign: 'left',
@@ -153,7 +153,7 @@ export default function UploadResourceModal({ onClose, onSubmit, onSuccess, subj
                 }}
               >
                 <span>{formData.type || '-- Select Type --'}</span>
-                <ChevronDown size={16} style={{ color: '#94a3b8' }} />
+                <ChevronDown size={16} style={{ color: '#64748b' }} />
               </button>
               {isCategoryDropdownOpen && (
                 <div style={{
@@ -162,11 +162,11 @@ export default function UploadResourceModal({ onClose, onSubmit, onSuccess, subj
                   left: 0,
                   right: 0,
                   zIndex: 50,
-                  background: '#1e1e2d',
-                  border: '1px solid #2d314d',
+                  background: '#ffffff',
+                  border: '1px solid #e2e8f0',
                   borderRadius: '8px',
                   marginTop: '0.25rem',
-                  boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
                   maxHeight: '200px',
                   overflow: 'hidden'
                 }}>
@@ -179,9 +179,9 @@ export default function UploadResourceModal({ onClose, onSubmit, onSuccess, subj
                       width: '100%',
                       padding: '0.5rem 0.75rem',
                       border: 'none',
-                      borderBottom: '1px solid #2d314d',
-                      background: '#11131f',
-                      color: '#fff',
+                      borderBottom: '1px solid #e2e8f0',
+                      background: '#f8fafc',
+                      color: '#0f172a',
                       fontSize: '0.85rem',
                       outline: 'none'
                     }}

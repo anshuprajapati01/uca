@@ -13,8 +13,13 @@ import {
   Calendar,
   Grid,
   ClipboardList,
-  ClipboardCheck,
   Trophy,
+  GraduationCap,
+  BarChart2,
+  Building2,
+  Briefcase,
+  Contact,
+  BookMarked,
 } from 'lucide-react';
 import { ROUTES } from './constants.js';
 
@@ -50,14 +55,14 @@ export const STUDENT_NAV_ITEMS = [
 
 /** @type {NavItem[]} */
 export const FACULTY_NAV_ITEMS = [
-  { label: '🏠 Overview', path: ROUTES.FACULTY_DASHBOARD, icon: LayoutDashboard },
+  { label: 'Overview', path: ROUTES.FACULTY_DASHBOARD, icon: LayoutDashboard },
   {
-    label: '📚 My Subjects',
+    label: 'My Subjects',
     path: `${ROUTES.FACULTY_DASHBOARD}/subjects`,
     icon: BookOpen,
   },
   {
-    label: '📤 Upload Materials',
+    label: 'Upload Materials',
     path: `${ROUTES.FACULTY_DASHBOARD}/resources`,
     icon: Upload,
   },
@@ -65,13 +70,13 @@ export const FACULTY_NAV_ITEMS = [
     id: 'assignments',
     label: 'Assignments',
     path: `${ROUTES.FACULTY_DASHBOARD}/assignments`,
-    icon: ClipboardList,
+    icon: FileText,
   },
   {
     id: 'sessional-marks',
     label: 'Sessional Marks',
     path: `${ROUTES.FACULTY_DASHBOARD}/sessional-marks`,
-    icon: ClipboardCheck,
+    icon: ClipboardList,
   },
 ];
 
@@ -108,70 +113,70 @@ export const ADMIN_NAV_ITEMS = [
 
 /** @type {NavItem[]} */
 export const HOD_NAV_ITEMS = [
-  { id: 'overview', label: '🏠 Overview', path: ROUTES.HOD_DASHBOARD, icon: LayoutDashboard },
+  { id: 'overview', label: 'Overview', path: ROUTES.HOD_DASHBOARD, icon: LayoutDashboard },
   {
     id: 'faculty-workload',
-    label: '👥 Faculty Workload',
+    label: 'Faculty Workload',
     path: `${ROUTES.HOD_DASHBOARD}/faculty-workload`,
     icon: Users,
   },
   {
     id: 'manage-student',
-    label: '🎓 Manage Student',
+    label: 'Manage Student',
     path: `${ROUTES.HOD_DASHBOARD}/manage-student`,
     icon: Users,
   },
   {
     id: 'manage-cr',
-    label: '📇 Manage CRs',
+    label: 'Manage CRs',
     path: `${ROUTES.HOD_DASHBOARD}/manage-cr`,
     icon: UserCheck,
   },
   {
     id: 'upload-material',
-    label: '📤 Upload Material',
+    label: 'Upload Material',
     path: `${ROUTES.HOD_DASHBOARD}/upload-material`,
     icon: Upload,
   },
   {
     id: 'announcement',
-    label: '📢 Announcement',
+    label: 'Announcement',
     path: `${ROUTES.HOD_DASHBOARD}/announcement`,
     icon: Megaphone,
   },
   {
     id: 'curriculum',
-    label: '📚 Curriculum',
+    label: 'Curriculum',
     path: `${ROUTES.HOD_DASHBOARD}/curriculum`,
     icon: BookOpen,
   },
   {
     id: 'categories',
-    label: '🏷️ Categories',
+    label: 'Categories',
     path: `${ROUTES.HOD_DASHBOARD}/categories`,
     icon: Tags,
   },
   {
     id: 'attendance',
-    label: '📊 Attendance Analytics',
+    label: 'Attendance Analytics',
     path: `${ROUTES.HOD_DASHBOARD}/attendance`,
     icon: Calendar,
   },
   {
     id: 'manage-timetable',
-    label: '🗓️ Manage Timetable',
+    label: 'Manage Timetable',
     path: `${ROUTES.HOD_DASHBOARD}/manage-timetable`,
     icon: Grid,
   },
   {
     id: 'manage-results',
-    label: '📝 Publish Results',
+    label: 'Publish Results',
     path: `${ROUTES.HOD_DASHBOARD}/manage-results`,
     icon: FileText,
   },
   {
     id: 'rank-sheets',
-    label: '🏆 Rank Sheets',
+    label: 'Rank Sheets',
     path: `${ROUTES.HOD_DASHBOARD}/rank-sheets`,
     icon: Trophy,
   },
@@ -179,30 +184,30 @@ export const HOD_NAV_ITEMS = [
 
 /** @type {NavItem[]} */
 export const DIRECTOR_NAV_ITEMS = [
-  { label: '🏠 Overview', path: ROUTES.DIRECTOR_DASHBOARD, icon: LayoutDashboard, tab: 'overview' },
+  { label: 'Overview', path: ROUTES.DIRECTOR_DASHBOARD, icon: LayoutDashboard, tab: 'overview' },
   {
-    label: '🎓 Academic Hub',
+    label: 'Academic Hub',
     path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=academic`,
-    icon: Layers,
+    icon: GraduationCap,
     tab: 'academic',
   },
-  { label: '👥 Manage Faculty', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=faculty`, icon: UserPlus, tab: 'faculty' },
+  { label: 'Manage Faculty', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=faculty`, icon: Users, tab: 'faculty' },
   {
-    label: '🏢 Manage Departments',
+    label: 'Manage Departments',
     path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=departments`,
-    icon: Layers,
+    icon: Building2,
     tab: 'departments',
   },
-  { label: '👨‍🏫 HOD Management', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=hod-management`, icon: UserCheck, tab: 'hod-management' },
-  { label: '📖 Student Directory', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=student-directory`, icon: Users, tab: 'student-directory' },
+  { label: 'HOD Management', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=hod-management`, icon: Briefcase, tab: 'hod-management' },
+  { label: 'Student Directory', path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=student-directory`, icon: Contact, tab: 'student-directory' },
   {
-    label: '📚 Master Syllabus',
+    label: 'Master Syllabus',
     path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=master-syllabus`,
-    icon: BookOpen,
+    icon: BookMarked,
     tab: 'master-syllabus',
   },
   {
-    label: '📢 Announcements',
+    label: 'Announcements',
     path: `${ROUTES.DIRECTOR_DASHBOARD}?tab=announcements`,
     icon: Megaphone,
     tab: 'announcements',

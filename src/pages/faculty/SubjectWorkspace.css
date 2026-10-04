@@ -12,16 +12,35 @@
   position: relative;
   width: 100%;
   padding: 2rem;
-  background:
-    radial-gradient(circle at top left, rgba(139, 92, 246, 0.08), transparent 45%),
-    radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.06), transparent 40%),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.35), rgba(15, 23, 42, 0.12));
+  background: var(--bg-app);
   border-radius: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
   font-family: 'Inter', system-ui, sans-serif;
+}
+
+.premium-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #ffffff;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  transition: all 0.2s ease;
+  margin-bottom: 24px;
+}
+
+.premium-back-btn:hover {
+  background-color: #f8fafc;
+  color: #0f172a;
+  border-color: #94a3b8;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
 }
 
 .subject-workspace__back {
@@ -29,23 +48,23 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.65rem 1.15rem;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.22), rgba(59, 130, 246, 0.14));
-  border: 1px solid rgba(139, 92, 246, 0.35);
+  background: linear-gradient(135deg, var(--brand-subtle), var(--brand-hover));
+  border: 1px solid var(--border-brand);
   border-radius: 12px;
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 0.9rem;
   font-weight: 800;
   cursor: pointer;
   transition: all 0.25s ease;
   font-family: inherit;
   margin-bottom: 1.25rem;
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.15);
+  box-shadow: var(--shadow-md);
 }
 
 .subject-workspace__back:hover {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.34), rgba(59, 130, 246, 0.24));
-  border-color: rgba(139, 92, 246, 0.5);
-  box-shadow: 0 14px 34px rgba(99, 102, 241, 0.22);
+  background: linear-gradient(135deg, var(--brand-subtle-hover), var(--brand-hover));
+  border-color: var(--border-brand);
+  box-shadow: var(--shadow-lg);
   transform: translateY(-2px);
 }
 
@@ -61,29 +80,22 @@
   padding: 2rem;
   margin-bottom: 2.25rem;
   border-radius: 28px;
-  background:
-    radial-gradient(circle at top left, rgba(139, 92, 246, 0.22), transparent 40%),
-    radial-gradient(circle at top right, rgba(34, 211, 238, 0.14), transparent 35%),
-    linear-gradient(160deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.72));
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow:
-    0 24px 70px rgba(0, 0, 0, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
 }
 
 .subject-workspace__title {
   margin: 0;
   font-size: 1.75rem;
   font-weight: 900;
-  color: #ffffff;
+  color: var(--text-primary);
   letter-spacing: -0.03em;
 }
 
 .subject-workspace__subtitle {
   margin: 0.5rem 0 0;
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 1rem;
   font-weight: 600;
   letter-spacing: 0.01em;
@@ -181,7 +193,7 @@
 }
 
 .subject-workspace__tab:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--border-subtle);
   color: #e5e7eb;
 }
 
@@ -255,7 +267,7 @@
   gap: 0.5rem;
   min-height: 12rem;
   padding: 2.5rem;
-  color: #64748b;
+  color: var(--text-muted);
   text-align: center;
   border: 1px dashed rgba(148, 163, 184, 0.2);
   border-radius: 16px;
@@ -263,12 +275,12 @@
 }
 
 .subject-workspace__empty strong {
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-weight: 700;
 }
 
 .subject-workspace__status {
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
@@ -281,12 +293,12 @@
   margin: 0 0 0.75rem;
   font-size: 1.5rem;
   font-weight: 800;
-  color: #f1f5f9;
+  color: var(--text-primary);
 }
 
 .subject-workspace__error p {
   margin: 0;
-  color: #64748b;
+  color: var(--text-muted);
   font-weight: 500;
 }
 
@@ -336,7 +348,7 @@
   margin: 0 !important;
   font-size: 1.5rem !important;
   font-weight: 700 !important;
-  color: #ffffff !important;
+  color: var(--text-primary) !important;
   text-align: left !important;
 }
 

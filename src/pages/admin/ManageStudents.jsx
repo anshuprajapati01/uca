@@ -5,7 +5,9 @@ import { useAuth } from '../../hooks/useAuth.js';
 import { useHodContext } from '../../context/HodContext.jsx';
 import { toast, Toaster } from 'react-hot-toast';
 import { AGGREGATE_DEPARTMENTS } from '../../config/constants.js';
+import { Users } from 'lucide-react';
 import './DirectorDashboard-v2.css';
+import './ManageStudents.css';
 
 export default function ManageStudents() {
   const { hodDepartmentsData } = useHodContext();
@@ -658,7 +660,7 @@ export default function ManageStudents() {
 
   return (
     <div className="min-h-screen">
-      <h2 className="broadcast-title">Manage Students 🎓</h2>
+      <h2 className="broadcast-title">Manage Students <Users size={24} className="ml-2 inline-block text-slate-800" /></h2>
 
       <div className="director-branch-subtabs">
         <button type="button" onClick={() => setActiveTab('register')} className={`director-branch-subtab ${activeTab === 'register' ? 'director-branch-subtab--active' : ''}`}>📝 Register Student</button>
@@ -702,35 +704,35 @@ export default function ManageStudents() {
               </div>
             </form>
 
-            <div style={{ width: '320px', flexShrink: 0, background: 'rgba(15, 23, 42, 0.4)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.06)', padding: '1.25rem' }}>
-              <h3 style={{ color: '#f8fafc', fontSize: '1rem', fontWeight: '700', margin: '0 0 0.75rem' }}>Bulk Upload via CSV</h3>
+            <div className="csv-upload-section" style={{ width: '320px', flexShrink: 0, background: 'var(--bg-subtle)', borderRadius: '16px', border: '2px dashed var(--border-strong)', padding: '1.25rem' }}>
+              <h3 style={{ color: 'var(--text-primary)', fontSize: '1rem', fontWeight: '700', margin: '0 0 0.75rem' }}>Bulk Upload via CSV</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                <button type="button" onClick={handleDownloadTemplate} style={{ width: '100%', padding: '0.6rem 1rem', borderRadius: '10px', border: '0', background: '#059669', color: '#fff', fontSize: '0.85rem', fontWeight: '700', cursor: 'pointer', transition: 'background 0.2s ease, transform 0.2s ease', boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)' }} onMouseEnter={(e) => { e.currentTarget.style.background = '#10b981'; e.currentTarget.style.transform = 'translateY(-1px)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = '#059669'; e.currentTarget.style.transform = 'translateY(0)'; }}>
+                <button type="button" onClick={handleDownloadTemplate} style={{ width: '100%', padding: '0.6rem 1rem', borderRadius: '10px', border: '0', background: 'var(--success)', color: 'var(--brand-on)', fontSize: '0.85rem', fontWeight: '700', cursor: 'pointer', transition: 'background 0.2s ease, transform 0.2s ease', boxShadow: 'var(--shadow-sm)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--success-hover, #10b981)'; e.currentTarget.style.transform = 'translateY(-1px)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--success)'; e.currentTarget.style.transform = 'translateY(0)'; }}>
                   Download Template
                 </button>
                 <input type="file" accept=".csv" ref={fileInputRef} onChange={handleCsvFileChange} style={{ display: 'none' }} />
-                <div onClick={() => fileInputRef.current && fileInputRef.current.click()} style={{ width: '100%', padding: '0.6rem 1rem', borderRadius: '10px', border: '1px dashed rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.03)', color: '#94a3b8', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer', textAlign: 'center', transition: 'background 0.2s ease, color 0.2s ease, border-color 0.2s ease' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = '#e2e8f0'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.35)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; }}>
+                <div onClick={() => fileInputRef.current && fileInputRef.current.click()} className="csv-choose-btn" style={{ width: '100%', padding: '0.6rem 1rem', borderRadius: '10px', border: '1px dashed var(--border-strong)', background: 'var(--bg-muted)', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer', textAlign: 'center', transition: 'background 0.2s ease, color 0.2s ease, border-color 0.2s ease' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.borderColor = 'var(--border-strong)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-muted)'; e.currentTarget.style.color = 'var(--text-secondary)'; e.currentTarget.style.borderColor = 'var(--border-strong)'; }}>
                   Choose CSV File
                 </div>
                 {csvFile && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.5rem 0.75rem', borderRadius: '10px', background: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.25)' }}>
-                    <span style={{ flex: 1, color: '#e2e8f0', fontSize: '0.85rem', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{csvFile.name}</span>
-                    <button type="button" onClick={(e) => { e.stopPropagation(); clearCsvFile(); }} title="Clear selected file" style={{ flexShrink: 0, width: '28px', height: '28px', display: 'grid', placeItems: 'center', borderRadius: '8px', border: '1px solid rgba(244, 63, 94, 0.25)', background: 'rgba(244, 63, 94, 0.08)', color: '#fda4af', cursor: 'pointer', fontSize: '0.85rem', lineHeight: 1, transition: 'background 0.2s ease' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(244, 63, 94, 0.2)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(244, 63, 94, 0.08)'; }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.5rem 0.75rem', borderRadius: '10px', background: 'var(--info-subtle, rgba(59, 130, 246, 0.08))', border: '1px solid var(--info-border, rgba(59, 130, 246, 0.25))' }}>
+                    <span style={{ flex: 1, color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{csvFile.name}</span>
+                    <button type="button" onClick={(e) => { e.stopPropagation(); clearCsvFile(); }} title="Clear selected file" style={{ flexShrink: 0, width: '28px', height: '28px', display: 'grid', placeItems: 'center', borderRadius: '8px', border: '1px solid var(--danger-border)', background: 'var(--danger-subtle)', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.85rem', lineHeight: 1, transition: 'background 0.2s ease' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--danger-hover, rgba(244, 63, 94, 0.2))'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--danger-subtle)'; }}>
                       ✕
                     </button>
                   </div>
                 )}
-                <button type="button" onClick={handleProcessCsv} disabled={isImporting || !csvFile} style={{ width: '100%', padding: '0.65rem 1rem', borderRadius: '10px', border: '0', background: isImporting || !csvFile ? 'rgba(255,255,255,0.06)' : 'linear-gradient(135deg, #8b5cf6, #3b82f6)', color: isImporting || !csvFile ? '#64748b' : '#fff', fontSize: '0.9rem', fontWeight: '800', cursor: isImporting || !csvFile ? 'not-allowed' : 'pointer', boxShadow: isImporting || !csvFile ? 'none' : '0 8px 20px rgba(99, 102, 241, 0.35)', transition: 'transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease' }} onMouseEnter={(e) => { if (!isImporting && csvFile) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 26px rgba(99, 102, 241, 0.45)'; } }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isImporting || !csvFile ? 'none' : '0 8px 20px rgba(99, 102, 241, 0.35)'; }}>
+                <button type="button" onClick={handleProcessCsv} disabled={isImporting || !csvFile} className="csv-import-btn" style={{ width: '100%', padding: '0.65rem 1rem', borderRadius: '10px', border: '0', background: isImporting || !csvFile ? 'var(--bg-muted)' : 'linear-gradient(135deg, var(--brand), var(--brand-hover))', color: isImporting || !csvFile ? 'var(--text-secondary)' : 'var(--brand-on)', fontSize: '0.9rem', fontWeight: '800', cursor: isImporting || !csvFile ? 'not-allowed' : 'pointer', boxShadow: isImporting || !csvFile ? 'none' : 'var(--shadow-md)', transition: 'transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease' }} onMouseEnter={(e) => { if (!isImporting && csvFile) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; } }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isImporting || !csvFile ? 'none' : 'var(--shadow-md)'; }}>
                   {isImporting ? 'Importing...' : 'Import Students'}
                 </button>
               </div>
               {importResult && (
-                <div style={{ padding: '0.75rem', borderRadius: '10px', background: importResult.failCount > 0 ? 'rgba(244, 63, 94, 0.08)' : 'rgba(16, 185, 129, 0.08)', border: `1px solid ${importResult.failCount > 0 ? 'rgba(244, 63, 94, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`, marginTop: '0.75rem' }}>
-                  <p style={{ color: '#f8fafc', fontSize: '0.85rem', fontWeight: '600', margin: '0 0 0.4rem' }}>
+                <div style={{ padding: '0.75rem', borderRadius: '10px', background: importResult.failCount > 0 ? 'var(--danger-subtle)' : 'var(--success-subtle, rgba(16, 185, 129, 0.08))', border: `1px solid ${importResult.failCount > 0 ? 'var(--danger-border)' : 'var(--success-border, rgba(16, 185, 129, 0.3))'}`, marginTop: '0.75rem' }}>
+                  <p style={{ color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: '600', margin: '0 0 0.4rem' }}>
                     {importResult.successCount} succeeded, {importResult.failCount} failed
                   </p>
                   {importResult.errors?.length > 0 && (
-                    <ul style={{ color: '#fda4af', fontSize: '0.8rem', margin: 0, paddingLeft: '1.1rem' }}>
+                    <ul style={{ color: 'var(--danger)', fontSize: '0.8rem', margin: 0, paddingLeft: '1.1rem' }}>
                       {importResult.errors?.slice(0, 5).map((err, idx) => (
                         <li key={idx}>{err}</li>
                       ))}
@@ -784,29 +786,29 @@ export default function ManageStudents() {
             />
           </div>
 
-          <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
+          <table className="student-table" style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
-                <th style={{ padding: '12px', borderBottom: '2px solid rgba(255,255,255,0.1)', color: '#94a3b8', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Name</th>
-                <th style={{ padding: '12px', borderBottom: '2px solid rgba(255,255,255,0.1)', color: '#94a3b8', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Roll Number</th>
-                <th style={{ padding: '12px', borderBottom: '2px solid rgba(255,255,255,0.1)', color: '#94a3b8', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Section</th>
-                <th style={{ padding: '12px', borderBottom: '2px solid rgba(255,255,255,0.1)', color: '#94a3b8', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Phone Number</th>
-                <th style={{ padding: '12px', borderBottom: '2px solid rgba(255,255,255,0.1)', color: '#94a3b8', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actions</th>
+                <th style={{ padding: '12px', borderBottom: '2px solid var(--border-strong)', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Name</th>
+                <th style={{ padding: '12px', borderBottom: '2px solid var(--border-strong)', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Roll Number</th>
+                <th style={{ padding: '12px', borderBottom: '2px solid var(--border-strong)', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Section</th>
+                <th style={{ padding: '12px', borderBottom: '2px solid var(--border-strong)', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Phone Number</th>
+                <th style={{ padding: '12px', borderBottom: '2px solid var(--border-strong)', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {tableStudents.length === 0 ? (
                 <tr>
-                  <td colSpan="5" style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '14px', border: '1px dashed rgba(148, 163, 184, 0.25)' }}>
+                  <td colSpan="5" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)', background: 'var(--bg-subtle)', borderRadius: '14px', border: '1px dashed var(--border-strong)' }}>
                     No students found.
                   </td>
                 </tr>
               ) : tableStudents.map(student => (
-                <tr key={student.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  <td style={{ padding: '14px 12px', color: '#f8fafc', fontSize: '0.95rem', fontWeight: '500' }}>{student.full_name}</td>
-                  <td style={{ padding: '14px 12px', color: '#cbd5e1', fontSize: '0.85rem' }}>{student.roll_number}</td>
-                   <td style={{ padding: '14px 12px', color: '#cbd5e1', fontSize: '0.85rem' }}>{getSection(student) || '-'}</td>
-                  <td style={{ padding: '14px 12px', color: '#cbd5e1', fontSize: '0.85rem' }}>{student.phone || 'N/A'}</td>
+                <tr key={student.id} className="student-row" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                  <td style={{ padding: '14px 12px', color: 'var(--text-primary)', fontSize: '0.95rem', fontWeight: '500' }}>{student.full_name}</td>
+                  <td style={{ padding: '14px 12px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{student.roll_number}</td>
+                   <td style={{ padding: '14px 12px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{getSection(student) || '-'}</td>
+                  <td style={{ padding: '14px 12px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{student.phone || 'N/A'}</td>
                   <td style={{ padding: '14px 12px' }}>
                     <button onClick={() => initiateDelete(student.id)} className="dept-card__delete-btn">🗑️</button>
                   </td>
@@ -838,14 +840,14 @@ export default function ManageStudents() {
           </div>
 
           {filterYear === 'All' || filterBranch === 'All' ? (
-            <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
+            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
               Please select a Year and Branch to manage sections.
             </div>
           ) : (
             <>
-              <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <label style={{ color: '#cbd5e1', fontSize: '0.85rem', fontWeight: '500' }}>Section 1 Name:</label>
+                  <label style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '500' }}>Section 1 Name:</label>
                   <input
                     type="text"
                     value={sec1Name}
@@ -855,7 +857,7 @@ export default function ManageStudents() {
                   />
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <label style={{ color: '#cbd5e1', fontSize: '0.85rem', fontWeight: '500' }}>Section 2 Name:</label>
+                  <label style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '500' }}>Section 2 Name:</label>
                   <input
                     type="text"
                     value={sec2Name}
@@ -871,9 +873,9 @@ export default function ManageStudents() {
                   style={{
                     padding: '0.5rem 1rem',
                     borderRadius: '8px',
-                    border: '1px solid rgba(244, 63, 94, 0.35)',
-                    background: lockSuccess ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.1)',
-                    color: lockSuccess ? '#6ee7b7' : '#fda4af',
+                    border: '1px solid var(--danger-border)',
+                    background: lockSuccess ? 'var(--success-subtle, rgba(16, 185, 129, 0.15))' : 'var(--danger-subtle)',
+                    color: lockSuccess ? 'var(--success, #6ee7b7)' : 'var(--danger)',
                     fontSize: '0.85rem',
                     fontWeight: '700',
                     cursor: 'pointer',
@@ -896,16 +898,16 @@ export default function ManageStudents() {
                 >
                   {isSplitting ? 'Splitting...' : `Auto-Split Alphabetically (${sec1Name}/${sec2Name})`}
                 </button>
-                <span style={{ marginLeft: '1rem', color: '#94a3b8', fontSize: '0.85rem' }}>
+                <span style={{ marginLeft: '1rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
                   {unassignedStudents.length} student(s) selected
                 </span>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem' }}>
-                <div style={{ background: 'rgba(15, 23, 42, 0.4)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.06)', padding: '1rem' }}>
+                <div className="section-column" style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '1rem', boxShadow: 'var(--shadow-sm)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                    <h4 style={{ margin: 0, color: '#f8fafc', fontSize: '0.95rem', fontWeight: '700' }}>Unassigned</h4>
-                    <span style={{ color: '#94a3b8', fontSize: '0.8rem', fontWeight: '600' }}>{unassignedStudents.length}</span>
+                    <h4 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '0.95rem', fontWeight: '700' }}>Unassigned</h4>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: '600' }}>{unassignedStudents.length}</span>
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
                     <button
@@ -917,9 +919,7 @@ export default function ManageStudents() {
                         flex: 1,
                         padding: '0.5rem',
                         borderRadius: '8px',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        background: 'rgba(139, 92, 246, 0.15)',
-                        color: '#c4b5fd',
+                        border: '1px solid var(--border)',
                         fontSize: '0.8rem',
                         fontWeight: '700',
                         cursor: 'pointer'
@@ -936,9 +936,7 @@ export default function ManageStudents() {
                         flex: 1,
                         padding: '0.5rem',
                         borderRadius: '8px',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        background: 'rgba(59, 130, 246, 0.15)',
-                        color: '#bfdbfe',
+                        border: '1px solid var(--border)',
                         fontSize: '0.8rem',
                         fontWeight: '700',
                         cursor: 'pointer'
@@ -949,19 +947,20 @@ export default function ManageStudents() {
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxHeight: '400px', overflowY: 'auto' }}>
                     {unassignedStudents.length === 0 ? (
-                      <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>No unassigned students</div>
+                      <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>No unassigned students</div>
                     ) : unassignedStudents.map(student => (
                       <div
                         key={student.id}
                         onClick={() => toggleStudentSelection(student.id)}
+                        className="section-student-item"
                         style={{
                           display: 'flex',
                           alignItems: 'center',
                           gap: '0.6rem',
                           padding: '0.6rem 0.75rem',
                           borderRadius: '10px',
-                          background: sectionSelectedStudents.has(student.id) ? 'rgba(139, 92, 246, 0.12)' : 'rgba(255, 255, 255, 0.03)',
-                          border: '1px solid ' + (sectionSelectedStudents.has(student.id) ? 'rgba(139, 92, 246, 0.35)' : 'rgba(255, 255, 255, 0.05)'),
+                          background: sectionSelectedStudents.has(student.id) ? 'var(--brand-subtle, rgba(139, 92, 246, 0.12))' : 'var(--bg-muted)',
+                          border: '1px solid ' + (sectionSelectedStudents.has(student.id) ? 'var(--border-brand, rgba(139, 92, 246, 0.35))' : 'var(--border-subtle)'),
                           cursor: 'pointer',
                           transition: 'background 0.2s ease, border-color 0.2s ease'
                         }}
@@ -970,21 +969,21 @@ export default function ManageStudents() {
                           type="checkbox"
                           checked={sectionSelectedStudents.has(student.id)}
                           onChange={() => {}}
-                          style={{ accentColor: '#8b5cf6', cursor: 'pointer' }}
+                          style={{ accentColor: 'var(--brand)', cursor: 'pointer' }}
                         />
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ color: '#f8fafc', fontSize: '0.85rem', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.full_name}</div>
-                          <div style={{ color: '#64748b', fontSize: '0.75rem' }}>{student.roll_number}</div>
+                          <div style={{ color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.full_name}</div>
+                          <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>{student.roll_number}</div>
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div style={{ background: 'rgba(15, 23, 42, 0.4)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.06)', padding: '1rem' }}>
+                <div className="section-column" style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '1rem', boxShadow: 'var(--shadow-sm)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-                      <h4 style={{ margin: 0, color: '#c084fc', fontSize: '0.95rem', fontWeight: '700' }}>Section {sec1Name}</h4>
+                      <h4 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '0.95rem', fontWeight: '700' }}>Section {sec1Name}</h4>
                       <select
                         value={mentorAssignments[sec1Name] || ''}
                         onChange={(e) => handleMentorChange(sec1Name, e.target.value)}
@@ -992,9 +991,9 @@ export default function ManageStudents() {
                         style={{
                           padding: '0.35rem 0.6rem',
                           borderRadius: '8px',
-                          border: '1px solid rgba(255,255,255,0.15)',
-                          background: 'rgba(15, 23, 42, 0.6)',
-                          color: '#e2e8f0',
+                          border: '1px solid var(--border)',
+                          background: 'var(--bg-card)',
+                          color: 'var(--text-primary)',
                           fontSize: '0.8rem',
                           fontWeight: '500',
                           cursor: 'pointer',
@@ -1007,28 +1006,29 @@ export default function ManageStudents() {
                         ))}
                       </select>
                     </div>
-                    <span style={{ color: '#94a3b8', fontSize: '0.8rem', fontWeight: '600' }}>{b1Students.length}</span>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: '600' }}>{b1Students.length}</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxHeight: '400px', overflowY: 'auto' }}>
                     {b1Students.length === 0 ? (
-                       <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>No students in {sec1Name}</div>
-                    ) : b1Students.map(student => (
-                      <div
-                        key={student.id}
-                        style={{
+                       <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>No students in {sec1Name}</div>
+                     ) : b1Students.map(student => (
+                       <div
+                         key={student.id}
+                         className="section-student-item"
+                         style={{
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
                           gap: '0.6rem',
                           padding: '0.6rem 0.75rem',
                           borderRadius: '10px',
-                          background: 'rgba(255, 255, 255, 0.03)',
-                          border: '1px solid rgba(255, 255, 255, 0.05)'
+                          background: 'var(--bg-muted)',
+                          border: '1px solid var(--border-subtle)'
                         }}
                       >
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ color: '#f8fafc', fontSize: '0.85rem', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.full_name}</div>
-                          <div style={{ color: '#64748b', fontSize: '0.75rem' }}>{student.roll_number}</div>
+                          <div style={{ color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.full_name}</div>
+                          <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>{student.roll_number}</div>
                         </div>
                         <button
                           type="button"
@@ -1041,9 +1041,9 @@ export default function ManageStudents() {
                             display: 'grid',
                             placeItems: 'center',
                             borderRadius: '8px',
-                            border: '1px solid rgba(244, 63, 94, 0.2)',
-                            background: 'rgba(244, 63, 94, 0.08)',
-                            color: '#fda4af',
+                            border: '1px solid var(--danger-border)',
+                            background: 'var(--danger-subtle)',
+                            color: 'var(--danger)',
                             cursor: 'pointer',
                             fontSize: '0.8rem',
                             lineHeight: 1
@@ -1056,10 +1056,10 @@ export default function ManageStudents() {
                   </div>
                 </div>
 
-                <div style={{ background: 'rgba(15, 23, 42, 0.4)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.06)', padding: '1rem' }}>
+                <div className="section-column" style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '1rem', boxShadow: 'var(--shadow-sm)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-                      <h4 style={{ margin: 0, color: '#bfdbfe', fontSize: '0.95rem', fontWeight: '700' }}>Section {sec2Name}</h4>
+                      <h4 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '0.95rem', fontWeight: '700' }}>Section {sec2Name}</h4>
                       <select
                         value={mentorAssignments[sec2Name] || ''}
                         onChange={(e) => handleMentorChange(sec2Name, e.target.value)}
@@ -1067,9 +1067,9 @@ export default function ManageStudents() {
                         style={{
                           padding: '0.35rem 0.6rem',
                           borderRadius: '8px',
-                          border: '1px solid rgba(255,255,255,0.15)',
-                          background: 'rgba(15, 23, 42, 0.6)',
-                          color: '#e2e8f0',
+                          border: '1px solid var(--border)',
+                          background: 'var(--bg-card)',
+                          color: 'var(--text-primary)',
                           fontSize: '0.8rem',
                           fontWeight: '500',
                           cursor: 'pointer',
@@ -1082,28 +1082,29 @@ export default function ManageStudents() {
                         ))}
                       </select>
                     </div>
-                    <span style={{ color: '#94a3b8', fontSize: '0.8rem', fontWeight: '600' }}>{b2Students.length}</span>
+                     <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: '600' }}>{b2Students.length}</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxHeight: '400px', overflowY: 'auto' }}>
                     {b2Students.length === 0 ? (
-                       <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>No students in {sec2Name}</div>
-                    ) : b2Students.map(student => (
-                      <div
-                        key={student.id}
-                        style={{
+                       <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>No students in {sec2Name}</div>
+                     ) : b2Students.map(student => (
+                       <div
+                         key={student.id}
+                         className="section-student-item"
+                         style={{
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
                           gap: '0.6rem',
                           padding: '0.6rem 0.75rem',
                           borderRadius: '10px',
-                          background: 'rgba(255, 255, 255, 0.03)',
-                          border: '1px solid rgba(255, 255, 255, 0.05)'
+                          background: 'var(--bg-muted)',
+                          border: '1px solid var(--border-subtle)'
                         }}
                       >
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ color: '#f8fafc', fontSize: '0.85rem', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.full_name}</div>
-                          <div style={{ color: '#64748b', fontSize: '0.75rem' }}>{student.roll_number}</div>
+                          <div style={{ color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.full_name}</div>
+                          <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>{student.roll_number}</div>
                         </div>
                         <button
                           type="button"
@@ -1116,9 +1117,9 @@ export default function ManageStudents() {
                             display: 'grid',
                             placeItems: 'center',
                             borderRadius: '8px',
-                            border: '1px solid rgba(244, 63, 94, 0.2)',
-                            background: 'rgba(244, 63, 94, 0.08)',
-                            color: '#fda4af',
+                            border: '1px solid var(--danger-border)',
+                            background: 'var(--danger-subtle)',
+                            color: 'var(--danger)',
                             cursor: 'pointer',
                             fontSize: '0.8rem',
                             lineHeight: 1
